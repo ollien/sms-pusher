@@ -1,0 +1,37 @@
+#Vim swap files
+.sw*
+
+#Python files
+__pycache__*
+*.pyc
+
+#Android Studio
+#--Log files
+*.log
+#--Intellij files
+*.iml
+#--Keystore files
+*.jks
+#--Gradle files
+android/SMSPusher/.gradle/
+android/SMSPusher/build/
+#--Local configuration file
+android/SMSPusher/local.properties
+#--Proguard
+android/SMSPusher/proguard/
+#--Android Studio navigation folders
+android/SMSPusher/.navigation/
+android/SMSPusher/captures/
+android/SMSPusher/.externalNativeBuild
+#--Intellij
+android/SMSPusher/.idea/workspace.xml
+android/SMSPusher/.idea/tasks.xml
+android/SMSPusher/.idea/gradle.xml
+android/SMSPusher/.idea/dictionaries
+android/SMSPusher/.idea/libraries
+#Google services APIs
+android/SMSPusher/google-services.json
+#--Freeline
+android/SMSPusher/freeline.py
+android/SMSPusher/freeline/
+android/SMSPusher/freeline_project_description.json
