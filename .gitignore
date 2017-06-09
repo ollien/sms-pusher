@@ -30,7 +30,7 @@ android/SMSPusher/.idea/gradle.xml
 android/SMSPusher/.idea/dictionaries
 android/SMSPusher/.idea/libraries
 #Google services APIs
-android/SMSPusher/google-services.json
+android/SMSPusher/app/google-services.json
 #--Freeline
 android/SMSPusher/freeline.py
 android/SMSPusher/freeline/
