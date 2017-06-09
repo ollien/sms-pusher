@@ -8,8 +8,8 @@ import android.widget.Toast;
 
 public class SMSReceiver extends BroadcastReceiver {
 
-    @Override
-    public void onReceive(Context context, Intent intent) {
-        Toast.makeText(context, "Received!", Toast.LENGTH_LONG).show();
-    }
+	@Override
+	public void onReceive(Context context, Intent intent) {
+		Toast.makeText(context, "Received!", Toast.LENGTH_LONG).show();
+	}
 }

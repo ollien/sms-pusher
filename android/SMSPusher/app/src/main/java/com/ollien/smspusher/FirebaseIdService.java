@@ -8,14 +8,14 @@ import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 
 public class FirebaseIdService extends FirebaseInstanceIdService {
-    public FirebaseIdService() {
-    }
+	public FirebaseIdService() {
+	}
 
-    @Override
-    public void onTokenRefresh() {
-        //TODO: Send this to server
-        //For now, just leaving it in here for reference.
-        String token = FirebaseInstanceId.getInstance().getToken();
-    }
+	@Override
+	public void onTokenRefresh() {
+		//TODO: Send this to server
+		//For now, just leaving it in here for reference.
+		String token = FirebaseInstanceId.getInstance().getToken();
+	}
 
 }
