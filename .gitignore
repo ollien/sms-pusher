@@ -1,5 +1,5 @@
 #Vim swap files
-.sw*
+*.sw?
 
 #Python files
 __pycache__*
