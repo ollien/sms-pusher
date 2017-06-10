@@ -4,7 +4,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.telephony.SmsMessage;
-import android.widget.Toast;
 
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;
@@ -17,7 +16,13 @@ public class SMSReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		Toast.makeText(context, "Received!", Toast.LENGTH_LONG).show();
+		byte[][] pdus = (byte[][])intent.getSerializableExtra("pdus");
+		String format = intent.getStringExtra("format");
+		for (byte[] pdu : pdus) {
+			SmsMessage message = SmsMessage.createFromPdu(pdu, format);
+			sendMessageUpstream(message);
+		}
+
 	}
 
 	private String generateMessageId() {
