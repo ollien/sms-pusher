@@ -32,7 +32,13 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 	jsonDecoder := json.NewDecoder(file)
 	var config Config
 	jsonDecoder.Decode(&config)
+	clientOptions := generateClientOptions(config)
+	client, error := xmpp.NewClient(clientOptions)
+	if error != nil {
+		log.Fatal(error)
+	}
 	return FirebaseClient{
+		xmppClient: client,
 		senderId: config.SenderId,
 		serverKey: config.ServerKey,
 	}
