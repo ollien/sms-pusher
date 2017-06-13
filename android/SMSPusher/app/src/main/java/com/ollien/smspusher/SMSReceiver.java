@@ -32,7 +32,7 @@ public class SMSReceiver extends BroadcastReceiver {
 
 	private void sendMessageUpstream(SmsMessage message) {
 		FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
-		RemoteMessage payload = new RemoteMessage.Builder(SENDER_ID + "@gc.googleapis.com")
+		RemoteMessage payload = new RemoteMessage.Builder(SENDER_ID + "@gcm.googleapis.com")
 				.setMessageId(generateMessageId())
 				.addData("phone_number", message.getOriginatingAddress())
 				.addData("message", message.getMessageBody())
