@@ -13,7 +13,7 @@ const FCM_PROD_PORT = 5235
 const FCM_USERNAME_ADDRESS = "gcm.googleapis.com"
 
 type FirebaseClient struct {
-	xmppClient *xmpp.Client
+	xmppClient xmpp.Client
 	senderId string
 	serverKey string
 }
@@ -38,7 +38,7 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 		log.Fatal(err)
 	}
 	return FirebaseClient{
-		xmppClient: client,
+		xmppClient: *client,
 		senderId: config.SenderId,
 		serverKey: config.ServerKey,
 	}
