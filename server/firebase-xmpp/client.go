@@ -25,17 +25,17 @@ type Config struct {
 
 //Will create a FirebaseClient from configuration file
 func NewFirebaseClient(configPath string) FirebaseClient {
-	file, error := os.Open(configPath)
-	if error != nil {
-		log.Fatal(error)
+	file, err := os.Open(configPath)
+	if err != nil {
+		log.Fatal(err)
 	}
 	jsonDecoder := json.NewDecoder(file)
 	var config Config
 	jsonDecoder.Decode(&config)
 	clientOptions := generateClientOptions(config)
-	client, error := xmpp.NewClient(clientOptions)
-	if error != nil {
-		log.Fatal(error)
+	client, err := xmpp.NewClient(clientOptions)
+	if err != nil {
+		log.Fatal(err)
 	}
 	return FirebaseClient{
 		xmppClient: client,
