@@ -43,18 +43,3 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 		serverKey: config.ServerKey,
 	}
 }
-
-func generateClientOptions(config Config) xmpp.Options {
-	//TODO: Check if dev or production, and change FCM port accordingly
-	//As a workaround, to prevent go from telling me I have unused variables, I'm saving the production prot to an unused identifier
-	//For now, we will always set the port to the dev port
-	_ = FCM_PROD_PORT
-	port := FCM_DEV_PORT
-	return xmpp.Options {
-		Address: fmt.Sprintf("%s:%d", FCM_SERVER,port),
-		Jid: fmt.Sprintf("%s@%s", config.SenderId, FCM_USERNAME_ADDRESS),
-		Password: config.ServerKey,
-		Retry: 10,
-		ConnectTimeout: 15,
-	}
-}
