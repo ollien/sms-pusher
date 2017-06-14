@@ -2,7 +2,7 @@ package firebase_xmpp
 
 import "encoding/json"
 import "fmt"
-import "github.com/processone/gox/xmpp"
+import "github.com/mattn/go-xmpp"
 import "log"
 import "os"
 
@@ -32,8 +32,8 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 	jsonDecoder := json.NewDecoder(file)
 	var config Config
 	jsonDecoder.Decode(&config)
-	clientOptions := generateClientOptions(config)
-	client, err := xmpp.NewClient(clientOptions)
+	username = fmt.Sprintf("%s@%s", config.ServerKey, FCM_USERNAME_ADDRESS)
+	client, err := xmpp.NewClient(FCM_SERVER, username, config.ServerKey, true)
 	if err != nil {
 		log.Fatal(err)
 	}
