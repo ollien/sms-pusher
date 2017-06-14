@@ -32,8 +32,10 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 	jsonDecoder := json.NewDecoder(file)
 	var config Config
 	jsonDecoder.Decode(&config)
-	username = fmt.Sprintf("%s@%s", config.ServerKey, FCM_USERNAME_ADDRESS)
-	client, err := xmpp.NewClient(FCM_SERVER, username, config.ServerKey, true)
+	//TODO: Detect if debug. For now, use dev port and set debug to true. For now, we will just always do this.
+	server := fmt.Sprintf("%s:%d", FCM_SERVER, FCM_DEV_PORT)
+	username := fmt.Sprintf("%s@%s", config.SenderId, FCM_USERNAME_ADDRESS)
+	client, err := xmpp.NewClient(server, username, config.ServerKey, true)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,4 +44,20 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 		senderId: config.SenderId,
 		serverKey: config.ServerKey,
 	}
+}
+
+func (client *FirebaseClient) recv(recvChannel chan interface{}) {
+	for {
+		data, err := client.xmppClient.Recv()
+		if err != nil {
+			log.Fatal(err)
+		}
+		recvChannel <- data
+	}
+}
+
+func (client *FirebaseClient) StartRecv() <-chan interface{} {
+	recvChannel := make(chan interface{})
+	go client.recv(recvChannel)
+	return recvChannel
 }
