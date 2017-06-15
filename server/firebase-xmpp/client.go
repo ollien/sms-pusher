@@ -5,6 +5,7 @@ import "fmt"
 import "github.com/mattn/go-xmpp"
 import "log"
 import "os"
+import "time"
 
 
 const FCM_SERVER = "fcm-xmpp.googleapis.com"
@@ -66,12 +67,12 @@ func (client *FirebaseClient) Send(chat xmpp.Chat) (int, error) {
 	return client.xmppClient.Send(chat)
 }
 
-func (client *FirebaseClient) Send(messageType, text string) (int, error) {
+func (client *FirebaseClient) SendRaw(messageType, text string) (int, error) {
 	chat := xmpp.Chat {
 		Remote: FCM_SERVER,
 		Type: messageType,
-		Text: text
-		Stamp: time.Time.Now()
+		Text: text,
+		Stamp: time.Now(),
 	}
 	return client.Send(chat)
 }
