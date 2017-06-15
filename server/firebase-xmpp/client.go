@@ -65,3 +65,13 @@ func (client *FirebaseClient) StartRecv() <-chan interface{} {
 func (client *FirebaseClient) Send(chat xmpp.Chat) (int, error) {
 	return client.xmppClient.Send(chat)
 }
+
+func (client *FirebaseClient) Send(messageType, text string) (int, error) {
+	chat := xmpp.Chat {
+		Remote: FCM_SERVER,
+		Type: messageType,
+		Text: text
+		Stamp: time.Time.Now()
+	}
+	return client.Send(chat)
+}
