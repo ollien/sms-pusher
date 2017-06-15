@@ -61,3 +61,7 @@ func (client *FirebaseClient) StartRecv() <-chan interface{} {
 	go client.recv(recvChannel)
 	return recvChannel
 }
+
+func (client *FirebaseClient) Send(chat xmpp.Chat) (int, error) {
+	return client.xmppClient.Send(chat)
+}
