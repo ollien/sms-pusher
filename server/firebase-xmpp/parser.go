@@ -11,6 +11,26 @@ type UpstreamMessage struct {
 	Data SMSMessage
 }
 
+type InboundACKMessage struct {
+	To string
+	MessageId string
+	MessageType string
+}
+
+type OutboundACKMessage struct {
+	From string
+	MessageId string
+	MessageType string
+}
+
+type NACKMessage struct {
+	From string
+	MessageId string
+	MessageType string
+	Error string
+	ErrorDescription string
+}
+
 type SMSMessage struct {
 	PhoneNumber string
 	Message string
