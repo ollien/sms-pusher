@@ -92,7 +92,7 @@ func (client *FirebaseClient) SendRaw(messageType, text string) (int, error) {
 	return client.Send(chat)
 }
 
-func (client *FirebaseClient) sendAck(registrationId, messageId string) (int, error) {
+func (client *FirebaseClient) sendAck(message OutboundACKMessage) (int, error) {
 	payload := fmt.Sprintf(
 		`<message id="">
 			<gcm xmlns="google:mobile:data"
@@ -102,6 +102,6 @@ func (client *FirebaseClient) sendAck(registrationId, messageId string) (int, er
 					"message_type": "ack"
 				}
 			</gcm>
-		</message>`, registrationId, messageId)
+		</message>`, message.To, message.MessageId)
 	return client.SendRaw("normal", payload)
 }
