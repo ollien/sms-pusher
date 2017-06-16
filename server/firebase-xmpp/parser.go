@@ -37,6 +37,18 @@ type SMSMessage struct {
 	Timestamp int64
 }
 
+func GetMessageType(rawData[] byte) string {
+	dataMap := make(map[string]string)
+	if value, exists := dataMap["type"]; exists {
+		if value == "ack" {
+			return "InboundACKMessage"
+		} else if value == "nack" {
+			return "NACKMessage"
+		}
+	}
+	return "UpstreamMessage"
+}
+
 func (message *InboundACKMessage) UnmarshalJSON(rawData []byte) error {
 	messageMap := make(map[string]*json.RawMessage)
 	json.Unmarshal(rawData, &messageMap)
