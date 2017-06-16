@@ -2,7 +2,7 @@ package firebase_xmpp
 
 import "encoding/xml"
 
-type XMPPMessage struct {
+type MessageStanza struct {
 	XMLName xml.Name `xml:"message"`
 	To string `xml:"to,attr"`
 	Type string `xml:"type,attr"`
