@@ -4,9 +4,9 @@ import "encoding/xml"
 
 type MessageStanza struct {
 	XMLName xml.Name `xml:"message"`
-	To string `xml:"to,attr"`
-	Type string `xml:"type,attr"`
-	Id string `xml:"id,attr"`
+	To string `xml:"to,attr,omitempty"`
+	Type string `xml:"type,attr,omitempty"`
+	Id string `xml:"id,attr,omitempty"`
 	Body interface{}
 }
 
