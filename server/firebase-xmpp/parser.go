@@ -60,7 +60,7 @@ func (message *InboundACKMessage) UnmarshalJSON(rawData []byte) error {
 
 func (message *NACKMessage) UnmarshalJSON(rawData []byte) error {
 	messageMap := make(map[string]*json.RawMessage)
-	json.Unmarshal(rawdata, &messageMap)
+	json.Unmarshal(rawData, &messageMap)
 	json.Unmarshal(*messageMap["from"], &message.From)
 	json.Unmarshal(*messageMap["message_id"], &message.MessageId)
 	json.Unmarshal(*messageMap["message_type"], &message.MessageType)
