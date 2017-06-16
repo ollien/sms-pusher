@@ -12,13 +12,13 @@ type UpstreamMessage struct {
 }
 
 type InboundACKMessage struct {
-	To string
+	From string
 	MessageId string
 	MessageType string
 }
 
 type OutboundACKMessage struct {
-	From string
+	To string
 	MessageId string
 	MessageType string
 }
@@ -37,7 +37,7 @@ type SMSMessage struct {
 	Timestamp int64
 }
 
-func (message *OutboundACKMessage) UnmarshalJSON(rawData []byte) error {
+func (message *InboundACKMessage) UnmarshalJSON(rawData []byte) error {
 	messageMap := make(map[string]*json.RawMessage)
 	json.Unmarshal(rawData, &messageMap)
 	json.Unmarshal(*messageMap["from"], &message.From)
