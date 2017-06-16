@@ -82,7 +82,8 @@ func (client *FirebaseClient) Send(chat xmpp.Chat) (int, error) {
 	return client.xmppClient.Send(chat)
 }
 
-func (client *FirebaseClient) SendRaw(messageType, text string) (int, error) {
+//Construct a xmpp.Chat object and send it using Send
+func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, error) {
 	chat := xmpp.Chat {
 		Remote: FCM_SERVER,
 		Type: messageType,
@@ -103,5 +104,5 @@ func (client *FirebaseClient) sendAck(message OutboundACKMessage) (int, error) {
 				}
 			</gcm>
 		</message>`, message.To, message.MessageId)
-	return client.SendRaw("normal", payload)
+	return client.ConstructAndSend("normal", payload)
 }
