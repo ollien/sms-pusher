@@ -14,19 +14,16 @@ type UpstreamMessage struct {
 type InboundACKMessage struct {
 	From string
 	MessageId string
-	MessageType string
 }
 
 type OutboundACKMessage struct {
 	To string
 	MessageId string
-	MessageType string
 }
 
 type NACKMessage struct {
 	From string
 	MessageId string
-	MessageType string
 	Error string
 	ErrorDescription string
 }
@@ -54,7 +51,6 @@ func (message *InboundACKMessage) UnmarshalJSON(rawData []byte) error {
 	json.Unmarshal(rawData, &messageMap)
 	json.Unmarshal(*messageMap["from"], &message.From)
 	json.Unmarshal(*messageMap["message_id"], &message.MessageId)
-	json.Unmarshal(*messageMap["message_type"], &message.MessageType)
 	return nil
 }
 
@@ -63,7 +59,6 @@ func (message *NACKMessage) UnmarshalJSON(rawData []byte) error {
 	json.Unmarshal(rawData, &messageMap)
 	json.Unmarshal(*messageMap["from"], &message.From)
 	json.Unmarshal(*messageMap["message_id"], &message.MessageId)
-	json.Unmarshal(*messageMap["message_type"], &message.MessageType)
 	json.Unmarshal(*messageMap["error"], &message.Error)
 	json.Unmarshal(*messageMap["error_description"], &message.ErrorDescription)
 	return nil
