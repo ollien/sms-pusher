@@ -7,5 +7,4 @@ type MessageStanza struct {
 	To string `xml:"to,attr"`
 	Type string `xml:"type,attr"`
 	Id string `xml:"id,attr"`
-	Body string `xml:"body"`
 }
