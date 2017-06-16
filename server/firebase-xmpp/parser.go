@@ -37,6 +37,15 @@ type SMSMessage struct {
 	Timestamp int64
 }
 
+func (message *OutboundACKMessage) UnmarshalJSON(rawData []byte) error {
+	messageMap := make(map[string]*json.RawMessage)
+	json.Unmarshal(rawData, &messageMap)
+	json.Unmarshal(*messageMap["from"], &message.From)
+	json.Unmarshal(*messageMap["message_id"], &message.MessageId)
+	json.Unmarshal(*messageMap["message_type"], &message.MessageType)
+	return nil
+}
+
 func (message *UpstreamMessage) UnmarshalJSON(rawData []byte) error {
 	messageMap := make(map[string]*json.RawMessage)
 	dataMap := make(map[string]*json.RawMessage)
