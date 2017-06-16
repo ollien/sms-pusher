@@ -53,7 +53,22 @@ func (client *FirebaseClient) recv(recvChannel chan interface{}) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		recvChannel <- data
+		chat := data.(xmpp.Chat)
+		messageBody := []byte(chat.Other[0])
+		switch messageType := GetMessageType(messageBody); messageType {
+			case "InboundACKMessage":
+				var message InboundACKMessage
+				json.Unmarshal(messageBody, &message)
+				//TODO: Process ACK message so we don't just silently receive acknowledgement
+			case "NACKMessage":
+				var message NACKMessage
+				json.Unmarshal(messageBody, &message)
+				//TODO: Process NACK message so we don't just silently fail
+			case "UpstreamMessage":
+				var message UpstreamMessage
+				json.Unmarshal(messageBody, &message)
+				recvChannel <- message.Data
+		}
 	}
 }
 
