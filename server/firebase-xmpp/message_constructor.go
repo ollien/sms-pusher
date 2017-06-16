@@ -18,3 +18,10 @@ type GCMStanza struct {
 type BodyStanza struct {
 	Body string `xml:"body"`
 }
+
+func NewGCMStanza(payload string) GCMStanza {
+	return GCMStanza {
+		GCM: payload,
+		XMLNS: "google:mobile:data",
+	}
+}
