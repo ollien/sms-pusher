@@ -14,3 +14,7 @@ type GCMStanza struct {
 	GCM string `xml:"gcm"`
 	XMLNS string `xml:"xmlns,attr"`
 }
+
+type BodyStanza struct {
+	Body string `xml:"body"`
+}
