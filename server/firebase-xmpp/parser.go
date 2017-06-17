@@ -17,8 +17,8 @@ type InboundACKMessage struct {
 }
 
 type OutboundACKMessage struct {
-	To string
-	MessageId string
+	To string `json:"to"`
+	MessageId string `json:"message_id"`
 }
 
 type NACKMessage struct {
