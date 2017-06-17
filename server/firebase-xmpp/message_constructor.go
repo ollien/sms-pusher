@@ -1,6 +1,8 @@
 package firebase_xmpp
 
 import "encoding/xml"
+import "encoding/json"
+import "log"
 
 type MessageStanza struct {
 	XMLName xml.Name `xml:"message"`
@@ -38,4 +40,20 @@ func NewACKPayload (registrationId, messageId string){
 			MessageId: messageId,
 			messageType: "ack",
 		}
+}
+
+func ConstructACK(registrationId, messageId string) []byte {
+	payload := NewACKPayload(registrationId, messageId)
+	marshaledPayload, err := json.Marshal(payload)
+	if err != nil {
+		log.Fatal(err)
+	}
+	messageStanza := MessageStanza {
+		Body: NewGCMStanza(payload),
+	}
+	marshalledMessageStanza, err := xml.Marshal(messageStanza)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return marshalledMessageStanza
 }
