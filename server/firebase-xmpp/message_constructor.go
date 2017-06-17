@@ -15,7 +15,7 @@ type MessageStanza struct {
 type GCMStanza struct {
 	XMLName xml.Name `xml:"gcm"`
 	XMLNS string `xml:"xmlns,attr"`
-	Value string `xml:",chardata"`
+	Value string `xml:",innerxml"` //A bit of a hack, but it works. Chardata escaped our JSON, but innerxml will not.
 }
 
 type BodyStanza struct {
