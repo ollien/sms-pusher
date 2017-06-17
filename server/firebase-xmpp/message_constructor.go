@@ -15,7 +15,7 @@ type MessageStanza struct {
 type GCMStanza struct {
 	XMLName xml.Name `xml:"gcm"`
 	XMLNS string `xml:"xmlns,attr"`
-	Value string `xml: ",chardata"`
+	Value string `xml:",chardata"`
 }
 
 type BodyStanza struct {
