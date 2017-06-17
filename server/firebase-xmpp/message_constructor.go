@@ -19,6 +19,12 @@ type BodyStanza struct {
 	Body string `xml:"body"`
 }
 
+type ACKPayload struct {
+	To string `json:"to"`
+	MessageId string `json:"message_id"`
+	MessageType string `json:"message_type"`
+}
+
 func NewGCMStanza(payload string) GCMStanza {
 	return GCMStanza {
 		GCM: payload,
