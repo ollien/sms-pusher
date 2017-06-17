@@ -34,11 +34,11 @@ func NewGCMStanza(payload string) GCMStanza {
 	}
 }
 
-func NewACKPayload (registrationId, messageId string){
+func NewACKPayload (registrationId, messageId string) ACKPayload {
 	return ACKPayload {
 			To: registrationId,
 			MessageId: messageId,
-			messageType: "ack",
+			MessageType: "ack",
 		}
 }
 
@@ -49,11 +49,11 @@ func ConstructACK(registrationId, messageId string) []byte {
 		log.Fatal(err)
 	}
 	messageStanza := MessageStanza {
-		Body: NewGCMStanza(payload),
+		Body: NewGCMStanza(string(marshaledPayload)),
 	}
-	marshalledMessageStanza, err := xml.Marshal(messageStanza)
+	marshaledMessageStanza, err := xml.Marshal(messageStanza)
 	if err != nil {
 		log.Fatal(err)
 	}
-	return marshalledMessageStanza
+	return marshaledMessageStanza
 }
