@@ -93,16 +93,7 @@ func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, e
 	return client.Send(chat)
 }
 
-func (client *FirebaseClient) sendAck(message OutboundACKMessage) (int, error) {
-	payload := fmt.Sprintf(
-		`<message id="">
-			<gcm xmlns="google:mobile:data"
-				{
-					"to": "%s",
-					"message_id": "%s",
-					"message_type": "ack"
-				}
-			</gcm>
-		</message>`, message.To, message.MessageId)
-	return client.ConstructAndSend("normal", payload)
+func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
+	payload := ConstructACK(message.From, message.MessageId)
+	return client.xmppClient.SendOrg(string(payload))
 }
