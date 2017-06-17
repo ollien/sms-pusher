@@ -22,10 +22,10 @@ type OutboundACKMessage struct {
 }
 
 type NACKMessage struct {
-	From string
-	MessageId string
-	Error string
-	ErrorDescription string
+	From string `json:"from"`
+	MessageId string `json:"message_id"`
+	Error string `json:"error"`
+	ErrorDescription string `json:"error_description"`
 }
 
 type SMSMessage struct {
@@ -44,16 +44,6 @@ func GetMessageType(rawData[] byte) string {
 		}
 	}
 	return "UpstreamMessage"
-}
-
-func (message *NACKMessage) UnmarshalJSON(rawData []byte) error {
-	messageMap := make(map[string]*json.RawMessage)
-	json.Unmarshal(rawData, &messageMap)
-	json.Unmarshal(*messageMap["from"], &message.From)
-	json.Unmarshal(*messageMap["message_id"], &message.MessageId)
-	json.Unmarshal(*messageMap["error"], &message.Error)
-	json.Unmarshal(*messageMap["error_description"], &message.ErrorDescription)
-	return nil
 }
 
 func (message *UpstreamMessage) UnmarshalJSON(rawData []byte) error {
