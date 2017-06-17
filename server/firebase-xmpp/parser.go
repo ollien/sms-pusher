@@ -12,8 +12,8 @@ type UpstreamMessage struct {
 }
 
 type InboundACKMessage struct {
-	From string
-	MessageId string
+	From string `json:"from"`
+	MessageId string `json:"message_id"`
 }
 
 type OutboundACKMessage struct {
@@ -44,14 +44,6 @@ func GetMessageType(rawData[] byte) string {
 		}
 	}
 	return "UpstreamMessage"
-}
-
-func (message *InboundACKMessage) UnmarshalJSON(rawData []byte) error {
-	messageMap := make(map[string]*json.RawMessage)
-	json.Unmarshal(rawData, &messageMap)
-	json.Unmarshal(*messageMap["from"], &message.From)
-	json.Unmarshal(*messageMap["message_id"], &message.MessageId)
-	return nil
 }
 
 func (message *NACKMessage) UnmarshalJSON(rawData []byte) error {
