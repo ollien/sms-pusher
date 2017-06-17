@@ -31,7 +31,7 @@ type ACKPayload struct {
 
 func NewGCMStanza(payload string) GCMStanza {
 	return GCMStanza {
-		GCM: payload,
+		Value: payload,
 		XMLNS: "google:mobile:data",
 	}
 }
