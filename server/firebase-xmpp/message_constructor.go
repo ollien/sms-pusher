@@ -31,3 +31,11 @@ func NewGCMStanza(payload string) GCMStanza {
 		XMLNS: "google:mobile:data",
 	}
 }
+
+func NewACKPayload (registrationId, messageId string){
+	return ACKPayload {
+			To: registrationId,
+			MessageId: messageId,
+			messageType: "ack",
+		}
+}
