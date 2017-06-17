@@ -67,6 +67,10 @@ func (client *FirebaseClient) recv(recvChannel chan interface{}) {
 			case "UpstreamMessage":
 				var message UpstreamMessage
 				json.Unmarshal(messageBody, &message)
+				_, err := client.sendACK(message)
+				if err != nil {
+					log.Fatal(err)
+				}
 				recvChannel <- message.Data
 		}
 	}
