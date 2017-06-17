@@ -19,7 +19,8 @@ type GCMStanza struct {
 }
 
 type BodyStanza struct {
-	Body string `xml:"body"`
+	XMLName xml.Name `xml:"body"`
+	Value string `xml:",chardata"`
 }
 
 type ACKPayload struct {
