@@ -1,8 +1,5 @@
 package firebase_xmpp
 
-import "strconv"
-import "encoding/json"
-
 type UpstreamMessage struct {
 	From string `json:"from"`
 	TTL int `json:"time_to_live"`
