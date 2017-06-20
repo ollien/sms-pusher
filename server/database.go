@@ -3,6 +3,7 @@ package main
 import "encoding/json"
 import "database/sql"
 import _ "github.com/lib/pq"
+import "./firebase-xmpp"
 import "os"
 
 const CONFIG_URI_KEY = "uri"
@@ -28,4 +29,9 @@ func initDb(configPath string) (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
+}
+
+func insertMessage(db *sql.DB, message firebase_xmpp.SMSMessage) error {
+	_, err := db.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3", message.PhoneNumber, message.Timestamp, message.Message)
+	return err
 }
