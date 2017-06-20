@@ -36,7 +36,7 @@ public class SMSReceiver extends BroadcastReceiver {
 				.setMessageId(generateMessageId())
 				.addData("phone_number", message.getOriginatingAddress())
 				.addData("message", message.getMessageBody())
-				.addData("timestamp", String.valueOf(message.getTimestampMillis()))
+				.addData("timestamp", String.valueOf(message.getTimestampMillis()/1000))
 				.build();
 		firebaseMessaging.send(payload);
 	}
