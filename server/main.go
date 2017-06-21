@@ -6,7 +6,7 @@ import "./firebase-xmpp"
 import "log"
 
 func main() {
-	db, err := initDb("./database-conf.json")
+	db, err := InitDb("./database-conf.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func listenForSMS(db *sql.DB, outChannel <-chan interface{}) {
 		//TODO: Find some way to ping the client of this event. Maybe websockets?
 		message := (<-outChannel).(firebase_xmpp.SMSMessage)
 		fmt.Printf("MESSAGE DETAILS\nFrom: %s\nAt: %d\nBody:%s\n\n", message.PhoneNumber, message.Timestamp, message.Message)
-		err := insertMessage(db, message)
+		err := InsertMessage(db, message)
 		if err != nil {
 			log.Fatal(err)
 		}

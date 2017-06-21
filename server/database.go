@@ -9,7 +9,7 @@ import "os"
 
 const CONFIG_URI_KEY = "uri"
 
-func initDb(configPath string) (*sql.DB, error) {
+func InitDb(configPath string) (*sql.DB, error) {
 	file, err := os.Open(configPath)
 	if err != nil {
 		return nil, err
@@ -32,7 +32,7 @@ func initDb(configPath string) (*sql.DB, error) {
 	return db, nil
 }
 
-func insertMessage(db *sql.DB, message firebase_xmpp.SMSMessage) error {
+func InsertMessage(db *sql.DB, message firebase_xmpp.SMSMessage) error {
 	_, err := db.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
 	return err
 }
