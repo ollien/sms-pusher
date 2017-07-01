@@ -1,7 +1,7 @@
 package main
 
 import "encoding/json"
-import "fmt"
+//import "fmt"
 import "database/sql"
 import _ "github.com/lib/pq"
 import "./firebase-xmpp"
@@ -35,4 +35,8 @@ func InitDb(configPath string) (*sql.DB, error) {
 func InsertMessage(db *sql.DB, message firebase_xmpp.SMSMessage) error {
 	_, err := db.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
 	return err
+}
+
+func FindDuplicate(db *sql.DB, message firebase_xmpp.SMSMessage) (firebase_xmpp.SMSMessage, error) {
+	rows, err := db.Query("SELECT * FROM messages WHERE phone_number = $1, time = to_timestamp($2), mesage = $3", message.PhoneNumber, message.Timestamp, message.Message)
 }
