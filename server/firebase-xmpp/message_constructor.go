@@ -1,4 +1,4 @@
-package firebase_xmpp
+package firebasexmpp
 
 import "encoding/xml"
 import "encoding/json"

@@ -1,4 +1,4 @@
-package firebase_xmpp
+package firebasexmpp
 
 //UpstreamMessage stores the basic data from any upstream Firebase Cloud Messaging XML Message.
 //This isn't as general as it could be. Because the app only sends SMS messages upstream, I've included an SMSMessage in UpstreaMessage.
