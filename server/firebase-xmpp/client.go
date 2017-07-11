@@ -8,23 +8,25 @@ import "os"
 import "time"
 
 
-const FCM_SERVER = "fcm-xmpp.googleapis.com"
-const FCM_DEV_PORT = 5236
-const FCM_PROD_PORT = 5235
-const FCM_USERNAME_ADDRESS = "gcm.googleapis.com"
+const fcmServer = "fcm-xmpp.googleapis.com"
+const fcmDevPort = 5236
+const fcmProdPort = 5235
+const fcmUsernameAddres = "gcm.googleapis.com"
 
+//FirebaseClient stores the data necessary to be an XMPP Client for Firebase Cloud Messaging. See the spec at https://firebase.google.com/docs/cloud-messaging/xmpp-server-ref
 type FirebaseClient struct {
 	xmppClient xmpp.Client
-	senderId string
+	senderID string
 	serverKey string
 }
 
+//Config stores the details necessary for authenticating to Firebase Cloud Messaging's XMPP server, which cannot be hardcoded or put into version control.
 type Config struct {
-	SenderId string
+	SenderID string
 	ServerKey string
 }
 
-//Will create a FirebaseClient from configuration file
+//NewFirebaseClient creates a FirebaseClient from configuration file.
 func NewFirebaseClient(configPath string) FirebaseClient {
 	file, err := os.Open(configPath)
 	if err != nil {
@@ -34,19 +36,20 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 	var config Config
 	jsonDecoder.Decode(&config)
 	//TODO: Detect if debug. For now, use dev port and set debug to true. For now, we will just always do this.
-	server := fmt.Sprintf("%s:%d", FCM_SERVER, FCM_DEV_PORT)
-	username := fmt.Sprintf("%s@%s", config.SenderId, FCM_USERNAME_ADDRESS)
+	server := fmt.Sprintf("%s:%d", fcmServer, fcmDevPort)
+	username := fmt.Sprintf("%s@%s", config.SenderID, fcmUsernameAddres)
 	client, err := xmpp.NewClient(server, username, config.ServerKey, true)
 	if err != nil {
 		log.Fatal(err)
 	}
 	return FirebaseClient{
 		xmppClient: *client,
-		senderId: config.SenderId,
+		senderID: config.SenderID,
 		serverKey: config.ServerKey,
 	}
 }
 
+//recv listens for incomgin messages from Firebase Cloud Messaging.
 func (client *FirebaseClient) recv(recvChannel chan interface{}) {
 	for {
 		data, err := client.xmppClient.Recv()
@@ -76,20 +79,22 @@ func (client *FirebaseClient) recv(recvChannel chan interface{}) {
 	}
 }
 
+//StartRecv starts listening for Firebase Cloud Messaging messages in a goroutine of client.recv.
 func (client *FirebaseClient) StartRecv() <-chan interface{} {
 	recvChannel := make(chan interface{})
 	go client.recv(recvChannel)
 	return recvChannel
 }
 
+//Send sends a message to FirebaseXMPP
 func (client *FirebaseClient) Send(chat xmpp.Chat) (int, error) {
 	return client.xmppClient.Send(chat)
 }
 
-//Construct a xmpp.Chat object and send it using Send
+//ConstructAndSend constructs a xmpp.Chat object and send it using Send
 func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, error) {
 	chat := xmpp.Chat {
-		Remote: FCM_SERVER,
+		Remote: fcmServer,
 		Type: messageType,
 		Text: text,
 		Stamp: time.Now(),
