@@ -7,8 +7,9 @@ import _ "github.com/lib/pq"
 import "./firebase-xmpp"
 import "os"
 
-const CONFIG_URI_KEY = "uri"
+const configURIKey = "uri"
 
+//InitDb intiializes the database connection and returns a DB
 func InitDb(configPath string) (*sql.DB, error) {
 	file, err := os.Open(configPath)
 	if err != nil {
@@ -17,7 +18,7 @@ func InitDb(configPath string) (*sql.DB, error) {
 	jsonDecoder := json.NewDecoder(file)
 	configMap := make(map[string]string)
 	jsonDecoder.Decode(&configMap)
-	db, err := sql.Open("postgres", configMap[CONFIG_URI_KEY])
+	db, err := sql.Open("postgres", configMap[configURIKey])
 	if err != nil {
 		return nil, err
 	}
@@ -32,6 +33,7 @@ func InitDb(configPath string) (*sql.DB, error) {
 	return db, nil
 }
 
+//InsertMessage inserts a SMS message into the database
 func InsertMessage(db *sql.DB, message firebase_xmpp.SMSMessage) error {
 	_, err := db.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
 	return err
