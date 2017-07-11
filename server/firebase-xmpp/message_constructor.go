@@ -4,31 +4,36 @@ import "encoding/xml"
 import "encoding/json"
 import "log"
 
+//MessageStanza stores the data from the message stanza in outgoing messages. Used for marshalling XML.
 type MessageStanza struct {
 	XMLName xml.Name `xml:"message"`
 	To string `xml:"to,attr,omitempty"`
 	Type string `xml:"type,attr,omitempty"`
-	Id string `xml:"id,attr,omitempty"`
+	ID string `xml:"id,attr,omitempty"`
 	Body interface{}
 }
 
+//GCMStanza stores the data in the gcm stanza in outgoing messages. Used for marshalling XML.
 type GCMStanza struct {
 	XMLName xml.Name `xml:"gcm"`
 	XMLNS string `xml:"xmlns,attr"`
 	Value string `xml:",innerxml"` //A bit of a hack, but it works. Chardata escaped our JSON, but innerxml will not.
 }
 
+//BodyStanza stores the data in the body stanza in outgoing messages. Used for marshalling XML.
 type BodyStanza struct {
 	XMLName xml.Name `xml:"body"`
 	Value string `xml:",chardata"`
 }
 
+//ACKPayload stores the data in the ACK payload. Used for marshalling JSON.
 type ACKPayload struct {
 	To string `json:"to"`
-	MessageId string `json:"message_id"`
+	MessageID string `json:"message_id"`
 	MessageType string `json:"message_type"`
 }
 
+//NewGCMStanza makes a new GCMStanza. the XMLNS should always be google:mobile:data.
 func NewGCMStanza(payload string) GCMStanza {
 	return GCMStanza {
 		Value: payload,
@@ -36,16 +41,18 @@ func NewGCMStanza(payload string) GCMStanza {
 	}
 }
 
-func NewACKPayload (registrationId, messageId string) ACKPayload {
+//NewACKPayload makes a new ACKPayload. MessageType should always be ack.
+func NewACKPayload (registrationID, messageID string) ACKPayload {
 	return ACKPayload {
-			To: registrationId,
-			MessageId: messageId,
+			To: registrationID,
+			MessageID: messageID,
 			MessageType: "ack",
 		}
 }
 
-func ConstructACK(registrationId, messageId string) []byte {
-	payload := NewACKPayload(registrationId, messageId)
+//ConstructACK constructs a full ACK message to be send to the server.
+func ConstructACK(registrationID, messageID string) []byte {
+	payload := NewACKPayload(registrationID, messageID)
 	marshaledPayload, err := json.Marshal(payload)
 	if err != nil {
 		log.Fatal(err)
