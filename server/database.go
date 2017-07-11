@@ -1,7 +1,6 @@
 package main
 
 import "encoding/json"
-import "fmt"
 import "database/sql"
 import _ "github.com/lib/pq"
 import "./firebase-xmpp"
@@ -34,7 +33,7 @@ func InitDb(configPath string) (*sql.DB, error) {
 }
 
 //InsertMessage inserts a SMS message into the database
-func InsertMessage(db *sql.DB, message firebase_xmpp.SMSMessage) error {
+func InsertMessage(db *sql.DB, message firebasexmpp.SMSMessage) error {
 	_, err := db.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
 	return err
 }
