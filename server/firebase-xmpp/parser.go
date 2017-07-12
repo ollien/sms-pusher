@@ -1,5 +1,7 @@
 package firebasexmpp
 
+import "errors"
+
 //UpstreamMessage stores the basic data from any upstream Firebase Cloud Messaging XML Message.
 //This isn't as general as it could be. Because the app only sends SMS messages upstream, I've included an SMSMessage in UpstreaMessage.
 type UpstreamMessage struct {
@@ -32,17 +34,19 @@ type SMSMessage struct {
 }
 
 //GetMessageType determines the type of message that Firebase Cloud Messaging has sent upstream.
-func GetMessageType(rawData[] byte) string {
+func GetMessageType(rawData[] byte) (string, error) {
 	dataMap := make(map[string]string)
 	if messageType, exists := dataMap["message_type"]; exists {
 		if messageType == "ack" {
-			return "InboundACKMessage"
+			return "InboundACKMessage", nil
 		} else if messageType == "nack" {
-			return "NACKMessage"
+			return "NACKMessage", nil
 		} else if messageType == "control" {
 			//Per the spec, CONNECTION_DRAINING is the only control_type supported. We can save CPU time by not checking the control_type.
-			return "ConnectionDrainingMessage"
+			return "ConnectionDrainingMessage", nil
 		}
+		//Per the spec, if we receive an unknown message type, we should discard the message.
+		return messageType, errors.New("Unknown type")
 	}
-	return "UpstreamMessage"
+	return "UpstreamMessage", nil
 }
