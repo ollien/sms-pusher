@@ -58,23 +58,26 @@ func (client *FirebaseClient) recv(recvChannel chan interface{}) {
 		}
 		chat := data.(xmpp.Chat)
 		messageBody := []byte(chat.Other[0])
-		switch messageType := GetMessageType(messageBody); messageType {
-			case "InboundACKMessage":
-				var message InboundACKMessage
-				json.Unmarshal(messageBody, &message)
-				//TODO: Process ACK message so we don't just silently receive acknowledgement
-			case "NACKMessage":
-				var message NACKMessage
-				json.Unmarshal(messageBody, &message)
-				//TODO: Process NACK message so we don't just silently fail
-			case "UpstreamMessage":
-				var message UpstreamMessage
-				json.Unmarshal(messageBody, &message)
-				_, err := client.sendACK(message)
-				if err != nil {
-					log.Fatal(err)
-				}
-				recvChannel <- message.Data
+		messageType, err := GetMessageType(messageBody)
+		if err != nil {
+			//Don't need to quit for unknowm message types
+			log.Println(err)
+		} else if (messageType == "InboundACKMessage") {
+			var message InboundACKMessage
+			json.Unmarshal(messageBody, &message)
+			//TODO: Process ACK message so we don't just silently receive acknowledgement
+		} else if (messageType == "NACKMessage") {
+			var message NACKMessage
+			json.Unmarshal(messageBody, &message)
+			//TODO: Process NACK message so we don't just silently fail
+		} else if (messageType == "UpstreamMsesage") {
+			var message UpstreamMessage
+			json.Unmarshal(messageBody, &message)
+			_, err := client.sendACK(message)
+			if err != nil {
+				log.Fatal(err)
+			}
+			recvChannel <- message.Data
 		}
 	}
 }
