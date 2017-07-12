@@ -34,7 +34,7 @@ type SMSMessage struct {
 //GetMessageType determines the type of message that Firebase Cloud Messaging has sent upstream.
 func GetMessageType(rawData[] byte) string {
 	dataMap := make(map[string]string)
-	if value, exists := dataMap["type"]; exists {
+	if value, exists := dataMap["message_type"]; exists {
 		if value == "ack" {
 			return "InboundACKMessage"
 		} else if value == "nack" {
