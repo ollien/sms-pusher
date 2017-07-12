@@ -39,6 +39,9 @@ func GetMessageType(rawData[] byte) string {
 			return "InboundACKMessage"
 		} else if messageType == "nack" {
 			return "NACKMessage"
+		} else if messageType == "control" {
+			//Per the spec, CONNECTION_DRAINING is the only control_type supported. We can save CPU time by not checking the control_type.
+			return "ConnectionDrainingMessage"
 		}
 	}
 	return "UpstreamMessage"
