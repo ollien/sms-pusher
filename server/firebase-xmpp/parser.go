@@ -33,6 +33,9 @@ type SMSMessage struct {
 	Timestamp int64 `json:"timestamp,string"`
 }
 
+//ConnectionDrainingMessage indicates a CONNECTION_DRAINING message.
+type ConnectionDrainingMessage struct {}
+
 //GetMessageType determines the type of message that Firebase Cloud Messaging has sent upstream.
 func GetMessageType(rawData[] byte) (string, error) {
 	dataMap := make(map[string]string)
