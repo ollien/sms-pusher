@@ -46,7 +46,7 @@ func GetMessageType(rawData[] byte) (string, error) {
 			return "ConnectionDrainingMessage", nil
 		}
 		//Per the spec, if we receive an unknown message type, we should discard the message.
-		return messageType, errors.New("Unknown type")
+		return messageType, errors.New("Unknown message type")
 	}
 	return "UpstreamMessage", nil
 }

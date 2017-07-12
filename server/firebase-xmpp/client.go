@@ -70,7 +70,7 @@ func (client *FirebaseClient) recv(recvChannel chan interface{}) {
 			var message NACKMessage
 			json.Unmarshal(messageBody, &message)
 			//TODO: Process NACK message so we don't just silently fail
-		} else if (messageType == "UpstreamMsesage") {
+		} else if (messageType == "UpstreamMessage") {
 			var message UpstreamMessage
 			json.Unmarshal(messageBody, &message)
 			_, err := client.sendACK(message)
