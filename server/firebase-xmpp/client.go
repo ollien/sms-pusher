@@ -50,7 +50,7 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 }
 
 //recv listens for incomgin messages from Firebase Cloud Messaging.
-func (client *FirebaseClient) recv(recvChannel chan interface{}) {
+func (client *FirebaseClient) recv(recvChannel chan SMSMessage) {
 	for {
 		data, err := client.xmppClient.Recv()
 		if err != nil {
@@ -62,14 +62,6 @@ func (client *FirebaseClient) recv(recvChannel chan interface{}) {
 		if err != nil {
 			//Don't need to quit for unknowm message types
 			log.Println(err)
-		} else if (messageType == "InboundACKMessage") {
-			var message InboundACKMessage
-			json.Unmarshal(messageBody, &message)
-			//TODO: Process ACK message so we don't just silently receive acknowledgement
-		} else if (messageType == "NACKMessage") {
-			var message NACKMessage
-			json.Unmarshal(messageBody, &message)
-			//TODO: Process NACK message so we don't just silently fail
 		} else if (messageType == "UpstreamMessage") {
 			var message UpstreamMessage
 			json.Unmarshal(messageBody, &message)
@@ -79,6 +71,7 @@ func (client *FirebaseClient) recv(recvChannel chan interface{}) {
 			}
 			recvChannel <- message.Data
 		}
+		//TODO: Handle InboundACKMessage and NACKMessage
 	}
 }
 
