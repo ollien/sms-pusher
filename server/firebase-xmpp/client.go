@@ -76,8 +76,8 @@ func (client *FirebaseClient) recv(recvChannel chan SMSMessage) {
 }
 
 //StartRecv starts listening for Firebase Cloud Messaging messages in a goroutine of client.recv.
-func (client *FirebaseClient) StartRecv() <-chan interface{} {
-	recvChannel := make(chan interface{})
+func (client *FirebaseClient) StartRecv() <-chan SMSMessage {
+	recvChannel := make(chan SMSMessage)
 	go client.recv(recvChannel)
 	return recvChannel
 }
