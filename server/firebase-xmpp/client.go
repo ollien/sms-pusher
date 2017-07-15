@@ -6,6 +6,8 @@ import "github.com/mattn/go-xmpp"
 import "log"
 import "os"
 import "time"
+import "strings"
+import "io"
 
 
 const fcmServer = "fcm-xmpp.googleapis.com"
@@ -14,8 +16,10 @@ const fcmProdPort = 5235
 const fcmUsernameAddres = "gcm.googleapis.com"
 
 //FirebaseClient stores the data necessary to be an XMPP Client for Firebase Cloud Messaging. See the spec at https://firebase.google.com/docs/cloud-messaging/xmpp-server-ref
+//senderID and severKey refer to their corresponding FCM properties. ClientID is simply an id to identify clients. It can safely be ommitted, but your connectionClosedCallback will receive an empty string
 type FirebaseClient struct {
 	xmppClient xmpp.Client
+	ClientID string
 	senderID string
 	serverKey string
 }
@@ -27,7 +31,7 @@ type Config struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from configuration file.
-func NewFirebaseClient(configPath string) FirebaseClient {
+func NewFirebaseClient(configPath string, clientID string) FirebaseClient {
 	file, err := os.Open(configPath)
 	if err != nil {
 		log.Fatal(err)
@@ -44,17 +48,24 @@ func NewFirebaseClient(configPath string) FirebaseClient {
 	}
 	return FirebaseClient{
 		xmppClient: *client,
+		ClientID: clientID,
 		senderID: config.SenderID,
 		serverKey: config.ServerKey,
 	}
 }
 
 //recv listens for incomgin messages from Firebase Cloud Messaging.
-func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage) {
+func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage, drainChannel chan<- ConnectionDrainingMessage, closeChannel chan<- *FirebaseClient) {
 	for {
 		data, err := client.xmppClient.Recv()
 		if err != nil {
-			log.Fatal(err)
+			//encoding/xml adds a bunch of extra stuff to XML errors, including the line number. However, all we care about is whether or not an EOF was reached.
+			if strings.Contains(err.Error(), io.EOF.Error()) {
+				closeChannel <- client
+				break
+			} else {
+				log.Fatal(err)
+			}
 		}
 		chat := data.(xmpp.Chat)
 		messageBody := []byte(chat.Other[0])
@@ -70,16 +81,23 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage) {
 				log.Fatal(err)
 			}
 			recvChannel <- message.Data
+		} else if (messageType == "ConnectionDrainingMessage") {
+			drainChannel <- ConnectionDrainingMessage{}
 		}
 		//TODO: Handle InboundACKMessage and NACKMessage
 	}
 }
 
 //StartRecv starts listening for Firebase Cloud Messaging messages in a goroutine of client.recv.
-func (client *FirebaseClient) StartRecv() <-chan SMSMessage {
+func (client *FirebaseClient) StartRecv(drainChannel chan<- ConnectionDrainingMessage, closeChannel chan<- *FirebaseClient) chan SMSMessage {
 	recvChannel := make(chan SMSMessage)
-	go client.recv(recvChannel)
+	client.StartRecvOnExistingChannel(drainChannel, closeChannel, recvChannel)
 	return recvChannel
+}
+
+//StartRecvOnExistingChannel is identical to StartRecv, except that it takes a recvChannel as an argument, and will direct all messages to that channel.
+func (client *FirebaseClient)StartRecvOnExistingChannel(drainChannel chan<- ConnectionDrainingMessage, closeChannel chan<- *FirebaseClient, recvChannel chan SMSMessage) {
+	go client.recv(recvChannel, drainChannel, closeChannel)
 }
 
 //Send sends a message to FirebaseXMPP
