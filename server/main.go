@@ -10,8 +10,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	client := firebasexmpp.NewFirebaseClient("./xmpp-config.json")
-	outChannel:= client.StartRecv()
+	clients := make(map[string]firebasexmpp.FirebaseClient)
+	outChannel:= StartFirebaseClient(clients, "./xmpp-config.json")
 	go listenForSMS(db, outChannel)
 	fmt.Println("Listening for SMS")
 	server := NewServer("127.0.0.1:8080")
