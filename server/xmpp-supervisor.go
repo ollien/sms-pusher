@@ -23,10 +23,11 @@ func StartFirebaseClientOnExistingMessageChannel(clients map[string] firebasexmp
 	return messageChannel
 }
 
-func addClientToMap(clients map[string]firebasexmpp.FirebaseClient) {
+func addClientToMap(clients map[string]firebasexmpp.FirebaseClient) (firebasexmpp.FirebaseClient, string) {
 	clientID := uuid.NewV4().String()
 	client := firebasexmpp.NewFirebaseClient(configPath, clientID)
 	clients[clientID] = client
+	return client, clientID
 }
 
 func runConnectionHandlers(clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string, drainChannel <-chan firebasexmpp.ConnectionDraininGmessage, closeChannel <-chan *firebasexmpp.FirebaseClient) {
