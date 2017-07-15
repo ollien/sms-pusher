@@ -9,7 +9,7 @@ func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configP
 	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)
 	messageChannel := client.StartRecv(drainChannel, closeChannel)
-	runConnectionHandlers(clients, clientID, configPath, drainChannel, closeChannel)
+	runConnectionHandlers(clients, clientID, configPath, messageChannel, drainChannel, closeChannel)
 	return messageChannel
 }
 
@@ -19,7 +19,7 @@ func StartFirebaseClientOnExistingMessageChannel(clients map[string]firebasexmpp
 	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)
 	client.StartRecvOnExistingChannel(drainChannel, closeChannel, messageChannel)
-	runConnectionHandlers(clients, clientID, configPath, drainChannel, closeChannel)
+	runConnectionHandlers(clients, clientID, configPath, messageChannel, drainChannel, closeChannel)
 }
 
 func addClientToMap(clients map[string]firebasexmpp.FirebaseClient, configPath string) (firebasexmpp.FirebaseClient, string) {
@@ -29,14 +29,14 @@ func addClientToMap(clients map[string]firebasexmpp.FirebaseClient, configPath s
 	return client, clientID
 }
 
-func runConnectionHandlers(clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string, drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, closeChannel <-chan *firebasexmpp.FirebaseClient) {
-	go handleConnectionDraining(drainChannel, clients, clientID, configPath)
+func runConnectionHandlers(clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string, messageChannel chan<- firebasexmpp.SMSMessage, drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, closeChannel <-chan *firebasexmpp.FirebaseClient) {
+	go handleConnectionDraining(drainChannel, messageChannel, clients, clientID, configPath)
 	go handleConnectionClose(closeChannel, clients)
 }
 
-func handleConnectionDraining(drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string) {
+func handleConnectionDraining(drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, messageChannel chan<- firebasexmpp.SMSMessage, clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string) {
 	_ = <- drainChannel
-	StartFirebaseClient(clients, configPath)
+	StartFirebaseClientOnExistingMessageChannel(clients, configPath, messageChannel)
 }
 
 func handleConnectionClose(closeChannel <-chan *firebasexmpp.FirebaseClient, clients map[string]firebasexmpp.FirebaseClient) {
