@@ -1,6 +1,8 @@
 package firebasexmpp
 
+import "encoding/json"
 import "errors"
+import "log"
 
 //UpstreamMessage stores the basic data from any upstream Firebase Cloud Messaging XML Message.
 //This isn't as general as it could be. Because the app only sends SMS messages upstream, I've included an SMSMessage in UpstreaMessage.
@@ -39,6 +41,10 @@ type ConnectionDrainingMessage struct {}
 //GetMessageType determines the type of message that Firebase Cloud Messaging has sent upstream.
 func GetMessageType(rawData[] byte) (string, error) {
 	dataMap := make(map[string]string)
+	err := json.Unmarshal(rawData, &dataMap)
+	if err != nil {
+		return "", err
+	}
 	if messageType, exists := dataMap["message_type"]; exists {
 		if messageType == "ack" {
 			return "InboundACKMessage", nil
