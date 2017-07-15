@@ -6,6 +6,8 @@ import "github.com/mattn/go-xmpp"
 import "log"
 import "os"
 import "time"
+import "strings"
+import "io"
 
 
 const fcmServer = "fcm-xmpp.googleapis.com"
