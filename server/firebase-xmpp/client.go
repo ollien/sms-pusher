@@ -57,7 +57,12 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage, drainChannel c
 	for {
 		data, err := client.xmppClient.Recv()
 		if err != nil {
-			log.Fatal(err)
+			//encoding/xml adds a bunch of extra stuff to XML errors, including the line number. However, all we care about is whether or not an EOF was reached.
+			if strings.Contains(err.Error(), io.EOF.Error()) {
+				break
+			} else {
+				log.Fatal(err)
+			}
 		}
 		chat := data.(xmpp.Chat)
 		messageBody := []byte(chat.Other[0])
