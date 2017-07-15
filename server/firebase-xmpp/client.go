@@ -67,7 +67,12 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage, drainChannel c
 				log.Fatal(err)
 			}
 		}
-		chat := data.(xmpp.Chat)
+		chat, ok := data.(xmpp.Chat)
+		if !ok {
+			//xmpp.Recv can return a xmpp.Chat or a xmpp.Presence. We don't care about presence notifications.
+			//Though the FCM spec makes no mention of them, because it doesn't explicitly say we will never recieve them, we must handle them somehow - in this case, ignoring them.
+			continue
+		}
 		messageBody := []byte(chat.Other[0])
 		messageType, err := GetMessageType(messageBody)
 		if err != nil {
