@@ -11,11 +11,16 @@ func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configP
 	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)
 	messageChannel := client.StartRecv(drainChannel, closeChannel)
-	go handleConnectionDraining(drainChannel, clients, cliendID, configPath)
+	go handleConnectionDraining(drainChannel, clients, clientID, configPath)
 	return messageChannel
 }
 
 func handleConnectionDraining(drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string) {
 	_ = <- drainChannel
 	StartFirebaseClient(clients, configPath)
+}
+
+func handleConnectionClose(closeChannel <-chan *firebasexmpp.FirebaseClient, clients map[string]firebasexmpp.FirebaseClient) {
+	closingClient = <- closeChannel
+	delete(clients, *closingClient.clientId)
 }
