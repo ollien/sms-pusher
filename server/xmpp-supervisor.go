@@ -20,7 +20,6 @@ func StartFirebaseClientOnExistingMessageChannel(clients map[string]firebasexmpp
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)
 	client.StartRecvOnExistingChannel(drainChannel, closeChannel, messageChannel)
 	runConnectionHandlers(clients, clientID, configPath, drainChannel, closeChannel)
-	return messageChannel
 }
 
 func addClientToMap(clients map[string]firebasexmpp.FirebaseClient) (firebasexmpp.FirebaseClient, string) {
