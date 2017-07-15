@@ -5,7 +5,7 @@ import "github.com/satori/go.uuid"
 
 //StartFirebaseClient will add a client to the clients map and begin listening for connection draining messages
 func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configPath string) <-chan firebasexmpp.SMSMessage{
-	client, clientID := addClientToMap(clients)
+	client, clientID := addClientToMap(clients, configPath)
 	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)
 	messageChannel := client.StartRecv(drainChannel, closeChannel)
@@ -15,14 +15,14 @@ func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configP
 
 //StartFirebaseClientOnExistingMessageChannel is identical to StartFirebaseClient but it takes a messageChannel as an argument, and will direct all messages to that channel.
 func StartFirebaseClientOnExistingMessageChannel(clients map[string]firebasexmpp.FirebaseClient, configPath string, messageChannel chan<- firebasexmpp.SMSMessage) {
-	client, clientID := addClientToMap(clients)
+	client, clientID := addClientToMap(clients, configPath)
 	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)
 	client.StartRecvOnExistingChannel(drainChannel, closeChannel, messageChannel)
 	runConnectionHandlers(clients, clientID, configPath, drainChannel, closeChannel)
 }
 
-func addClientToMap(clients map[string]firebasexmpp.FirebaseClient) (firebasexmpp.FirebaseClient, string) {
+func addClientToMap(clients map[string]firebasexmpp.FirebaseClient, configPath string) (firebasexmpp.FirebaseClient, string) {
 	clientID := uuid.NewV4().String()
 	client := firebasexmpp.NewFirebaseClient(configPath, clientID)
 	clients[clientID] = client
