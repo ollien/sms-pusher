@@ -6,13 +6,13 @@ import "github.com/satori/go.uuid"
 //StartFirebaseClient will add a client to the clients map and begin listening for connection draining messages
 func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configPath string) <-chan firebasexmpp.SMSMessage{
 	clientID := uuid.NewV4().String()
-	clients[clientID] = client
 	client := firebasexmpp.NewFirebaseClient(configPath, clientID)
+	clients[clientID] = client
 	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)
 	messageChannel := client.StartRecv(drainChannel, closeChannel)
 	go handleConnectionDraining(drainChannel, clients, clientID, configPath)
-	go handleConnectionClosing(closeChannel, clients)
+	go handleConnectionClose(closeChannel, clients)
 	return messageChannel
 }
 
@@ -22,6 +22,6 @@ func handleConnectionDraining(drainChannel <-chan firebasexmpp.ConnectionDrainin
 }
 
 func handleConnectionClose(closeChannel <-chan *firebasexmpp.FirebaseClient, clients map[string]firebasexmpp.FirebaseClient) {
-	closingClient = <- closeChannel
-	delete(clients, *closingClient.clientId)
+	closingClient := <- closeChannel
+	delete(clients, closingClient.ClientID)
 }
