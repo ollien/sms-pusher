@@ -12,6 +12,7 @@ func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configP
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)
 	messageChannel := client.StartRecv(drainChannel, closeChannel)
 	go handleConnectionDraining(drainChannel, clients, clientID, configPath)
+	go handleConnectionClosing(closeChannel, clients)
 	return messageChannel
 }
 
