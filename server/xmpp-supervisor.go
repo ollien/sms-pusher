@@ -37,11 +37,11 @@ func runConnectionHandlers(clients map[string]firebasexmpp.FirebaseClient, clien
 }
 
 func handleConnectionDraining(drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, messageChannel chan firebasexmpp.SMSMessage, clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string) {
-	_ = <- drainChannel
+	_ = <-drainChannel
 	StartFirebaseClientOnExistingMessageChannel(clients, configPath, messageChannel)
 }
 
 func handleConnectionClose(closeChannel <-chan *firebasexmpp.FirebaseClient, clients map[string]firebasexmpp.FirebaseClient) {
-	closingClient := <- closeChannel
+	closingClient := <-closeChannel
 	delete(clients, closingClient.ClientID)
 }
