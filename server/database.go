@@ -1,10 +1,13 @@
 package main
 
-import "encoding/json"
-import "database/sql"
-import _ "github.com/lib/pq"
-import "./firebase-xmpp"
-import "os"
+import (
+	"database/sql"
+	"encoding/json"
+	"os"
+
+	"./firebase-xmpp"
+	_ "github.com/lib/pq"
+)
 
 const configURIKey = "uri"
 

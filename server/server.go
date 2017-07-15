@@ -1,8 +1,10 @@
 package main
 
-import "net/http"
-import "io"
-import "time"
+import (
+	"io"
+	"net/http"
+	"time"
+)
 
 //Must use Newserver in order to instantiate.
 type server struct {

@@ -1,9 +1,12 @@
 package main
 
-import "database/sql"
-import "fmt"
-import "./firebase-xmpp"
-import "log"
+import (
+	"database/sql"
+	"fmt"
+	"log"
+
+	"./firebase-xmpp"
+)
 
 func main() {
 	db, err := InitDb("./database-conf.json")

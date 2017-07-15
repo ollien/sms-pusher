@@ -1,8 +1,10 @@
 package firebasexmpp
 
-import "encoding/xml"
-import "encoding/json"
-import "log"
+import (
+	"encoding/json"
+	"encoding/xml"
+	"log"
+)
 
 //MessageStanza stores the data from the message stanza in outgoing messages. Used for marshalling XML.
 type MessageStanza struct {

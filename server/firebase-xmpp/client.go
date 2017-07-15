@@ -1,13 +1,16 @@
 package firebasexmpp
 
-import "encoding/json"
-import "fmt"
-import "github.com/mattn/go-xmpp"
-import "log"
-import "os"
-import "time"
-import "strings"
-import "io"
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/mattn/go-xmpp"
+)
 
 
 const fcmServer = "fcm-xmpp.googleapis.com"

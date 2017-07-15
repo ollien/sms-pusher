@@ -1,7 +1,9 @@
 package main
 
-import "./firebase-xmpp"
-import "github.com/satori/go.uuid"
+import (
+	"./firebase-xmpp"
+	"github.com/satori/go.uuid"
+)
 
 //StartFirebaseClient will add a client to the clients map and begin listening for connection draining messages
 func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configPath string) chan firebasexmpp.SMSMessage{
