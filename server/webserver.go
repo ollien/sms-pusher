@@ -6,25 +6,27 @@ import (
 	"time"
 )
 
+//Webserver hosts a webserver for sms-pusher
 type Webserver struct {
-	http_server *http.Server
-	listen_addr string
+	httpServer *http.Server
+	listenAddr string
 }
 
 func index(writer http.ResponseWriter, req *http.Request) {
 	io.WriteString(writer, "<h1>Hello world!</h1>")
 }
 
-func NewWebserver(listen_addr string) Webserver {
-	http_server := &http.Server {
-		Addr: listen_addr,
+//NewWebserver creats a new Webserver with httpServer being set to a new http.Server
+func NewWebserver(listenAddr string) Webserver {
+	httpServer := &http.Server {
+		Addr: listenAddr,
 		ReadTimeout: 5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
 	serv := Webserver {
-		http_server: http_server,
-		listen_addr: listen_addr,
+		httpServer: http_server,
+		listenAddr: listen_addr,
 	}
 	serv.initHandlers()
 	return serv
@@ -35,5 +37,5 @@ func (serv *Webserver) initHandlers() {
 }
 
 func (serv *Webserver) start() {
-	serv.http_server.ListenAndServe()
+	serv.httpServer.ListenAndServe()
 }
