@@ -6,8 +6,7 @@ import (
 	"time"
 )
 
-//Must use Newserver in order to instantiate.
-type server struct {
+type Webserver struct {
 	http_server *http.Server
 	listen_addr string
 }
@@ -16,14 +15,14 @@ func index(writer http.ResponseWriter, req *http.Request) {
 	io.WriteString(writer, "<h1>Hello world!</h1>")
 }
 
-func NewServer(listen_addr string) server {
+func NewWebserver(listen_addr string) Webserver {
 	http_server := &http.Server {
 		Addr: listen_addr,
 		ReadTimeout: 5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
-	serv := server{
+	serv := Webserver {
 		http_server: http_server,
 		listen_addr: listen_addr,
 	}
@@ -31,10 +30,10 @@ func NewServer(listen_addr string) server {
 	return serv
 }
 
-func (serv *server) initHandlers() {
+func (serv *Webserver) initHandlers() {
 	http.HandleFunc("/", index)
 }
 
-func (serv *server) start() {
+func (serv *Webserver) start() {
 	serv.http_server.ListenAndServe()
 }
