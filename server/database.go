@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"./firebase-xmpp"
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	_ "github.com/lib/pq"
 )
 

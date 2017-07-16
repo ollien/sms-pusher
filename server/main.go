@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	"./firebase-xmpp"
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
 )
 
 func main() {

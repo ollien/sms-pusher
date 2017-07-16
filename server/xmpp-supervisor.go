@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./firebase-xmpp"
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/satori/go.uuid"
 )
 
