@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	_ "github.com/lib/pq"
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
 )
 
 const configURIKey = "uri"
@@ -25,10 +25,10 @@ func InitDb(configPath string) (*sql.DB, error) {
 		return nil, err
 	}
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS messages (" +
-			"id SERIAL," +
-			"phone_number VARCHAR(16)," +
-			"time timestamp," +
-			"message TEXT);")
+		"id SERIAL," +
+		"phone_number VARCHAR(16)," +
+		"time timestamp," +
+		"message TEXT);")
 	if err != nil {
 		return nil, err
 	}
