@@ -6,7 +6,7 @@ import (
 )
 
 //StartFirebaseClient will add a client to the clients map and begin listening for connection draining messages
-func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configPath string) chan firebasexmpp.SMSMessage{
+func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configPath string) chan firebasexmpp.SMSMessage {
 	client, clientID := addClientToMap(clients, configPath)
 	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
 	closeChannel := make(chan *firebasexmpp.FirebaseClient)

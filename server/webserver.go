@@ -18,13 +18,13 @@ func index(writer http.ResponseWriter, req *http.Request) {
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
 func NewWebserver(listenAddr string) Webserver {
-	httpServer := &http.Server {
-		Addr: listenAddr,
-		ReadTimeout: 5 * time.Second,
+	httpServer := &http.Server{
+		Addr:              listenAddr,
+		ReadTimeout:       5 * time.Second,
 		ReadHeaderTimeout: 5 * time.Second,
-		WriteTimeout: 5 * time.Second,
+		WriteTimeout:      5 * time.Second,
 	}
-	serv := Webserver {
+	serv := Webserver{
 		httpServer: http_server,
 		listenAddr: listen_addr,
 	}
