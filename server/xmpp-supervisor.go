@@ -14,3 +14,11 @@ type XMPPSupervisor struct {
 	closeChannel  chan *firebasexmpp.FirebaseClient
 	drainChannel  chan *firebaexmpp.FirebaseClient
 }
+
+//SpawnClient spawns a new FirebaseClient
+func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage) {
+	clientID := uuid.NewV4().String()
+	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.configPath, signalChannel, clientID, client.spawnChannel)
+	supervisor.clients[clientID] = firebaseClient
+	//TODO: Start handlers
+}
