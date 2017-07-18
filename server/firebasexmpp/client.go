@@ -20,10 +20,11 @@ const fcmUsernameAddres = "gcm.googleapis.com"
 //FirebaseClient stores the data necessary to be an XMPP Client for Firebase Cloud Messaging. See the spec at https://firebase.google.com/docs/cloud-messaging/xmpp-server-ref
 //senderID and severKey refer to their corresponding FCM properties. ClientID is simply an id to identify clients. It can safely be ommitted, but your connectionClosedCallback will receive an empty string
 type FirebaseClient struct {
-	xmppClient xmpp.Client
-	ClientID   string
-	senderID   string
-	serverKey  string
+	xmppClient    xmpp.Client
+	ClientID      string
+	senderID      string
+	serverKey     string
+	signalChannel chan<- Signal
 }
 
 //Config stores the details necessary for authenticating to Firebase Cloud Messaging's XMPP server, which cannot be hardcoded or put into version control.
@@ -50,7 +51,7 @@ type ConnectionClosedSignal struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from configuration file.
-func NewFirebaseClient(configPath string, clientID string) FirebaseClient {
+func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- Signal) FirebaseClient {
 	file, err := os.Open(configPath)
 	if err != nil {
 		log.Fatal(err)
@@ -66,10 +67,11 @@ func NewFirebaseClient(configPath string, clientID string) FirebaseClient {
 		log.Fatal(err)
 	}
 	return FirebaseClient{
-		xmppClient: *client,
-		ClientID:   clientID,
-		senderID:   config.SenderID,
-		serverKey:  config.ServerKey,
+		xmppClient:    *client,
+		ClientID:      clientID,
+		senderID:      config.SenderID,
+		serverKey:     config.SererKey,
+		signalChannel: signalChannel,
 	}
 }
 
