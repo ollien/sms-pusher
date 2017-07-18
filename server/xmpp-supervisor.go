@@ -37,7 +37,7 @@ func deleteClientFromMap(clients map[string]firebasexmpp.FirebaseClient, clientI
 	}
 }
 
-func runConnectionHandlers(clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string, messageChannel chan firebasexmpp.SMSMessage, drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, closeChannel <-chan *firebasexmpp.FirebaseClient) {
+func runConnectionHandlers(clients map[string]firebasexmpp.FirebaseClient, clientID string, messageChannel chan firebasexmpp.SMSMessage, drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, closeChannel <-chan *firebasexmpp.FirebaseClient, configPath string) {
 	go handleConnectionDraining(drainChannel, messageChannel, clients, clientID, configPath)
 	go handleConnectionClose(closeChannel, clients)
 }
