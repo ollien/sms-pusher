@@ -40,7 +40,13 @@ type Signal interface {
 //ConnectionDrainingSignal is a signal to represeent a CONNECTION_DRAINING message
 //Implements Signal interface
 type ConnectionDrainingSignal struct {
-	client *FirebaseCilent
+	client *FirebaseClient
+}
+
+//ConnectionClosedSignal is a signal to represent the socket being closed
+//Implements Signal interface
+type ConnectionClosedSignal struct {
+	client *FirebaseClient
 }
 
 //NewFirebaseClient creates a FirebaseClient from configuration file.
@@ -147,5 +153,16 @@ func NewConnectionDrainingSignal(client *FirebaseClient) ConnectionDrainingSigna
 }
 
 func (signal *ConnectionDrainingSignal) init(client *FirebaseClient) {
+	signal.client = client
+}
+
+//NewConnectionClosedSignal generates a new ConnectionClosedSignal
+func NewConnectionClosedSignal(client *FirebaseClient) ConnectionClosedSignal {
+	signal := ConnectionClosedSignal{}
+	signal.init(client)
+	return signal
+}
+
+func (signal *ConnectionClosedSignal) init(client *FirebaseClient) {
 	signal.client = client
 }
