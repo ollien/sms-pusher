@@ -53,7 +53,7 @@ func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- 
 		xmppClient:    *client,
 		ClientID:      clientID,
 		senderID:      config.SenderID,
-		serverKey:     config.SererKey,
+		serverKey:     config.ServerKey,
 		signalChannel: signalChannel,
 	}
 }
