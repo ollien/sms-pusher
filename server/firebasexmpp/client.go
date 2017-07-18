@@ -33,23 +33,6 @@ type Config struct {
 	ServerKey string
 }
 
-//Signal represents a signal to the XMPP supervisor
-type Signal interface {
-	init(client *FirebaseClient) Signal
-}
-
-//ConnectionDrainingSignal is a signal to represeent a CONNECTION_DRAINING message
-//Implements Signal interface
-type ConnectionDrainingSignal struct {
-	client *FirebaseClient
-}
-
-//ConnectionClosedSignal is a signal to represent the socket being closed
-//Implements Signal interface
-type ConnectionClosedSignal struct {
-	client *FirebaseClient
-}
-
 //NewFirebaseClient creates a FirebaseClient from configuration file.
 func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- Signal) FirebaseClient {
 	file, err := os.Open(configPath)
@@ -145,26 +128,4 @@ func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, e
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
 	payload := ConstructACK(message.From, message.MessageID)
 	return client.xmppClient.SendOrg(string(payload))
-}
-
-//NewConnectionDrainingSignal generates a new ConnectionDrainingSignal
-func NewConnectionDrainingSignal(client *FirebaseClient) ConnectionDrainingSignal {
-	signal := ConnectionDrainingSignal{}
-	signal.init(client)
-	return signal
-}
-
-func (signal *ConnectionDrainingSignal) init(client *FirebaseClient) {
-	signal.client = client
-}
-
-//NewConnectionClosedSignal generates a new ConnectionClosedSignal
-func NewConnectionClosedSignal(client *FirebaseClient) ConnectionClosedSignal {
-	signal := ConnectionClosedSignal{}
-	signal.init(client)
-	return signal
-}
-
-func (signal *ConnectionClosedSignal) init(client *FirebaseClient) {
-	signal.client = client
 }
