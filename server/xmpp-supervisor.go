@@ -47,7 +47,7 @@ func handleConnectionDraining(drainChannel <-chan firebasexmpp.ConnectionDrainin
 	StartFirebaseClientOnExistingMessageChannel(clients, configPath, messageChannel)
 }
 
-func handleConnectionClose(closeChannel <-chan *firebasexmpp.FirebaseClient, clients map[string]firebasexmpp.FirebaseClient) {
+func handleConnectionClose(clients map[string]firebasexmpp.FirebaseClient, closeChannel <-chan *firebasexmpp.FirebaseClient) {
 	closingClient := <-closeChannel
 	delete(clients, closingClient.ClientID)
 }
