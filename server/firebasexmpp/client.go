@@ -19,6 +19,7 @@ const fcmUsernameAddres = "gcm.googleapis.com"
 
 //FirebaseClient stores the data necessary to be an XMPP Client for Firebase Cloud Messaging. See the spec at https://firebase.google.com/docs/cloud-messaging/xmpp-server-ref
 //senderID and severKey refer to their corresponding FCM properties. ClientID is simply an id to identify clients. It can safely be ommitted, but your connectionClosedCallback will receive an empty string
+//Note that Signal will recieve pointer types of signals such as *ConnectionDrainingSignal and *ConnectionClosedSignal rather than ConnectionDrainingSignal and ConnectionClosedSignal respectively.
 type FirebaseClient struct {
 	xmppClient    xmpp.Client
 	ClientID      string
