@@ -76,13 +76,13 @@ func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- 
 }
 
 //recv listens for incomgin messages from Firebase Cloud Messaging.
-func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage, drainChannel chan<- ConnectionDrainingMessage, closeChannel chan<- *FirebaseClient) {
+func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage, drainChannel chan<- ConnectionDrainingMessage) {
 	for {
 		data, err := client.xmppClient.Recv()
 		if err != nil {
 			//encoding/xml adds a bunch of extra stuff to XML errors, including the line number. However, all we care about is whether or not an EOF was reached.
 			if strings.Contains(err.Error(), io.EOF.Error()) {
-				closeChannel <- client
+				client.signalChannel <- NewConnectionClosedSignal(client)
 				break
 			} else {
 				log.Fatal(err)
