@@ -34,7 +34,13 @@ type Config struct {
 
 //Signal represents a signal to the XMPP supervisor
 type Signal interface {
-	newSignal(client *FirebaseClient) Signal
+	init(client *FirebaseClient) Signal
+}
+
+//ConnectionDrainingSignal is a signal to represeent a CONNECTION_DRAINING message
+//Implements Signal interface
+type ConnectionDrainingSignal struct {
+	client *FirebaseCilent
 }
 
 //NewFirebaseClient creates a FirebaseClient from configuration file.
@@ -131,4 +137,15 @@ func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, e
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
 	payload := ConstructACK(message.From, message.MessageID)
 	return client.xmppClient.SendOrg(string(payload))
+}
+
+//NewConnectionDrainingSignal generates a new ConnectionDrainingSignal
+func NewConnectionDrainingSignal(client *FirebaseClient) ConnectionDrainingSignal {
+	signal := ConnectionDrainingSignal{}
+	signal.init(client)
+	return signal
+}
+
+func (signal *ConnectionDrainingSignal) init(client *FirebaseClient) {
+	signal.client = client
 }
