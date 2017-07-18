@@ -31,6 +31,12 @@ func addClientToMap(clients map[string]firebasexmpp.FirebaseClient, configPath s
 	return client, clientID
 }
 
+func deleteClientFromMap(clients map[string]firebasexmpp.FirebaseClient, clientID string) {
+	if _, exists := clients[clientID]; exists {
+		delete(clients, closingClient.clientID)
+	}
+}
+
 func runConnectionHandlers(clients map[string]firebasexmpp.FirebaseClient, clientID string, configPath string, messageChannel chan firebasexmpp.SMSMessage, drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, closeChannel <-chan *firebasexmpp.FirebaseClient) {
 	go handleConnectionDraining(drainChannel, messageChannel, clients, clientID, configPath)
 	go handleConnectionClose(closeChannel, clients)
