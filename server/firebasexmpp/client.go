@@ -12,7 +12,6 @@ import (
 	"github.com/mattn/go-xmpp"
 )
 
-
 const fcmServer = "fcm-xmpp.googleapis.com"
 const fcmDevPort = 5236
 const fcmProdPort = 5235
@@ -22,15 +21,20 @@ const fcmUsernameAddres = "gcm.googleapis.com"
 //senderID and severKey refer to their corresponding FCM properties. ClientID is simply an id to identify clients. It can safely be ommitted, but your connectionClosedCallback will receive an empty string
 type FirebaseClient struct {
 	xmppClient xmpp.Client
-	ClientID string
-	senderID string
-	serverKey string
+	ClientID   string
+	senderID   string
+	serverKey  string
 }
 
 //Config stores the details necessary for authenticating to Firebase Cloud Messaging's XMPP server, which cannot be hardcoded or put into version control.
 type Config struct {
-	SenderID string
+	SenderID  string
 	ServerKey string
+}
+
+//Signal represents a signal to the XMPP supervisor
+type Signal interface {
+	newSignal(client *FirebaseClient) Signal
 }
 
 //NewFirebaseClient creates a FirebaseClient from configuration file.
@@ -51,9 +55,9 @@ func NewFirebaseClient(configPath string, clientID string) FirebaseClient {
 	}
 	return FirebaseClient{
 		xmppClient: *client,
-		ClientID: clientID,
-		senderID: config.SenderID,
-		serverKey: config.ServerKey,
+		ClientID:   clientID,
+		senderID:   config.SenderID,
+		serverKey:  config.ServerKey,
 	}
 }
 
@@ -81,7 +85,7 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage, drainChannel c
 		if err != nil {
 			//Don't need to quit for unknowm message types
 			log.Println(err)
-		} else if (messageType == "UpstreamMessage") {
+		} else if messageType == "UpstreamMessage" {
 			var message UpstreamMessage
 			json.Unmarshal(messageBody, &message)
 			_, err := client.sendACK(message)
@@ -89,7 +93,7 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage, drainChannel c
 				log.Fatal(err)
 			}
 			recvChannel <- message.Data
-		} else if (messageType == "ConnectionDrainingMessage") {
+		} else if messageType == "ConnectionDrainingMessage" {
 			drainChannel <- ConnectionDrainingMessage{}
 		}
 		//TODO: Handle InboundACKMessage and NACKMessage
@@ -104,7 +108,7 @@ func (client *FirebaseClient) StartRecv(drainChannel chan<- ConnectionDrainingMe
 }
 
 //StartRecvOnExistingChannel is identical to StartRecv, except that it takes a recvChannel as an argument, and will direct all messages to that channel.
-func (client *FirebaseClient)StartRecvOnExistingChannel(drainChannel chan<- ConnectionDrainingMessage, closeChannel chan<- *FirebaseClient, recvChannel chan SMSMessage) {
+func (client *FirebaseClient) StartRecvOnExistingChannel(drainChannel chan<- ConnectionDrainingMessage, closeChannel chan<- *FirebaseClient, recvChannel chan SMSMessage) {
 	go client.recv(recvChannel, drainChannel, closeChannel)
 }
 
@@ -115,11 +119,11 @@ func (client *FirebaseClient) Send(chat xmpp.Chat) (int, error) {
 
 //ConstructAndSend constructs a xmpp.Chat object and send it using Send
 func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, error) {
-	chat := xmpp.Chat {
+	chat := xmpp.Chat{
 		Remote: fcmServer,
-		Type: messageType,
-		Text: text,
-		Stamp: time.Now(),
+		Type:   messageType,
+		Text:   text,
+		Stamp:  time.Now(),
 	}
 	return client.Send(chat)
 }
