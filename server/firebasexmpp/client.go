@@ -65,7 +65,8 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage) {
 		if err != nil {
 			//encoding/xml adds a bunch of extra stuff to XML errors, including the line number. However, all we care about is whether or not an EOF was reached.
 			if strings.Contains(err.Error(), io.EOF.Error()) {
-				client.signalChannel <- NewConnectionClosedSignal(client)
+				closeSignal := NewConnectionClosedSignal(client)
+				client.signalChannel <- &closeSignal
 				break
 			} else {
 				log.Fatal(err)
@@ -91,7 +92,8 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage) {
 			}
 			recvChannel <- message.Data
 		} else if messageType == "ConnectionDrainingMessage" {
-			client.signalChannel <- NewConnectionDrainingSignal(client)
+			drainSignal := NewConnectionDrainingSignal(client)
+			client.signalChannel <- &drainSignal
 		}
 		//TODO: Handle InboundACKMessage and NACKMessage
 	}
