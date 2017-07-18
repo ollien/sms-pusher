@@ -115,15 +115,15 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage) {
 }
 
 //StartRecv starts listening for Firebase Cloud Messaging messages in a goroutine of client.recv.
-func (client *FirebaseClient) StartRecv(drainChannel chan<- ConnectionDrainingMessage, closeChannel chan<- *FirebaseClient) chan SMSMessage {
+func (client *FirebaseClient) StartRecv() chan SMSMessage {
 	recvChannel := make(chan SMSMessage)
-	client.StartRecvOnExistingChannel(drainChannel, closeChannel, recvChannel)
+	client.StartRecvOnExistingChannel(recvChannel)
 	return recvChannel
 }
 
 //StartRecvOnExistingChannel is identical to StartRecv, except that it takes a recvChannel as an argument, and will direct all messages to that channel.
-func (client *FirebaseClient) StartRecvOnExistingChannel(drainChannel chan<- ConnectionDrainingMessage, closeChannel chan<- *FirebaseClient, recvChannel chan SMSMessage) {
-	go client.recv(recvChannel, drainChannel, closeChannel)
+func (client *FirebaseClient) StartRecvOnExistingChannel(recvChannel chan SMSMessage) {
+	go client.recv(recvChannel)
 }
 
 //Send sends a message to FirebaseXMPP
