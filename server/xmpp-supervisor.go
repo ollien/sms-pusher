@@ -56,9 +56,9 @@ func (supervisor *XMPPSupervisor) listenForSignal() {
 	for signal := range supervisor.signalChannel {
 		switch convertedSignal := signal.(type) {
 		case *firebasexmpp.ConnectionDrainingSignal:
-			supervisor.closeChannel <- convertedSignal
-		case *firebasexmpp.ConnectionClosedSignal:
 			supervisor.drainChannel <- convertedSignal
+		case *firebasexmpp.ConnectionClosedSignal:
+			supervisor.closeChannel <- convertedSignal
 		}
 	}
 }
