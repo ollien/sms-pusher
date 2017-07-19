@@ -19,9 +19,10 @@ type ConnectionClosedSignal struct {
 }
 
 //NewConnectionDrainingSignal generates a new ConnectionDrainingSignal
-func NewConnectionDrainingSignal(client *FirebaseClient) ConnectionDrainingSignal {
+func NewConnectionDrainingSignal(client *FirebaseClient, messageChannel chan SMSMessage) ConnectionDrainingSignal {
 	signal := ConnectionDrainingSignal{}
 	signal.init(client)
+	signal.messageChannel = messageChannel
 	return signal
 }
 
@@ -30,10 +31,9 @@ func (signal *ConnectionDrainingSignal) init(client *FirebaseClient) {
 }
 
 //NewConnectionClosedSignal generates a new ConnectionClosedSignal
-func NewConnectionClosedSignal(client *FirebaseClient, messsageChannel chan SMSMessage) ConnectionClosedSignal {
+func NewConnectionClosedSignal(client *FirebaseClient) ConnectionClosedSignal {
 	signal := ConnectionClosedSignal{}
 	signal.init(client)
-	signal.messageCHannel = messageChannel
 	return signal
 }
 
