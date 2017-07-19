@@ -22,3 +22,11 @@ func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.S
 	supervisor.clients[clientID] = firebaseClient
 	//TODO: Start handlers
 }
+
+//listenAndSpawns listens on supervisor.spawnChannel and spawns clients as necessary
+//Exits when supervisor.spawnChannel is closed
+func (supervisor *XMPPSupervisor) listenAndSpawn() {
+	for messageChannel := range spawnChannel {
+		supervisor.SpawnClient(messageChannel)
+	}
+}
