@@ -31,6 +31,8 @@ func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 	go supervsior.listenForSignal()
 	go supervsior.listenForDraining()
 	go supervsior.listenForClose()
+
+	return supervisor
 }
 
 //SpawnClient spawns a new FirebaseClient
