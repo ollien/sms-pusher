@@ -15,12 +15,29 @@ type XMPPSupervisor struct {
 	drainChannel  chan firebasexmpp.ConnectionDrainingSiganl
 }
 
+//NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
+func NewXMPPSupervisor(configPath string) XMPPSupervisor {
+	supervsior := XMPPSupervisor{
+		clients:       make(map[string]firebasexmpp.FirebaseClient),
+		ConfigPath:    configPath,
+		signalChannel: make(chan firebasexmpp.Signal),
+		spawnChannel:  make(chan chan firebasexmpp.SMSMessage),
+		closeChannel:  make(chan firebasexmpp.ConnectionClosedSignal),
+		drainChannel:  make(chan firebasexmpp.ConnectionDrainingSiganl),
+	}
+
+	//Launch handlers
+	go supervsior.listenAndSpawn()
+	go supervsior.listenForSignal()
+	go supervsior.listenForDraining()
+	go supervsior.listenForClose()
+}
+
 //SpawnClient spawns a new FirebaseClient
 func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage) {
 	clientID := uuid.NewV4().String()
 	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.configPath, signalChannel, clientID, client.spawnChannel)
 	supervisor.clients[clientID] = firebaseClient
-	//TODO: Start handlers
 }
 
 //listenAndSpawns listens on supervisor.spawnChannel and spawns clients as necessary
