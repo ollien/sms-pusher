@@ -67,7 +67,7 @@ func (supervisor *XMPPSupervisor) listenForSignal() {
 //Exists when supervisor.drainChannel is closed
 func (supervisor *XMPPSupervisor) listenForDraining() {
 	for signal := range supervisor.drainChannel {
-		supervisor.spawnChannel <- signal.messageChannel
+		supervisor.spawnChannel <- signal.MessageChannel
 	}
 }
 
