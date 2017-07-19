@@ -75,7 +75,7 @@ func (supervisor *XMPPSupervisor) listenForDraining() {
 //Exits when supervisor.closeChannel is closed
 func (supervisor *XMPPSupervisor) listenForClose() {
 	for signal := range supervisor.closeChannel {
-		clientID := signal.Client.clientID
+		clientID := signal.Client.ClientID
 		delete(supervisor.clients, clientID)
 	}
 }
