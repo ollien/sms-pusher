@@ -12,7 +12,7 @@ type XMPPSupervisor struct {
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan chan firebasexmpp.SMSMessage
 	closeChannel  chan firebasexmpp.ConnectionClosedSignal
-	drainChannel  chan firebasexmpp.ConnectionClosedSignal
+	drainChannel  chan firebasexmpp.ConnectionDrainingSiganl
 }
 
 //SpawnClient spawns a new FirebaseClient
@@ -28,5 +28,14 @@ func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.S
 func (supervisor *XMPPSupervisor) listenAndSpawn() {
 	for messageChannel := range spawnChannel {
 		supervisor.SpawnClient(messageChannel)
+	}
+}
+
+//ListenForeClose listens on supervisor.closeChannel and deletes closed clients from supervisor.clients as necessary
+//Exits when supervisor.closeChannel is closed
+func (supervisor *XMPPSupervisor) listenForClose() {
+	for signal := range closeChannel {
+		clientID := signal.client.clientID
+		delete(clients, clientId)
 	}
 }
