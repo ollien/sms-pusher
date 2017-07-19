@@ -31,6 +31,19 @@ func (supervisor *XMPPSupervisor) listenAndSpawn() {
 	}
 }
 
+//listenForSignal listens on supervisor.signalChannel and passes the signal aloong to the appropriate channels
+//Exists when supervisor.spawnChannel closes
+func (supervisor *XMPPSupervisor) listenForSignal() {
+	for signal := range signalChannel {
+		switch signal.(type) {
+		case firebasexmpp.ConnectionDrainingSignal:
+			closeChannel <- signal
+		case firebasexmpp.ConnectionClosedSignal:
+			drainChannel <- signal
+		}
+	}
+}
+
 //ListenForeClose listens on supervisor.closeChannel and deletes closed clients from supervisor.clients as necessary
 //Exits when supervisor.closeChannel is closed
 func (supervisor *XMPPSupervisor) listenForClose() {
