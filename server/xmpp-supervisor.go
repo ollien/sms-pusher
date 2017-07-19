@@ -5,49 +5,77 @@ import (
 	"github.com/satori/go.uuid"
 )
 
-//StartFirebaseClient will add a client to the clients map and begin listening for connection draining messages
-func StartFirebaseClient(clients map[string]firebasexmpp.FirebaseClient, configPath string) chan firebasexmpp.SMSMessage {
-	client, clientID := addClientToMap(clients, configPath)
-	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
-	closeChannel := make(chan *firebasexmpp.FirebaseClient)
-	messageChannel := client.StartRecv(drainChannel, closeChannel)
-	runConnectionHandlers(clients, clientID, configPath, messageChannel, drainChannel, closeChannel)
-	return messageChannel
+//XMPPSupervisor supervises all Firebase XMPP connections
+type XMPPSupervisor struct {
+	clients       map[string]firebasexmpp.FirebaseClient
+	ConfigPath    string
+	signalChannel chan firebasexmpp.Signal
+	spawnChannel  chan chan firebasexmpp.SMSMessage
+	closeChannel  chan *firebasexmpp.ConnectionClosedSignal
+	drainChannel  chan *firebasexmpp.ConnectionDrainingSignal
 }
 
-//StartFirebaseClientOnExistingMessageChannel is identical to StartFirebaseClient but it takes a messageChannel as an argument, and will direct all messages to that channel.
-func StartFirebaseClientOnExistingMessageChannel(clients map[string]firebasexmpp.FirebaseClient, configPath string, messageChannel chan firebasexmpp.SMSMessage) {
-	client, clientID := addClientToMap(clients, configPath)
-	drainChannel := make(chan firebasexmpp.ConnectionDrainingMessage)
-	closeChannel := make(chan *firebasexmpp.FirebaseClient)
-	client.StartRecvOnExistingChannel(drainChannel, closeChannel, messageChannel)
-	runConnectionHandlers(clients, clientID, configPath, messageChannel, drainChannel, closeChannel)
+//NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
+func NewXMPPSupervisor(configPath string) XMPPSupervisor {
+	supervisor := XMPPSupervisor{
+		clients:       make(map[string]firebasexmpp.FirebaseClient),
+		ConfigPath:    configPath,
+		signalChannel: make(chan firebasexmpp.Signal),
+		spawnChannel:  make(chan chan firebasexmpp.SMSMessage),
+		closeChannel:  make(chan *firebasexmpp.ConnectionClosedSignal),
+		drainChannel:  make(chan *firebasexmpp.ConnectionDrainingSignal),
+	}
+
+	//Launch handlers
+	go supervisor.listenAndSpawn()
+	go supervisor.listenForSignal()
+	go supervisor.listenForDraining()
+	go supervisor.listenForClose()
+
+	return supervisor
 }
 
-func addClientToMap(clients map[string]firebasexmpp.FirebaseClient, configPath string) (firebasexmpp.FirebaseClient, string) {
+//SpawnClient spawns a new FirebaseClient
+func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage) {
 	clientID := uuid.NewV4().String()
-	client := firebasexmpp.NewFirebaseClient(configPath, clientID)
-	clients[clientID] = client
-	return client, clientID
+	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.ConfigPath, clientID, supervisor.signalChannel)
+	supervisor.clients[clientID] = firebaseClient
 }
 
-func deleteClientFromMap(clients map[string]firebasexmpp.FirebaseClient, clientID string) {
-	if _, exists := clients[clientID]; exists {
-		delete(clients, closingClient.clientID)
+//listenAndSpawns listens on supervisor.spawnChannel and spawns clients as necessary
+//Exits when supervisor.spawnChannel is closed
+func (supervisor *XMPPSupervisor) listenAndSpawn() {
+	for messageChannel := range supervisor.spawnChannel {
+		supervisor.SpawnClient(messageChannel)
 	}
 }
 
-func runConnectionHandlers(clients map[string]firebasexmpp.FirebaseClient, clientID string, messageChannel chan firebasexmpp.SMSMessage, drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, closeChannel <-chan *firebasexmpp.FirebaseClient, configPath string) {
-	go handleConnectionDraining(drainChannel, messageChannel, clients, clientID, configPath)
-	go handleConnectionClose(closeChannel, clients)
+//listenForSignal listens on supervisor.signalChannel and passes the signal aloong to the appropriate channels
+//Exists when supervisor.spawnChannel closes
+func (supervisor *XMPPSupervisor) listenForSignal() {
+	for signal := range supervisor.signalChannel {
+		switch convertedSignal := signal.(type) {
+		case *firebasexmpp.ConnectionDrainingSignal:
+			supervisor.drainChannel <- convertedSignal
+		case *firebasexmpp.ConnectionClosedSignal:
+			supervisor.closeChannel <- convertedSignal
+		}
+	}
 }
 
-func handleConnectionDraining(clients map[string]firebasexmpp.FirebaseClient, drainChannel <-chan firebasexmpp.ConnectionDrainingMessage, messageChannel chan firebasexmpp.SMSMessage, clientID string, configPath string) {
-	_ = <-drainChannel
-	StartFirebaseClientOnExistingMessageChannel(clients, configPath, messageChannel)
+//listenForDraining listens on supervisor.drainChannel and spawns a new client as necessary
+//Exists when supervisor.drainChannel is closed
+func (supervisor *XMPPSupervisor) listenForDraining() {
+	for signal := range supervisor.drainChannel {
+		supervisor.spawnChannel <- signal.MessageChannel
+	}
 }
 
-func handleConnectionClose(clients map[string]firebasexmpp.FirebaseClient, closeChannel <-chan *firebasexmpp.FirebaseClient) {
-	closingClient := <-closeChannel
-	delete(clients, closingClient.ClientID)
+//ListenForeClose listens on supervisor.closeChannel and deletes closed clients from supervisor.clients as necessary
+//Exits when supervisor.closeChannel is closed
+func (supervisor *XMPPSupervisor) listenForClose() {
+	for signal := range supervisor.closeChannel {
+		clientID := signal.Client.ClientID
+		delete(supervisor.clients, clientID)
+	}
 }

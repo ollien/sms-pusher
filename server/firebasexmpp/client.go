@@ -60,7 +60,7 @@ func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- 
 }
 
 //recv listens for incomgin messages from Firebase Cloud Messaging.
-func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage) {
+func (client *FirebaseClient) recv(recvChannel chan SMSMessage) {
 	for {
 		data, err := client.xmppClient.Recv()
 		if err != nil {
@@ -93,23 +93,11 @@ func (client *FirebaseClient) recv(recvChannel chan<- SMSMessage) {
 			}
 			recvChannel <- message.Data
 		} else if messageType == "ConnectionDrainingMessage" {
-			drainSignal := NewConnectionDrainingSignal(client)
+			drainSignal := NewConnectionDrainingSignal(client, recvChannel)
 			client.signalChannel <- &drainSignal
 		}
 		//TODO: Handle InboundACKMessage and NACKMessage
 	}
-}
-
-//StartRecv starts listening for Firebase Cloud Messaging messages in a goroutine of client.recv.
-func (client *FirebaseClient) StartRecv() chan SMSMessage {
-	recvChannel := make(chan SMSMessage)
-	client.StartRecvOnExistingChannel(recvChannel)
-	return recvChannel
-}
-
-//StartRecvOnExistingChannel is identical to StartRecv, except that it takes a recvChannel as an argument, and will direct all messages to that channel.
-func (client *FirebaseClient) StartRecvOnExistingChannel(recvChannel chan SMSMessage) {
-	go client.recv(recvChannel)
 }
 
 //Send sends a message to FirebaseXMPP
