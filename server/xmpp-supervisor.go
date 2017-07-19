@@ -54,11 +54,11 @@ func (supervisor *XMPPSupervisor) listenAndSpawn() {
 //Exists when supervisor.spawnChannel closes
 func (supervisor *XMPPSupervisor) listenForSignal() {
 	for signal := range supervisor.signalChannel {
-		switch signal.(type) {
-		case firebasexmpp.ConnectionDrainingSignal:
-			supervisor.closeChannel <- signal
-		case firebasexmpp.ConnectionClosedSignal:
-			supervisor.drainChannel <- signal
+		switch convertedSignal := signal.(type) {
+		case *firebasexmpp.ConnectionDrainingSignal:
+			supervisor.closeChannel <- convertedSignal
+		case *firebasexmpp.ConnectionClosedSignal:
+			supervisor.drainChannel <- convertedSignal
 		}
 	}
 }
