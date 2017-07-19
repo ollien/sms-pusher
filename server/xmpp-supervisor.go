@@ -36,7 +36,7 @@ func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 //SpawnClient spawns a new FirebaseClient
 func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage) {
 	clientID := uuid.NewV4().String()
-	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.configPath, signalChannel, clientID, client.spawnChannel)
+	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.configPath, clientID, supervisor.signalChannel)
 	supervisor.clients[clientID] = firebaseClient
 }
 
