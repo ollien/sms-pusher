@@ -17,7 +17,7 @@ type XMPPSupervisor struct {
 
 //NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
 func NewXMPPSupervisor(configPath string) XMPPSupervisor {
-	supervsior := XMPPSupervisor{
+	supervisor := XMPPSupervisor{
 		clients:       make(map[string]firebasexmpp.FirebaseClient),
 		ConfigPath:    configPath,
 		signalChannel: make(chan firebasexmpp.Signal),
@@ -27,10 +27,10 @@ func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 	}
 
 	//Launch handlers
-	go supervsior.listenAndSpawn()
-	go supervsior.listenForSignal()
-	go supervsior.listenForDraining()
-	go supervsior.listenForClose()
+	go supervisor.listenAndSpawn()
+	go supervisor.listenForSignal()
+	go supervisor.listenForDraining()
+	go supervisor.listenForClose()
 
 	return supervisor
 }
