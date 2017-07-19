@@ -11,8 +11,8 @@ type XMPPSupervisor struct {
 	ConfigPath    string
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan chan firebasexmpp.SMSMessage
-	closeChannel  chan *firebasexmpp.FirebaseClient
-	drainChannel  chan *firebaexmpp.FirebaseClient
+	closeChannel  chan firebasexmpp.ConnectionClosedSignal
+	drainChannel  chan firebasexmpp.ConnectionClosedSignal
 }
 
 //SpawnClient spawns a new FirebaseClient
