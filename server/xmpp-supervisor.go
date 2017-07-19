@@ -39,3 +39,11 @@ func (supervisor *XMPPSupervisor) listenForClose() {
 		delete(clients, clientId)
 	}
 }
+
+//listenForDraining listens on supervisor.drainChannel and spawns a new client as necessary
+//Exists when supervisor.drainChannel is closed
+func (supervisor *XMPPSupervisor) listenForDraining() {
+	for signal := range drainChannel {
+		supervisor.spawnChannel <- signal.messageChannel
+	}
+}
