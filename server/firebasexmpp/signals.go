@@ -8,7 +8,8 @@ type Signal interface {
 //ConnectionDrainingSignal is a signal to represeent a CONNECTION_DRAINING message
 //Implements Signal interface
 type ConnectionDrainingSignal struct {
-	client *FirebaseClient
+	client         *FirebaseClient
+	messageChannel chan SMSMessage
 }
 
 //ConnectionClosedSignal is a signal to represent the socket being closed
@@ -29,9 +30,10 @@ func (signal *ConnectionDrainingSignal) init(client *FirebaseClient) {
 }
 
 //NewConnectionClosedSignal generates a new ConnectionClosedSignal
-func NewConnectionClosedSignal(client *FirebaseClient) ConnectionClosedSignal {
+func NewConnectionClosedSignal(client *FirebaseClient, messsageChannel chan SMSMessage) ConnectionClosedSignal {
 	signal := ConnectionClosedSignal{}
 	signal.init(client)
+	signal.messageCHannel = messageChannel
 	return signal
 }
 
