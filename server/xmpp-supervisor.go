@@ -11,8 +11,8 @@ type XMPPSupervisor struct {
 	ConfigPath    string
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan chan firebasexmpp.SMSMessage
-	closeChannel  chan firebasexmpp.ConnectionClosedSignal
-	drainChannel  chan firebasexmpp.ConnectionDrainingSignal
+	closeChannel  chan *firebasexmpp.ConnectionClosedSignal
+	drainChannel  chan *firebasexmpp.ConnectionDrainingSignal
 }
 
 //NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
@@ -22,8 +22,8 @@ func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 		ConfigPath:    configPath,
 		signalChannel: make(chan firebasexmpp.Signal),
 		spawnChannel:  make(chan chan firebasexmpp.SMSMessage),
-		closeChannel:  make(chan firebasexmpp.ConnectionClosedSignal),
-		drainChannel:  make(chan firebasexmpp.ConnectionDrainingSignal),
+		closeChannel:  make(chan *firebasexmpp.ConnectionClosedSignal),
+		drainChannel:  make(chan *firebasexmpp.ConnectionDrainingSignal),
 	}
 
 	//Launch handlers
