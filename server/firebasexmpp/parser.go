@@ -47,26 +47,24 @@ type ConnectionDrainingMessage struct{}
 
 //GetMessageType determines the type of message that Firebase Cloud Messaging has sent upstream.
 func GetMessageType(rawData []byte) (string, error) {
-	dataMap := make(map[string]interface{})
-	err := json.Unmarshal(rawData, &dataMap)
+	message := UnknownMessage{}
+	err := json.Unmarshal(rawData, &message)
 	if err != nil {
 		return "", err
 	}
-	if messageType, exists := dataMap["message_type"]; exists {
-		messageType, ok = messageType.(string)
-		if !ok {
-			return nil, errors.New("Invalid message type")
-		}
-		if messageType == "ack" {
-			return "InboundACKMessage", nil
-		} else if messageType == "nack" {
-			return "NACKMessage", nil
-		} else if messageType == "control" {
-			//Per the spec, CONNECTION_DRAINING is the only control_type supported. We can save CPU time by not checking the control_type.
-			return "ConnectionDrainingMessage", nil
-		}
-		//Per the spec, if we receive an unknown message type, we should discard the message.
-		return messageType, errors.New("Unknown message type")
+	//Upstream Messages have no message type. thus, if MessageType is nil, the message therefore has no message type, and we can assume it's an upstream mesage.
+	if message.MessageType == nil {
+		return "UpstreamMessage", nil
 	}
-	return "UpstreamMessage", nil
+	switch *message.MessageType {
+	case "ack":
+		return "InboundACKMessage", nil
+	case "nack":
+		return "NACKMessage", nil
+	case "control":
+		//Per the spec, CONNECTION_DRAINING is the only control_type supported. We can save CPU time by not checking the control_type.
+		return "ConnectionDrainingMessage", nil
+	default:
+		return *message.MessageType, errors.New("Unknown message type")
+	}
 }
