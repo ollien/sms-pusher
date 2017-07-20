@@ -5,6 +5,12 @@ import (
 	"errors"
 )
 
+//UnknownMessage represents a message a message of undetermined type
+type UnknownMessage struct {
+	MessageType *string `json:"message_type"`
+	Other       json.RawMessage
+}
+
 //UpstreamMessage stores the basic data from any upstream Firebase Cloud Messaging XML Message.
 //This isn't as general as it could be. Because the app only sends SMS messages upstream, I've included an SMSMessage in UpstreaMessage.
 type UpstreamMessage struct {
