@@ -41,12 +41,16 @@ type ConnectionDrainingMessage struct{}
 
 //GetMessageType determines the type of message that Firebase Cloud Messaging has sent upstream.
 func GetMessageType(rawData []byte) (string, error) {
-	dataMap := make(map[string]string)
+	dataMap := make(map[string]interface{})
 	err := json.Unmarshal(rawData, &dataMap)
 	if err != nil {
 		return "", err
 	}
 	if messageType, exists := dataMap["message_type"]; exists {
+		messageType, ok = messageType.(string)
+		if !ok {
+			return nil, errors.New("Invalid message type")
+		}
 		if messageType == "ack" {
 			return "InboundACKMessage", nil
 		} else if messageType == "nack" {
