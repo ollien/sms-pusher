@@ -25,8 +25,8 @@ func NewWebserver(listenAddr string) Webserver {
 		WriteTimeout:      5 * time.Second,
 	}
 	serv := Webserver{
-		httpServer: http_server,
-		listenAddr: listen_addr,
+		httpServer: httpServer,
+		listenAddr: listenAddr,
 	}
 	serv.initHandlers()
 	return serv
