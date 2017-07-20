@@ -59,8 +59,8 @@ func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- 
 	}
 }
 
-//recv listens for incomgin messages from Firebase Cloud Messaging.
-func (client *FirebaseClient) recv(recvChannel chan SMSMessage) {
+//StartRecv listens for incoming  messages from Firebase Cloud Messaging and sends them to recvChannel.
+func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 	for {
 		data, err := client.xmppClient.Recv()
 		if err != nil {
