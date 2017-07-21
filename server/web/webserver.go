@@ -36,6 +36,7 @@ func (serv *Webserver) initHandlers() {
 	http.HandleFunc("/", index)
 }
 
-func (serv *Webserver) start() {
+//Start starts the webserver
+func (serv *Webserver) Start() {
 	serv.httpServer.ListenAndServe()
 }

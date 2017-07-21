@@ -21,7 +21,7 @@ func main() {
 	fmt.Println("Listening for SMS")
 	server := web.NewWebserver("127.0.0.1:8080")
 	fmt.Println("Server running")
-	server.start()
+	server.Start()
 }
 
 func listenForSMS(db *sql.DB, outChannel <-chan firebasexmpp.SMSMessage) {
