@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
+	"github.com/ollien/sms-pusher/server/web"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 	go listenForSMS(db, outChannel)
 	supervisor.SpawnClient(outChannel)
 	fmt.Println("Listening for SMS")
-	server := NewWebserver("127.0.0.1:8080")
+	server := web.NewWebserver("127.0.0.1:8080")
 	fmt.Println("Server running")
 	server.start()
 }
