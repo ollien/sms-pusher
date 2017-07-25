@@ -44,6 +44,10 @@ func InitDb(configPath string) (*sql.DB, error) {
 		"username VARCHAR(32)," +
 		"password_hash CHAR(60));")
 
+	if err != nil {
+		return nil, err
+	}
+
 	return db, nil
 }
 
