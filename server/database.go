@@ -38,7 +38,8 @@ func InitDb(configPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	//Create users table. Our bcrypt implenetation uses 60 char hashes, so we can safely use CHAR(60) as the datatype.
+	//Create users table.
+	//Our bcrypt implenetation uses 60 char hashes, so we can safely use CHAR(60) as the datatype.
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS users (" +
 		"id SERIAL," +
 		"username VARCHAR(32)," +
