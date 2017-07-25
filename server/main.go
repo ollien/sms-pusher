@@ -11,9 +11,13 @@ import (
 
 func main() {
 	db, err := InitDb("./database-conf.json")
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	defer db.Close()
+
 	supervisor := NewXMPPSupervisor("./xmpp-config.json")
 	outChannel := make(chan firebasexmpp.SMSMessage)
 	go listenForSMS(db, outChannel)
