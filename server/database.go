@@ -7,9 +7,11 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const configURIKey = "uri"
+const passwordCost = 10
 
 //InitDb intiializes the database connection and returns a DB
 func InitDb(configPath string) (*sql.DB, error) {
@@ -48,5 +50,18 @@ func InitDb(configPath string) (*sql.DB, error) {
 //InsertMessage inserts a SMS message into the database
 func InsertMessage(db *sql.DB, message firebasexmpp.SMSMessage) error {
 	_, err := db.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
+	return err
+}
+
+//CreateUser insersts a user into the database
+func CreateUser(db *sql.DB, username, password string) error {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), passwordCost)
+
+	if err != nil {
+		return err
+	}
+
+	_, err := db.Exec("INSERT INTO users VALUES(DEFAULT, $1, $2)", username, hash)
+
 	return err
 }
