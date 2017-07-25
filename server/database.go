@@ -50,7 +50,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS devices (" +
 		"id SERIAL," +
 		"device_id CHAR(36)," +
-		"user INTEGER REFERENCES users(id));")
+		"device_user INTEGER REFERENCES users(id));")
 
 	if err != nil {
 		return nil, err
@@ -73,7 +73,7 @@ func CreateUser(db *sql.DB, username, password string) error {
 		return err
 	}
 
-	_, err := db.Exec("INSERT INTO users VALUES(DEFAULT, $1, $2)", username, hash)
+	_, err = db.Exec("INSERT INTO users VALUES(DEFAULT, $1, $2)", username, hash)
 
 	return err
 }
