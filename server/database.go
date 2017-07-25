@@ -24,14 +24,18 @@ func InitDb(configPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	//Create messages table
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS messages (" +
 		"id SERIAL," +
 		"phone_number VARCHAR(16)," +
 		"time timestamp," +
 		"message TEXT);")
+
 	if err != nil {
 		return nil, err
 	}
+
 	return db, nil
 }
 
