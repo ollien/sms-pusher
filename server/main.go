@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	db, err := InitDb("./database-conf.json")
+	db, err := InitDB("./database-conf.json")
 
 	if err != nil {
 		log.Fatal(err)
