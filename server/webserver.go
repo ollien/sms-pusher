@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"net/http"
 	"time"
 )
@@ -10,10 +9,6 @@ import (
 type Webserver struct {
 	httpServer *http.Server
 	listenAddr string
-}
-
-func index(writer http.ResponseWriter, req *http.Request) {
-	io.WriteString(writer, "<h1>Hello world!</h1>")
 }
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
