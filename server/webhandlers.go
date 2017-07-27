@@ -7,6 +7,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+//RouteHandler holds all routes and allows them to share common variables
+type RouteHandler struct {
+	database *sql.DB
+}
+
 func index(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	io.WriteString(writer, "<h1>Hello world!</h1>")
 }
