@@ -8,15 +8,20 @@ import (
 
 //Webserver hosts a webserver for sms-pusher
 type Webserver struct {
-	listenAddr string
-	router     *httprouter.Router
+	listenAddr   string
+	router       *httprouter.Router
+	routeHandler RouteHandler
 }
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
-func NewWebserver(listenAddr string) Webserver {
+func NewWebserver(listenAddr string, database *sql.DB) Webserver {
+	routeHandler := RouteHandler{
+		database: database,
+	}
 	serv := Webserver{
-		listenAddr: listenAddr,
-		router:     httprouter.New(),
+		listenAddr:   listenAddr,
+		router:       httprouter.New(),
+		routeHandler: routeHandler,
 	}
 	serv.initHandlers()
 	return serv
