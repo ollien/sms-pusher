@@ -11,8 +11,8 @@ import (
 
 const configURIKey = "uri"
 
-//InitDb intiializes the database connection and returns a DB
-func InitDb(configPath string) (*sql.DB, error) {
+//InitDB intiializes the database connection and returns a DB
+func InitDB(configPath string) (*sql.DB, error) {
 	file, err := os.Open(configPath)
 	if err != nil {
 		return nil, err
