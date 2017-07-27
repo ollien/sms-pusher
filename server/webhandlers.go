@@ -16,3 +16,16 @@ type RouteHandler struct {
 func (handler RouteHandler) index(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	io.WriteString(writer, "<h1>Hello world!</h1>")
 }
+
+func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	username := req.FormValue("username")
+	password := req.FormValue("password")
+
+	if username == "" || password == "" || len(password) < 8 {
+		//TODO: Return data explaining why a 400 was returned
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	CreateUser(handler.database, username, password)
+}
