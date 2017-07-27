@@ -22,13 +22,13 @@ func InitDB(configPath string) (*sql.DB, error) {
 	jsonDecoder := json.NewDecoder(file)
 	configMap := make(map[string]string)
 	jsonDecoder.Decode(&configMap)
-	db, err := sql.Open("postgres", configMap[configURIKey])
+	databaseConnection, err := sql.Open("postgres", configMap[configURIKey])
 	if err != nil {
 		return nil, err
 	}
 
 	//Create messages table
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS messages (" +
+	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS messages (" +
 		"id SERIAL," +
 		"phone_number VARCHAR(16)," +
 		"time timestamp," +
@@ -56,12 +56,12 @@ func InitDB(configPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	return db, nil
+	return databaseConnection, nil
 }
 
 //InsertMessage inserts a SMS message into the database
-func InsertMessage(db *sql.DB, message firebasexmpp.SMSMessage) error {
-	_, err := db.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
+func InsertMessage(databaseConnection *sql.DB, message firebasexmpp.SMSMessage) error {
+	_, err := databaseConnection.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
 	return err
 }
 

@@ -15,9 +15,9 @@ type Webserver struct {
 }
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
-func NewWebserver(listenAddr string, database *sql.DB) Webserver {
+func NewWebserver(listenAddr string, databaseConnection *sql.DB) Webserver {
 	routeHandler := RouteHandler{
-		database: database,
+		databaseConnection: databaseConnection,
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,
