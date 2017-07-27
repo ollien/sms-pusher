@@ -10,7 +10,7 @@ import (
 
 //RouteHandler holds all routes and allows them to share common variables
 type RouteHandler struct {
-	database *sql.DB
+	databaseConnection *sql.DB
 }
 
 func (handler RouteHandler) index(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {

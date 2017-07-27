@@ -9,30 +9,30 @@ import (
 )
 
 func main() {
-	db, err := InitDB("./database-conf.json")
+	databaseConnection, err := InitDB("./database-conf.json")
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	defer db.Close()
+	defer databaseConnection.Close()
 
 	supervisor := NewXMPPSupervisor("./xmpp-config.json")
 	outChannel := make(chan firebasexmpp.SMSMessage)
-	go listenForSMS(db, outChannel)
+	go listenForSMS(databaseConnection, outChannel)
 	supervisor.SpawnClient(outChannel)
 	fmt.Println("Listening for SMS")
-	server := NewWebserver("127.0.0.1:8080", db)
+	server := NewWebserver("127.0.0.1:8080", databaseConnection)
 	fmt.Println("Server running")
 	server.Start()
 }
 
-func listenForSMS(db *sql.DB, outChannel <-chan firebasexmpp.SMSMessage) {
+func listenForSMS(databaseConnection *sql.DB, outChannel <-chan firebasexmpp.SMSMessage) {
 	for {
 		//TODO: Find some way to ping the client of this event. Maybe websockets?
 		message := <-outChannel
 		fmt.Printf("MESSAGE DETAILS\nFrom: %s\nAt: %d\nBody:%s\n\n", message.PhoneNumber, message.Timestamp, message.Message)
-		err := InsertMessage(db, message)
+		err := InsertMessage(databaseConnection, message)
 		if err != nil {
 			log.Fatal(err)
 		}
