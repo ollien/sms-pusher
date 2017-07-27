@@ -1,4 +1,4 @@
-package main
+package core
 
 import (
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
