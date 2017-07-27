@@ -1,4 +1,4 @@
-package core
+package main
 
 import (
 	"database/sql"
@@ -6,7 +6,7 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
-	"github.com/ollien/sms-pusher/server/core/firebasexmpp"
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
 )
 
 const configURIKey = "uri"
