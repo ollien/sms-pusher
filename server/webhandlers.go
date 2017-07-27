@@ -12,6 +12,6 @@ type RouteHandler struct {
 	database *sql.DB
 }
 
-func index(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (handler RouteHandler) index(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	io.WriteString(writer, "<h1>Hello world!</h1>")
 }
