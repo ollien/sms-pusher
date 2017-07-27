@@ -42,7 +42,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	//Our bcrypt implenetation uses 60 char hashes, so we can safely use CHAR(60) as the datatype.
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS users (" +
 		"id SERIAL," +
-		"username VARCHAR(32)," +
+		"username VARCHAR(32) UNIQUE," +
 		"password_hash CHAR(60));")
 
 	//Create devices table

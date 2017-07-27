@@ -27,5 +27,6 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 		return
 	}
 
+	//TODO: Handle errors - especially duplicate usersnames
 	CreateUser(handler.databaseConnection, username, password)
 }
