@@ -28,7 +28,7 @@ func NewWebserver(listenAddr string, database *sql.DB) Webserver {
 }
 
 func (serv *Webserver) initHandlers() {
-	serv.router.GET("/", index)
+	serv.router.GET("/", serv.routeHandler.index)
 }
 
 //Start starts the webserver
