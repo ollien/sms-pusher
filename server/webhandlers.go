@@ -27,5 +27,5 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	CreateUser(handler.database, username, password)
+	CreateUser(handler.databaseConnection, username, password)
 }
