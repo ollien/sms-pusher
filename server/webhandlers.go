@@ -27,6 +27,15 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	//TODO: Handle errors - especially duplicate usersnames
-	CreateUser(handler.databaseConnection, username, password)
+	err := CreateUser(handler.databaseConnection, username, password)
+
+	if err != nil {
+		//Postgres specific check
+		if err.Error() == "pq: duplicate key value violates unique constraint \"users_username_key\"" {
+			writer.WriteHeader(http.StatusBadRequest)
+		} else {
+			writer.WriteHeader(http.StatusInternalServerError)
+		}
+
+	}
 }
