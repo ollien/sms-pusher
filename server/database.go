@@ -16,6 +16,13 @@ const passwordCost = 10
 //Error codes for checking
 const duplicateUserError = "pq: duplicate key value violates unique constraint \"users_username_key\""
 
+//User represents a user within the database
+type User struct {
+	ID           int
+	Username     string
+	passwordHash string
+}
+
 //InitDB intiializes the database connection and returns a DB
 func InitDB(configPath string) (*sql.DB, error) {
 	file, err := os.Open(configPath)
