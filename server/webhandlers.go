@@ -31,7 +31,7 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 
 	if err != nil {
 		//Postgres specific check
-		if err.Error() == "pq: duplicate key value violates unique constraint \"users_username_key\"" {
+		if err.Error() == duplicateUserError {
 			writer.WriteHeader(http.StatusBadRequest)
 		} else {
 			writer.WriteHeader(http.StatusInternalServerError)
