@@ -95,3 +95,16 @@ func GetUser(databaseConnection *sql.DB, username string) (User, error) {
 	err := userRow.Scan(&user)
 	return user, err
 }
+
+//VerifyUser verifies a user against its authentication details. Returns true if authed.
+func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (bool, error) {
+	user, err := GetUser(databaseConnection, username)
+	if err != nil {
+		return false, err
+	}
+	err = bcrypt.CompareHashAndPassword([]byte(user.passwordHash), password)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
