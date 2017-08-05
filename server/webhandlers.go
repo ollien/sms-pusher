@@ -27,7 +27,8 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	err := CreateUser(handler.databaseConnection, username, password)
+	encodedPassword := []byte(password)
+	err := CreateUser(handler.databaseConnection, username, encodedPassword)
 
 	if err != nil {
 		//Postgres specific check

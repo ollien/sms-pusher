@@ -76,7 +76,7 @@ func InsertMessage(databaseConnection *sql.DB, message firebasexmpp.SMSMessage) 
 }
 
 //CreateUser insersts a user into the database
-func CreateUser(databaseConnection *sql.DB, username, password string) error {
+func CreateUser(databaseConnection *sql.DB, username string, password []byte) error {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), passwordCost)
 
 	if err != nil {
