@@ -31,6 +31,7 @@ func NewWebserver(listenAddr string, databaseConnection *sql.DB) Webserver {
 func (serv *Webserver) initHandlers() {
 	serv.router.GET("/", serv.routeHandler.index)
 	serv.router.POST("/register", serv.routeHandler.register)
+	serv.router.POST("/authenticate", serv.routeHandler.authenticate)
 }
 
 //Start starts the webserver
