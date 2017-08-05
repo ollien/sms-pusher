@@ -94,7 +94,7 @@ func GetUser(databaseConnection *sql.DB, username string) (User, error) {
 	var id int
 	var internalUsername string
 	var passwordHash []byte
-	err := userRow.Scan(&id, &username, &passwordHash)
+	err := userRow.Scan(&id, &internalUsername, &passwordHash)
 	user := User{
 		ID:           id,
 		Username:     internalUsername,
