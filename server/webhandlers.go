@@ -40,3 +40,22 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 
 	}
 }
+
+func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	username := req.FormValue("username")
+	password := req.FormValue("password")
+
+	if username == "" || password == "" {
+		//TODO: Return data explaining why a 400 was returned
+		writer.WriteHeader(http.StatusBadRequest)
+	}
+
+	encodedPassword := []byte(password)
+	verified, err := VerifyUser(handler.databaseConnection, username, encodedPassword)
+	if err != nil {
+		//TODO: Log data about 500
+		writer.WriteHeader(http.StatusInternalServerError)
+	} else if !verified {
+		writer.WriteHeader(http.StatusUnauthorized)
+	}
+}
