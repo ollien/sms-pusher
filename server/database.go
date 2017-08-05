@@ -20,7 +20,7 @@ const duplicateUserError = "pq: duplicate key value violates unique constraint \
 type User struct {
 	ID           int
 	Username     string
-	passwordHash string
+	passwordHash []byte
 }
 
 //InitDB intiializes the database connection and returns a DB
@@ -102,7 +102,7 @@ func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (b
 	if err != nil {
 		return false, err
 	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.passwordHash), password)
+	err = bcrypt.CompareHashAndPassword(user.passwordHash, password)
 	if err != nil {
 		return false, err
 	}
