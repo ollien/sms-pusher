@@ -91,8 +91,15 @@ func CreateUser(databaseConnection *sql.DB, username string, password []byte) er
 //GetUser gets a user from the database and returns a User.
 func GetUser(databaseConnection *sql.DB, username string) (User, error) {
 	userRow := databaseConnection.QueryRow("SELECT * FROM users WHERE username = $1", username)
-	user := User{}
-	err := userRow.Scan(&user)
+	var id int
+	var internalUsername string
+	var passwordHash []byte
+	err := userRow.Scan(&id, &username, &passwordHash)
+	user := User{
+		ID:           id,
+		Username:     internalUsername,
+		passwordHash: passwordHash,
+	}
 	return user, err
 }
 
