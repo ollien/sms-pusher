@@ -55,6 +55,10 @@ func InitDB(configPath string) (*sql.DB, error) {
 		"username VARCHAR(32) UNIQUE," +
 		"password_hash CHAR(60));")
 
+	if err != nil {
+		return nil, err
+	}
+
 	//Create devices table
 	//UUID4s are 32 hex bits plus four digits by definition, thus we can use a CHAR(36) as the datatype.
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
