@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -125,4 +126,11 @@ func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (b
 		return false, err
 	}
 	return true, nil
+}
+
+//CreateSession makes a session given a User
+func CreateSession(databaseConnection *sql.DB, user User) (string, error) {
+	sessionID := uuid.NewV4().String()
+	_, err := databaseConnection.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.Username)
+	return sessionID, err
 }
