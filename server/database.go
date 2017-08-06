@@ -49,21 +49,19 @@ func InitDB(configPath string) (*sql.DB, error) {
 	}
 
 	//Create users table.
-	//Our bcrypt implenetation uses 60 char hashes, so we can safely use CHAR(60) as the datatype.
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS users (" +
 		"id SERIAL PRIMARY KEY," +
 		"username VARCHAR(32) UNIQUE," +
-		"password_hash CHAR(60));")
+		"password_hash bytea);")
 
 	if err != nil {
 		return nil, err
 	}
 
 	//Create devices table
-	//UUID4s are 32 hex bits plus four digits by definition, thus we can use a CHAR(36) as the datatype.
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
 		"id SERIAL PRIMARY KEY," +
-		"device_id CHAR(36)," +
+		"device_id bytea," +
 		"device_user INTEGER REFERENCES users(id));")
 
 	if err != nil {
@@ -81,7 +79,7 @@ func InsertMessage(databaseConnection *sql.DB, message firebasexmpp.SMSMessage) 
 
 //CreateUser insersts a user into the database
 func CreateUser(databaseConnection *sql.DB, username string, password []byte) error {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), passwordCost)
+	hash, err := bcrypt.GenerateFromPassword(password, passwordCost)
 
 	if err != nil {
 		return err
