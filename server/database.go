@@ -68,6 +68,11 @@ func InitDB(configPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
+	//Create sessions table
+	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS sessions (" +
+		"id uuid PRIMARY KEY," +
+		"for_user INTEGER REFERENCES users(id));")
+
 	if err != nil {
 		return nil, err
 	}
