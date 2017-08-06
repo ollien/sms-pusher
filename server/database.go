@@ -53,7 +53,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS users (" +
 		"id SERIAL PRIMARY KEY," +
 		"username VARCHAR(32) UNIQUE," +
-		"password_hash CHAR(60));")
+		"password_hash bytea;")
 
 	if err != nil {
 		return nil, err
