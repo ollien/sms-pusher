@@ -39,7 +39,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 
 	//Create messages table
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS messages (" +
-		"id SERIAL," +
+		"id SERIAL PRIMARY KEY," +
 		"phone_number VARCHAR(16)," +
 		"time timestamp," +
 		"message TEXT);")
@@ -51,7 +51,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	//Create users table.
 	//Our bcrypt implenetation uses 60 char hashes, so we can safely use CHAR(60) as the datatype.
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS users (" +
-		"id SERIAL," +
+		"id SERIAL PRIMARY KEY," +
 		"username VARCHAR(32) UNIQUE," +
 		"password_hash CHAR(60));")
 
@@ -62,7 +62,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	//Create devices table
 	//UUID4s are 32 hex bits plus four digits by definition, thus we can use a CHAR(36) as the datatype.
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
-		"id SERIAL," +
+		"id SERIAL PRIMARY KEY," +
 		"device_id CHAR(36)," +
 		"device_user INTEGER REFERENCES users(id));")
 
