@@ -108,13 +108,17 @@ func GetUser(databaseConnection *sql.DB, username string) (User, error) {
 	var internalUsername string
 	var passwordHash []byte
 	err := userRow.Scan(&id, &internalUsername, &passwordHash)
+	if err != nil {
+		return User{}, err
+	}
+
 	user := User{
 		ID:           id,
 		Username:     internalUsername,
 		passwordHash: passwordHash,
 	}
 
-	return user, err
+	return user, nil
 }
 
 //GetUserByID gets a user from the database and returns a User.
@@ -124,13 +128,17 @@ func GetUserByID(databaseConnection *sql.DB, id int) (User, error) {
 	var username string
 	var passwordHash []byte
 	err := userRow.Scan(&internalID, &username, &passwordHash)
+	if err != nil {
+		return User{}, err
+	}
+
 	user := User{
 		ID:           internalID,
 		Username:     username,
 		passwordHash: passwordHash,
 	}
 
-	return user, err
+	return user, nil
 }
 
 //VerifyUser verifies a user against its authentication details. Returns true if authed.
