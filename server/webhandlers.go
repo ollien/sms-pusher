@@ -58,4 +58,5 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	} else if !verified {
 		writer.WriteHeader(http.StatusUnauthorized)
 	}
+	//TODO: write cookies with sessions and handle them for authentication
 }
