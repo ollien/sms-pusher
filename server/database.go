@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
+	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -68,6 +69,11 @@ func InitDB(configPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
+	//Create sessions table
+	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS sessions (" +
+		"id uuid PRIMARY KEY," +
+		"for_user INTEGER REFERENCES users(id));")
+
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +115,21 @@ func GetUser(databaseConnection *sql.DB, username string) (User, error) {
 	return user, err
 }
 
+//GetUserByID gets a user from the database and returns a User.
+func GetUserByID(databaseConnection *sql.DB, id int) (User, error) {
+	userRow := databaseConnection.QueryRow("SELECT * FROM users WHERE id = $1", id)
+	var internalID int
+	var username string
+	var passwordHash []byte
+	err := userRow.Scan(&internalID, &username, &passwordHash)
+	user := User{
+		ID:           internalID,
+		Username:     username,
+		passwordHash: passwordHash,
+	}
+	return user, err
+}
+
 //VerifyUser verifies a user against its authentication details. Returns true if authed.
 func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (bool, error) {
 	user, err := GetUser(databaseConnection, username)
@@ -120,4 +141,28 @@ func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (b
 		return false, err
 	}
 	return true, nil
+}
+
+//CreateSession makes a session given a User
+func CreateSession(databaseConnection *sql.DB, user User) (string, error) {
+	sessionID := uuid.NewV4().String()
+	_, err := databaseConnection.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
+	return sessionID, err
+}
+
+//GetUserFromSession gets the user associated with a session
+func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, error) {
+	sessionRow := databaseConnection.QueryRow("SELECT for_user FROM sessions WHERE id = $1", sessionID)
+	var userID int
+	err := sessionRow.Scan(&userID)
+	if err != nil {
+		return User{}, err
+	}
+
+	user, err := GetUserByID(databaseConnection, userID)
+	if err != nil {
+		return User{}, err
+	}
+
+	return user, err
 }
