@@ -84,6 +84,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 //InsertMessage inserts a SMS message into the database
 func InsertMessage(databaseConnection *sql.DB, message firebasexmpp.SMSMessage) error {
 	_, err := databaseConnection.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
+
 	return err
 }
 
@@ -112,6 +113,7 @@ func GetUser(databaseConnection *sql.DB, username string) (User, error) {
 		Username:     internalUsername,
 		passwordHash: passwordHash,
 	}
+
 	return user, err
 }
 
@@ -127,6 +129,7 @@ func GetUserByID(databaseConnection *sql.DB, id int) (User, error) {
 		Username:     username,
 		passwordHash: passwordHash,
 	}
+
 	return user, err
 }
 
@@ -140,6 +143,7 @@ func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (b
 	if err != nil {
 		return false, err
 	}
+
 	return true, nil
 }
 
@@ -147,6 +151,7 @@ func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (b
 func CreateSession(databaseConnection *sql.DB, user User) (string, error) {
 	sessionID := uuid.NewV4().String()
 	_, err := databaseConnection.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
+
 	return sessionID, err
 }
 
