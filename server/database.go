@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -110,6 +111,21 @@ func GetUser(databaseConnection *sql.DB, username string) (User, error) {
 	user := User{
 		ID:           id,
 		Username:     internalUsername,
+		passwordHash: passwordHash,
+	}
+	return user, err
+}
+
+//GetUserByID gets a user from the database and returns a User.
+func GetUserByID(databaseConnection *sql.DB, id int) (User, error) {
+	userRow := databaseConnection.QueryRow("SELECT * FROM users WHERE id = $1", id)
+	var internalID int
+	var username string
+	var passwordHash []byte
+	err := userRow.Scan(&internalID, &username, &passwordHash)
+	user := User{
+		ID:           internalID,
+		Username:     username,
 		passwordHash: passwordHash,
 	}
 	return user, err
