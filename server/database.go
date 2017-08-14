@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
 	"os"
 
 	_ "github.com/lib/pq"
@@ -154,8 +153,16 @@ func CreateSession(databaseConnection *sql.DB, user User) (string, error) {
 //GetUserFromSession gets the user associated with a session
 func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, error) {
 	sessionRow := databaseConnection.QueryRow("SELECT for_user FROM sessions WHERE id = $1", sessionID)
-	var user User
-	err := sessionRow.Scan(&user)
+	var userID int
+	err := sessionRow.Scan(&userID)
+	if err != nil {
+		return User{}, err
+	}
+
+	user, err := GetUserByID(databaseConnection, userID)
+	if err != nil {
+		return User{}, err
+	}
 
 	return user, err
 }
