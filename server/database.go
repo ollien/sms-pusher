@@ -134,3 +134,12 @@ func CreateSession(databaseConnection *sql.DB, user User) (string, error) {
 	_, err := databaseConnection.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.Username)
 	return sessionID, err
 }
+
+//GetUserFromSession gets the user associated with a session
+func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, error) {
+	sessionRow := databaseConnection.QueryRow("SELECT for_user FROM sessions WHERE id = $1", sessionID)
+	var user User
+	err := sessionRow.Scan(&user)
+
+	return user, err
+}
