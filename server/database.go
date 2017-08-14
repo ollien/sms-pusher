@@ -147,7 +147,7 @@ func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (b
 //CreateSession makes a session given a User
 func CreateSession(databaseConnection *sql.DB, user User) (string, error) {
 	sessionID := uuid.NewV4().String()
-	_, err := databaseConnection.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.Username)
+	_, err := databaseConnection.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
 	return sessionID, err
 }
 
