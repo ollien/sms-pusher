@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	databaseConnection, err := InitDB("./database-conf.json")
+	databaseConnection, err := InitDB("./database-config.json")
 
 	if err != nil {
 		log.Fatal(err)
