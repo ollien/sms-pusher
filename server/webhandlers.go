@@ -61,10 +61,8 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	encodedPassword := []byte(password)
 	user, err := VerifyUser(handler.databaseConnection, username, encodedPassword)
 	if err != nil {
-		//TODO: Log data about 500
-		writer.WriteHeader(http.StatusInternalServerError)
-	} else if user == (User{}) {
 		writer.WriteHeader(http.StatusUnauthorized)
+		return
 	}
 
 	cookie = http.Cookie{
