@@ -44,7 +44,7 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	cookie := GetSessionCookie(req)
 	if cookie != nil {
-		user, err := GetUserFromSession(handler.databaseConnection, cookie.Value)
+		_, err := GetUserFromSession(handler.databaseConnection, cookie.Value)
 		if err != nil {
 			//user exists and session is valid - write 200 and move on
 			return
