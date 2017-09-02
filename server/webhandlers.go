@@ -65,9 +65,15 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 		return
 	}
 
-	cookie = http.Cookie{
+	sessionID, err := CreateSession(handler.databaseConnection, user)
+	if err != nil {
+		//TODO: Log data about 500
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
+
+	cookie = &http.Cookie{
 		Name:  "session",
 		Value: sessionID,
 	}
-	http.SetCookie(writer, &cookie)
+	http.SetCookie(writer, cookie)
 }
