@@ -56,6 +56,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	if username == "" || password == "" {
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	encodedPassword := []byte(password)
