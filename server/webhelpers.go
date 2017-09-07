@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 )
 
@@ -15,14 +16,14 @@ func GetSessionCookie(req *http.Request) *http.Cookie {
 	return nil
 }
 
-//HasValidSessionCookie checks if the user has a valid session cookie. Helper function for most authentication base
-func HasValidSessionCookie(db *sql.DB, req *http.Request) bool {
+//GetSessionUser gets the user associated with a session within a *http.Request.
+func GetSessionUser(db *sql.DB, req *http.Request) (User, error) {
 	cookie := GetSessionCookie(req)
 	if cookie != nil {
-		_, err := GetUserFromSession(db, cookie.Value)
+		user, err := GetUserFromSession(db, cookie.Value)
 		//If err is nil, there is no valid session.
-		return err == nil
+		return user, err
 	}
 
-	return false
+	return User{}, errors.New("no session cookie found")
 }
