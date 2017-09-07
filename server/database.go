@@ -141,18 +141,18 @@ func GetUserByID(databaseConnection *sql.DB, id int) (User, error) {
 	return user, nil
 }
 
-//VerifyUser verifies a user against its authentication details. Returns true if authed.
-func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (bool, error) {
+//VerifyUser verifies a user against its authentication details. Returns the user if authed.
+func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (User, error) {
 	user, err := GetUser(databaseConnection, username)
 	if err != nil {
-		return false, err
+		return User{}, err
 	}
 	err = bcrypt.CompareHashAndPassword(user.passwordHash, password)
 	if err != nil {
-		return false, err
+		return User{}, err
 	}
 
-	return true, nil
+	return user, nil
 }
 
 //CreateSession makes a session given a User
