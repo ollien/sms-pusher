@@ -42,13 +42,9 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 }
 
 func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
-	cookie := GetSessionCookie(req)
-	if cookie != nil {
-		_, err := GetUserFromSession(handler.databaseConnection, cookie.Value)
-		if err == nil {
-			//user exists and session is valid - write 200 and move on
-			return
-		}
+	if HasValidSessionCookie(handler.databaseConnection, req) {
+		//If there is a valid cookie, we have a 200, which is already the default header, so we just reurn.
+		return
 	}
 	username := req.FormValue("username")
 	password := req.FormValue("password")
@@ -72,7 +68,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 
-	cookie = &http.Cookie{
+	cookie := &http.Cookie{
 		Name:  "session",
 		Value: sessionID,
 	}
