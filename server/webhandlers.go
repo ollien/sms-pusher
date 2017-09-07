@@ -42,21 +42,37 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 }
 
 func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	user, err := GetSessionUser(handler.databaseConnection, req)
+	//If there is no error, we found a user, and can return a 200
+	if err == nil {
+		//If there is a valid cookie, we have a 200, which is already the default header, so we just reurn.
+		return
+	}
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 
 	if username == "" || password == "" {
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	encodedPassword := []byte(password)
-	verified, err := VerifyUser(handler.databaseConnection, username, encodedPassword)
+	user, err = VerifyUser(handler.databaseConnection, username, encodedPassword)
+	if err != nil {
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	sessionID, err := CreateSession(handler.databaseConnection, user)
 	if err != nil {
 		//TODO: Log data about 500
 		writer.WriteHeader(http.StatusInternalServerError)
-	} else if !verified {
-		writer.WriteHeader(http.StatusUnauthorized)
 	}
-	//TODO: write cookies with sessions and handle them for authentication
+
+	cookie := &http.Cookie{
+		Name:  "session",
+		Value: sessionID,
+	}
+	http.SetCookie(writer, cookie)
 }
