@@ -62,7 +62,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	//Create devices table
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
 		"id SERIAL PRIMARY KEY," +
-		"device_id uuid," +
+		"device_id uuid UNIQUE," +
 		"device_user INTEGER REFERENCES users(id));")
 
 	if err != nil {
