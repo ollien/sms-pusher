@@ -76,3 +76,19 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	}
 	http.SetCookie(writer, cookie)
 }
+
+func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	user, err := GetSessionUser(handler.databaseConnection, req)
+	if err != nil {
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	deviceID, err := RegisterDeviceToUser(handler.databaseConnection, user)
+	if err != nil {
+		//TODO: Log data about 500
+		writer.WriteHeader(http.StatusInternalServerError)
+	}
+
+	io.WriteString(writer, deviceID)
+}
