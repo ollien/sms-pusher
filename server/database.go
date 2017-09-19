@@ -62,7 +62,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	//Create devices table
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
 		"id SERIAL PRIMARY KEY," +
-		"device_id uuid," +
+		"device_id uuid UNIQUE," +
 		"device_user INTEGER REFERENCES users(id));")
 
 	if err != nil {
@@ -178,4 +178,15 @@ func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, err
 	}
 
 	return user, err
+}
+
+//RegisterDeviceToUser registers a device for a user
+func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (string, error) {
+	deviceID := uuid.NewV4().String()
+	_, err := databaseConnection.Exec("INSERT INTO devices VALUES(DEFAULT, $1, $2);", deviceID, user.ID)
+	if err != nil {
+		return "", err
+	}
+
+	return deviceID, nil
 }

@@ -32,6 +32,7 @@ func (serv *Webserver) initHandlers() {
 	serv.router.GET("/", serv.routeHandler.index)
 	serv.router.POST("/register", serv.routeHandler.register)
 	serv.router.POST("/authenticate", serv.routeHandler.authenticate)
+	serv.router.POST("/register_device", serv.routeHandler.registerDevice)
 }
 
 //Start starts the webserver
