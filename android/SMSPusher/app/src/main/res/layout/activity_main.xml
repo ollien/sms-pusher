@@ -8,6 +8,11 @@
 	tools:context="com.ollien.smspusher.MainActivity">
 
 	<EditText
+		android:id="@+id/register_host"
+		android:layout_width="200dp"
+		android:layout_height="wrap_content"
+		android:hint="@string/host_hint"/>
+	<EditText
 		android:id="@+id/register_username"
 		android:layout_width="200dp"
 		android:layout_height="wrap_content"
