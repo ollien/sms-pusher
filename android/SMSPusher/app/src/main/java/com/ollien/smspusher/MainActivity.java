@@ -5,16 +5,17 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 
 public class MainActivity extends AppCompatActivity {
 
-    RequestQueue queue;
-    EditText hostField;
-	EditText usernameField;
-	EditText passwordField;
+    private RequestQueue queue;
+    private EditText hostField;
+	private EditText usernameField;
+	private EditText passwordField;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
