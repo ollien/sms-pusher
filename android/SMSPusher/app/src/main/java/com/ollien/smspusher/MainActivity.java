@@ -29,10 +29,10 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-	protected final String PREFS_KEY = "SMSPusherPrefs";
-	protected final String SESSION_ID_PREFS_KEY = "session_id";
-	protected final String DEVICE_ID_PREFS_KEY = "device_id";
-	protected final String HOST_URL_PREFS_KEY = "host_url";
+	protected static final String PREFS_KEY = "SMSPusherPrefs";
+	protected static final String SESSION_ID_PREFS_KEY = "session_id";
+	protected static final String DEVICE_ID_PREFS_KEY = "device_id";
+	protected static final String HOST_URL_PREFS_KEY = "host_url";
 
 	private RequestQueue queue;
 	private EditText hostField;
