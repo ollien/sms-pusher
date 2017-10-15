@@ -104,7 +104,7 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 	}
 
 	resultMap := make(map[string]string)
-	resultMap["device_id"] = deviceID
+	resultMap["device_id"] = deviceID.DeviceID.String()
 	resultJSON, err := json.Marshal(resultMap)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)

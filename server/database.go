@@ -24,6 +24,13 @@ type User struct {
 	passwordHash []byte
 }
 
+//Device represents a user within the database
+type Device struct {
+	ID         int
+	DeviceID   uuid.UUID
+	DeviceUser User
+}
+
 //InitDB intiializes the database connection and returns a DB
 func InitDB(configPath string) (*sql.DB, error) {
 	file, err := os.Open(configPath)
@@ -181,15 +188,49 @@ func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, err
 	return user, err
 }
 
-//RegisterDeviceToUser registers a device for a user
-func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (string, error) {
-	deviceID := uuid.NewV4().String()
-	_, err := databaseConnection.Exec("INSERT INTO devices VALUES(DEFAULT, $1, NULL, $2);", deviceID, user.ID)
+//GetDevice gets a Device from the database, given a deviceID
+func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
+	deviceRow := databaseConnection.QueryRow("SELECT * FROM devices WHERE device_id = $1", deviceID)
+	var id int
+	var internalDeviceID uuid.UUID
+	var userID int
+	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
 	if err != nil {
-		return "", err
+		return Device{}, err
 	}
 
-	return deviceID, nil
+	user, err := GetUserByID(databaseConnection, userID)
+	//If there's an error, there's an invalid user for the device. (i.e. doesn't exist)
+	if err != nil {
+		return Device{}, err
+	}
+
+	return Device{
+		ID:         id,
+		DeviceID:   deviceID,
+		DeviceUser: user,
+	}, nil
+
+}
+
+//RegisterDeviceToUser registers a device for a user
+func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error) {
+	deviceID := uuid.NewV4()
+	deviceRow := databaseConnection.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, NULL, $2) RETURNING *;", deviceID, user.ID)
+
+	var id int
+	var internalDeviceID uuid.UUID
+	var userID int
+	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
+	if err != nil {
+		return Device{}, err
+	}
+
+	return Device{
+		ID:         id,
+		DeviceID:   deviceID,
+		DeviceUser: user,
+	}, nil
 }
 
 //RegisterFCMID sets the FCM id (firebase_id) for a user's device, given a device id
