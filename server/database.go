@@ -28,6 +28,7 @@ type User struct {
 type Device struct {
 	ID         int
 	DeviceID   uuid.UUID
+	FCMID      string
 	DeviceUser User
 }
 
@@ -220,8 +221,9 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error)
 
 	var id int
 	var internalDeviceID uuid.UUID
+	var fcmID string
 	var userID int
-	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
+	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
 	if err != nil {
 		return Device{}, err
 	}
@@ -229,6 +231,7 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error)
 	return Device{
 		ID:         id,
 		DeviceID:   deviceID,
+		FCMID:      fcmID,
 		DeviceUser: user,
 	}, nil
 }
