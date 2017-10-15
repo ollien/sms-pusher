@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -61,10 +62,14 @@ public class MainActivity extends AppCompatActivity {
 					String sessionID = resJSON.getString("session_id");
 					prefsEditor.putString(SESSION_ID_PREFS_KEY, sessionID);
 					prefsEditor.apply();
-					resListener.onResponse(sessionID);
+                    if (resListener != null) {
+						resListener.onResponse(sessionID);
+					}
 				} catch (JSONException e) {
-                    errorListener.onErrorResponse(new VolleyError(e));
-					e.printStackTrace();
+                    Log.e("SMSPusher", e.toString());
+                    if (errorListener != null) {
+						errorListener.onErrorResponse(new VolleyError(e));
+					}
 				}
 			}
 		}, errorListener) {
