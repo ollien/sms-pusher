@@ -187,6 +187,31 @@ func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, err
 	return user, err
 }
 
+//GetDevice gets a Device from the database, given a deviceID
+func GetDevice(databaseConnection *sql.DB, deviceID []byte) (Device, error) {
+	deviceRow := databaseConnection.QueryRow("SELECT * FROM devices WHERE device_id = $1", deviceID)
+	var id int
+	var internalDeviceID []byte
+	var userID int
+	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
+	if err != nil {
+		return Device{}, err
+	}
+
+	user, err := GetUserByID(databaseConnection, userID)
+	//If there's an error, there's an invalid user for the device. (i.e. doesn't exist)
+	if err != nil {
+		return Device{}, err
+	}
+
+	return Device{
+		ID:         id,
+		DeviceID:   deviceID,
+		DeviceUser: user,
+	}, nil
+
+}
+
 //RegisterDeviceToUser registers a device for a user
 func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (string, error) {
 	deviceID := uuid.NewV4().String()
