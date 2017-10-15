@@ -25,8 +25,8 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-	private final String PREFS_KEY = "SMSPusherPrefs";
-	private final String SESSION_ID_PREFS_KEY = "session_id";
+	protected final String PREFS_KEY = "SMSPusherPrefs";
+	protected final String SESSION_ID_PREFS_KEY = "session_id";
 
     private RequestQueue queue;
     private EditText hostField;
