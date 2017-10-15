@@ -27,7 +27,7 @@ type User struct {
 //Device represents a user within the database
 type Device struct {
 	ID         int
-	DeviceID   []byte
+	DeviceID   uuid.UUID
 	DeviceUser User
 }
 
@@ -188,10 +188,10 @@ func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, err
 }
 
 //GetDevice gets a Device from the database, given a deviceID
-func GetDevice(databaseConnection *sql.DB, deviceID []byte) (Device, error) {
+func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
 	deviceRow := databaseConnection.QueryRow("SELECT * FROM devices WHERE device_id = $1", deviceID)
 	var id int
-	var internalDeviceID []byte
+	var internalDeviceID uuid.UUID
 	var userID int
 	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
 	if err != nil {
@@ -218,7 +218,7 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error)
 	deviceRow := databaseConnection.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, $2) RETURNING *;", deviceID, user.ID)
 
 	var id int
-	var internalDeviceID []byte
+	var internalDeviceID uuid.UUID
 	var userID int
 	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
 	if err != nil {
@@ -227,7 +227,7 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error)
 
 	return Device{
 		ID:         id,
-		DeviceID:   internalDeviceID,
+		DeviceID:   deviceID,
 		DeviceUser: user,
 	}, nil
 }
