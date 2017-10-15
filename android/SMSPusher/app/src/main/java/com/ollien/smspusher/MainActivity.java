@@ -77,7 +77,8 @@ public class MainActivity extends AppCompatActivity {
 								Log.e("SMSPusher", e.toString());
 							}
 						});
-					} catch (MalformedURLException e) {
+					}
+					catch (MalformedURLException e) {
 						Toast.makeText(MainActivity.this, R.string.invalid_host_toast, Toast.LENGTH_SHORT).show();
 						Log.e("SMSPusher", e.toString());
 					}
@@ -97,7 +98,8 @@ public class MainActivity extends AppCompatActivity {
 			else {
 				resListener.onResponse(null);
 			}
-		} catch (MalformedURLException e) {
+		}
+		catch (MalformedURLException e) {
 			Toast.makeText(this, R.string.invalid_host_toast, Toast.LENGTH_SHORT).show();
 			Log.e("SMSPusher", e.toString());
 		}
@@ -120,7 +122,8 @@ public class MainActivity extends AppCompatActivity {
 					if (resListener != null) {
 						resListener.onResponse(deviceID);
 					}
-				} catch (JSONException e) {
+				}
+				catch (JSONException e) {
 					Log.e("SMSPusher", e.toString());
 					if (errorListener != null) {
 						errorListener.onErrorResponse(new VolleyError(e));
@@ -151,7 +154,8 @@ public class MainActivity extends AppCompatActivity {
 					if (resListener != null) {
 						resListener.onResponse(sessionID);
 					}
-				} catch (JSONException e) {
+				}
+				catch (JSONException e) {
 					Log.e("SMSPusher", e.toString());
 					if (errorListener != null) {
 						errorListener.onErrorResponse(new VolleyError(e));
