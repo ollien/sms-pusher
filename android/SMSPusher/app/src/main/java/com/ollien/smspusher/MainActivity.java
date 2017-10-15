@@ -52,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
 	//Assumes user is already authenticated. Authentication should be checked before use.
 	private void registerDevice(URL host, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
 		final URL registerUrl = new URL(host, "/register_device");
+		final HashMap<String, String> authMap = new HashMap<String, String>();
+		authMap.put("session_id", prefs.getString(SESSION_ID_PREFS_KEY, ""));
 		StringRequest req = new StringRequest(Request.Method.POST, registerUrl.toString(), new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response) {
@@ -71,7 +73,11 @@ public class MainActivity extends AppCompatActivity {
 					}
 				}
 			}
-		}, errorListener);
+		}, errorListener) {
+			protected Map<String, String> getParams() {
+				return authMap;
+			}
+		};
 		queue.add(req);
 	}
 
