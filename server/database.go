@@ -191,3 +191,9 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (string, error)
 
 	return deviceID, nil
 }
+
+//RegisterFCMID sets the FCM id (firebase_id) for a user's device, given a device id
+func RegisterFCMID(databaseConnection *sql.DB, deviceID string, fcmID string) error {
+	_, err := databaseConnection.Exec("UPDATE devices SET firebase_id = $1 WHERE device_id = $2;", fcmID, deviceID)
+	return err
+}
