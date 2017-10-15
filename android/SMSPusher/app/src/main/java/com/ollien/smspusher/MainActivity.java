@@ -8,12 +8,25 @@ import android.os.Bundle;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
 	private final String PREFS_KEY = "SMSPusherPrefs";
+	private final String SESSION_ID_PREFS_KEY = "session_id";
 
     private RequestQueue queue;
     private EditText hostField;
@@ -33,5 +46,32 @@ public class MainActivity extends AppCompatActivity {
 		passwordField = (EditText)findViewById(R.id.register_password);
 		prefs = getSharedPreferences(PREFS_KEY, MODE_PRIVATE);
         prefsEditor = prefs.edit();
+	}
+
+	private void authenticate(URL host, String username, String password, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
+		URL authURL = new URL(host, "/authenticate");
+		final HashMap<String, String> authMap = new HashMap<String, String>();
+        authMap.put("username", username);
+		authMap.put("password", password);
+		StringRequest req = new StringRequest(Request.Method.POST, authURL.toString(), new Response.Listener<String>() {
+			@Override
+			public void onResponse(String response) {
+				try {
+					JSONObject resJSON = new JSONObject(response);
+					String sessionID = resJSON.getString("session_id");
+					prefsEditor.putString(SESSION_ID_PREFS_KEY, sessionID);
+					prefsEditor.apply();
+					resListener.onResponse(sessionID);
+				} catch (JSONException e) {
+                    errorListener.onErrorResponse(new VolleyError(e));
+					e.printStackTrace();
+				}
+			}
+		}, errorListener) {
+			protected Map<String, String> getParams() {
+				return authMap;
+			}
+		};
+		queue.add(req);
 	}
 }
