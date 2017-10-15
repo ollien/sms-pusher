@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
 	protected final String PREFS_KEY = "SMSPusherPrefs";
 	protected final String SESSION_ID_PREFS_KEY = "session_id";
 	protected final String DEVICE_ID_PREFS_KEY = "device_id";
+	protected final String HOST_URL_PREFS_KEY = "host_url";
 
 	private RequestQueue queue;
 	private EditText hostField;
@@ -106,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	//Assumes user is already authenticated. Authentication should be checked before use.
-	private void registerDevice(URL host, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
+	private void registerDevice(final URL host, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
 		final URL registerUrl = new URL(host, "/register_device");
 		final HashMap<String, String> authMap = new HashMap<String, String>();
 		authMap.put("session_id", prefs.getString(SESSION_ID_PREFS_KEY, ""));
@@ -118,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
 					resJSON = new JSONObject(response);
 					String deviceID = resJSON.getString("device_id");
 					prefsEditor.putString(DEVICE_ID_PREFS_KEY, deviceID);
+					prefsEditor.putString(HOST_URL_PREFS_KEY, host.toString());
 					prefsEditor.apply();
 					if (resListener != null) {
 						resListener.onResponse(deviceID);
