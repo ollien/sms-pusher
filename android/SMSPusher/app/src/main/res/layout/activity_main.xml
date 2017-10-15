@@ -27,5 +27,6 @@
 		android:id="@+id/register_button"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
+		android:onClick="handleRegisterButtonPress"
 		android:text="@string/register_device"/>
 </LinearLayout>

@@ -6,7 +6,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -47,6 +49,52 @@ public class MainActivity extends AppCompatActivity {
 		passwordField = (EditText)findViewById(R.id.register_password);
 		prefs = getSharedPreferences(PREFS_KEY, MODE_PRIVATE);
 		prefsEditor = prefs.edit();
+	}
+
+	protected void handleRegisterButtonPress(View v) {
+		Toast.makeText(this, R.string.registering_toast, Toast.LENGTH_SHORT).show();
+		try {
+			final URL host = new URL(hostField.getText().toString());
+			Response.Listener<String> resListener = new Response.Listener<String>() {
+				@Override
+				public void onResponse(String response) {
+					try {
+						registerDevice(host, new Response.Listener<String>() {
+							@Override
+							public void onResponse(String response) {
+								Toast.makeText(MainActivity.this, R.string.registered_toast, Toast.LENGTH_SHORT).show();
+							}
+						}, new Response.ErrorListener() {
+							@Override
+							public void onErrorResponse(VolleyError e) {
+								Toast.makeText(MainActivity.this, R.string.connection_error_toast, Toast.LENGTH_SHORT).show();
+								Log.e("SMSPusher", e.toString());
+							}
+						});
+					} catch (MalformedURLException e) {
+						Toast.makeText(MainActivity.this, R.string.invalid_host_toast, Toast.LENGTH_SHORT).show();
+						Log.e("SMSPusher", e.toString());
+					}
+				}
+			};
+			if (prefs.getString(SESSION_ID_PREFS_KEY, "").equals("")) {
+				String username = usernameField.getText().toString();
+				String password = passwordField.getText().toString();
+				authenticate(host, username, password, resListener, new Response.ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError e) {
+						Toast.makeText(MainActivity.this, R.string.connection_error_toast, Toast.LENGTH_SHORT).show();
+						Log.e("SMSPusher", e.toString());
+					}
+				});
+			}
+			else {
+				resListener.onResponse(null);
+			}
+		} catch (MalformedURLException e) {
+			Toast.makeText(this, R.string.invalid_host_toast, Toast.LENGTH_SHORT).show();
+			Log.e("SMSPusher", e.toString());
+		}
 	}
 
 	//Assumes user is already authenticated. Authentication should be checked before use.
