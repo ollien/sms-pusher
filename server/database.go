@@ -28,7 +28,7 @@ type User struct {
 type Device struct {
 	ID         int
 	DeviceID   uuid.UUID
-	FCMID      string
+	FCMID      []byte
 	DeviceUser User
 }
 
@@ -71,7 +71,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
 		"id SERIAL PRIMARY KEY," +
 		"device_id uuid UNIQUE," +
-		"firebase_id VARCHAR(4096)," + //Theoretical maximum size of an fcm id. Though the docs have no perscribed limit, developres have confirmed it's bound by the max size of an http cookie
+		"firebase_id bytea," +
 		"device_user INTEGER REFERENCES users(id));")
 
 	if err != nil {
@@ -221,7 +221,7 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error)
 
 	var id int
 	var internalDeviceID uuid.UUID
-	var fcmID string
+	var fcmID []byte
 	var userID int
 	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
 	if err != nil {
@@ -237,7 +237,7 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error)
 }
 
 //RegisterFCMID sets the FCM id (firebase_id) for a user's device, given a device id
-func RegisterFCMID(databaseConnection *sql.DB, deviceID uuid.UUID, fcmID string) error {
+func RegisterFCMID(databaseConnection *sql.DB, deviceID uuid.UUID, fcmID []byte) error {
 	_, err := databaseConnection.Exec("UPDATE devices SET firebase_id = $1 WHERE device_id = $2;", fcmID, deviceID)
 	return err
 }
