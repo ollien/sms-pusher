@@ -214,7 +214,7 @@ func GetDevice(databaseConnection *sql.DB, deviceID []byte) (Device, error) {
 
 //RegisterDeviceToUser registers a device for a user
 func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error) {
-	deviceID := uuid.NewV4().String()
+	deviceID := uuid.NewV4()
 	deviceRow := databaseConnection.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, $2) RETURNING *;", deviceID, user.ID)
 
 	var id int
