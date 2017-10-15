@@ -63,6 +63,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
 		"id SERIAL PRIMARY KEY," +
 		"device_id uuid UNIQUE," +
+		"firebase_id VARCHAR(4096)," + //Theoretical maximum size of an fcm id. Though the docs have no perscribed limit, developres have confirmed it's bound by the max size of an http cookie
 		"device_user INTEGER REFERENCES users(id));")
 
 	if err != nil {
