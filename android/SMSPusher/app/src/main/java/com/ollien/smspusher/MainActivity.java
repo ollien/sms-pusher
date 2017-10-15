@@ -7,7 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -30,11 +29,11 @@ public class MainActivity extends AppCompatActivity {
 	protected final String SESSION_ID_PREFS_KEY = "session_id";
 	protected final String DEVICE_ID_PREFS_KEY = "device_id";
 
-    private RequestQueue queue;
-    private EditText hostField;
+	private RequestQueue queue;
+	private EditText hostField;
 	private EditText usernameField;
 	private EditText passwordField;
-    private SharedPreferences prefs;
+	private SharedPreferences prefs;
 	private SharedPreferences.Editor prefsEditor;
 
 	@Override
@@ -47,20 +46,20 @@ public class MainActivity extends AppCompatActivity {
 		usernameField = (EditText)findViewById(R.id.register_username);
 		passwordField = (EditText)findViewById(R.id.register_password);
 		prefs = getSharedPreferences(PREFS_KEY, MODE_PRIVATE);
-        prefsEditor = prefs.edit();
+		prefsEditor = prefs.edit();
 	}
 
 	//Assumes user is already authenticated. Authentication should be checked before use.
 	private void registerDevice(URL host, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
 		final URL registerUrl = new URL(host, "/register_device");
-        StringRequest req = new StringRequest(Request.Method.POST, registerUrl.toString(), new Response.Listener<String>() {
+		StringRequest req = new StringRequest(Request.Method.POST, registerUrl.toString(), new Response.Listener<String>() {
 			@Override
 			public void onResponse(String response) {
 				JSONObject resJSON = null;
 				try {
 					resJSON = new JSONObject(response);
 					String deviceID = resJSON.getString("device_id");
-                    prefsEditor.putString(DEVICE_ID_PREFS_KEY, deviceID);
+					prefsEditor.putString(DEVICE_ID_PREFS_KEY, deviceID);
 					prefsEditor.apply();
 					if (resListener != null) {
 						resListener.onResponse(deviceID);
@@ -73,13 +72,13 @@ public class MainActivity extends AppCompatActivity {
 				}
 			}
 		}, errorListener);
-        queue.add(req);
+		queue.add(req);
 	}
 
 	private void authenticate(URL host, String username, String password, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
 		URL authURL = new URL(host, "/authenticate");
 		final HashMap<String, String> authMap = new HashMap<String, String>();
-        authMap.put("username", username);
+		authMap.put("username", username);
 		authMap.put("password", password);
 		StringRequest req = new StringRequest(Request.Method.POST, authURL.toString(), new Response.Listener<String>() {
 			@Override
@@ -89,12 +88,12 @@ public class MainActivity extends AppCompatActivity {
 					String sessionID = resJSON.getString("session_id");
 					prefsEditor.putString(SESSION_ID_PREFS_KEY, sessionID);
 					prefsEditor.apply();
-                    if (resListener != null) {
+					if (resListener != null) {
 						resListener.onResponse(sessionID);
 					}
 				} catch (JSONException e) {
-                    Log.e("SMSPusher", e.toString());
-                    if (errorListener != null) {
+					Log.e("SMSPusher", e.toString());
+					if (errorListener != null) {
 						errorListener.onErrorResponse(new VolleyError(e));
 					}
 				}
