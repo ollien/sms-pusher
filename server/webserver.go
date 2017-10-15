@@ -37,5 +37,5 @@ func (serv *Webserver) initHandlers() {
 
 //Start starts the webserver
 func (serv *Webserver) Start() {
-	http.ListenAndServe(":8080", serv.router)
+	http.ListenAndServe(serv.listenAddr, serv.router)
 }
