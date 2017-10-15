@@ -33,6 +33,7 @@ func (serv *Webserver) initHandlers() {
 	serv.router.POST("/register", serv.routeHandler.register)
 	serv.router.POST("/authenticate", serv.routeHandler.authenticate)
 	serv.router.POST("/register_device", serv.routeHandler.registerDevice)
+	serv.router.POST("/set_fcm_id", serv.routeHandler.setFCMID)
 }
 
 //Start starts the webserver
