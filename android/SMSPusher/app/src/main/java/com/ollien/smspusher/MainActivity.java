@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
 	protected final String PREFS_KEY = "SMSPusherPrefs";
 	protected final String SESSION_ID_PREFS_KEY = "session_id";
+	protected final String DEVICE_ID_PREFS_KEY = "device_id";
 
     private RequestQueue queue;
     private EditText hostField;
@@ -47,6 +48,32 @@ public class MainActivity extends AppCompatActivity {
 		passwordField = (EditText)findViewById(R.id.register_password);
 		prefs = getSharedPreferences(PREFS_KEY, MODE_PRIVATE);
         prefsEditor = prefs.edit();
+	}
+
+	//Assumes user is already authenticated. Authentication should be checked before use.
+	private void registerDevice(URL host, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
+		final URL registerUrl = new URL(host, "/register_device");
+        StringRequest req = new StringRequest(Request.Method.POST, registerUrl.toString(), new Response.Listener<String>() {
+			@Override
+			public void onResponse(String response) {
+				JSONObject resJSON = null;
+				try {
+					resJSON = new JSONObject(response);
+					String deviceID = resJSON.getString("device_id");
+                    prefsEditor.putString(DEVICE_ID_PREFS_KEY, deviceID);
+					prefsEditor.apply();
+					if (resListener != null) {
+						resListener.onResponse(deviceID);
+					}
+				} catch (JSONException e) {
+					Log.e("SMSPusher", e.toString());
+					if (errorListener != null) {
+						errorListener.onErrorResponse(new VolleyError(e));
+					}
+				}
+			}
+		}, errorListener);
+        queue.add(req);
 	}
 
 	private void authenticate(URL host, String username, String password, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
