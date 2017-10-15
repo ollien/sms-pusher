@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -19,6 +20,7 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
 	private EditText hostField;
 	private EditText usernameField;
 	private EditText passwordField;
+	private TextView deviceIDDisplay;
 	private SharedPreferences prefs;
 	private SharedPreferences.Editor prefsEditor;
 
@@ -47,8 +50,10 @@ public class MainActivity extends AppCompatActivity {
 		hostField = (EditText)findViewById(R.id.register_host);
 		usernameField = (EditText)findViewById(R.id.register_username);
 		passwordField = (EditText)findViewById(R.id.register_password);
+		deviceIDDisplay = (TextView)findViewById(R.id.device_id_text_view);
 		prefs = getSharedPreferences(PREFS_KEY, MODE_PRIVATE);
 		prefsEditor = prefs.edit();
+		updateDeviceIDDisplay();
 	}
 
 	protected void handleRegisterButtonPress(View v) {
@@ -63,6 +68,7 @@ public class MainActivity extends AppCompatActivity {
 							@Override
 							public void onResponse(String response) {
 								Toast.makeText(MainActivity.this, R.string.registered_toast, Toast.LENGTH_SHORT).show();
+								updateDeviceIDDisplay();
 							}
 						}, new Response.ErrorListener() {
 							@Override
@@ -158,5 +164,15 @@ public class MainActivity extends AppCompatActivity {
 			}
 		};
 		queue.add(req);
+	}
+
+	private void updateDeviceIDDisplay(){
+		String deviceID = prefs.getString(DEVICE_ID_PREFS_KEY, "");
+		if (deviceID.equals("")) {
+			deviceIDDisplay.setText(R.string.no_device_id);
+		}
+		else {
+			deviceIDDisplay.setText("Device ID: " + deviceID);
+		}
 	}
 }

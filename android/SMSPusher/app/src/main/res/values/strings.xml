@@ -8,4 +8,5 @@
 	<string name="registered_toast">Registered device!</string>
 	<string name="invalid_host_toast">Invalid host. Please ensure it is typed correctly and try again.</string>
 	<string name="connection_error_toast">Could not connect to host. Please ensure it is typed correctly and try again.</string>
+	<string name="no_device_id">No device id has been set. Please register your device.</string>
 </resources>
