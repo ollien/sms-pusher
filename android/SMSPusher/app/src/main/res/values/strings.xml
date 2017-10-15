@@ -1,3 +1,11 @@
 <resources>
 	<string name="app_name">SMS Pusher</string>
+	<string name="register_device">Register Device</string>
+	<string name="host_hint">Host Address</string>
+	<string name="username_hint">Username</string>
+	<string name="password_hint">Password</string>
+	<string name="registering_toast">Registering…</string>
+	<string name="registered_toast">Registered device!</string>
+	<string name="invalid_host_toast">Invalid host. Please ensure it is typed correctly and try again.</string>
+	<string name="connection_error_toast">Could not connect to host. Please ensure it is typed correctly and try again.</string>
 </resources>

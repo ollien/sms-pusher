@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"io"
 	"net/http"
 
@@ -45,7 +46,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	//If there is no error, we found a user, and can return a 200
 	if err == nil {
-		//If there is a valid cookie, we have a 200, which is already the default header, so we just reurn.
+		//If there is a valid session, we have a 200, which is already the default header, so we just reurn.
 		return
 	}
 	username := req.FormValue("username")
@@ -70,11 +71,23 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 
-	cookie := &http.Cookie{
-		Name:  "session",
-		Value: sessionID,
+	resultMap := make(map[string]string)
+	resultMap["session_id"] = sessionID
+	resultJSON, err := json.Marshal(resultMap)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+	} else {
+		_, err := writer.Write(resultJSON)
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+		} else {
+			cookie := &http.Cookie{
+				Name:  "session",
+				Value: sessionID,
+			}
+			http.SetCookie(writer, cookie)
+		}
 	}
-	http.SetCookie(writer, cookie)
 }
 
 func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
@@ -90,5 +103,15 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 
-	io.WriteString(writer, deviceID)
+	resultMap := make(map[string]string)
+	resultMap["device_id"] = deviceID
+	resultJSON, err := json.Marshal(resultMap)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+	} else {
+		_, err := writer.Write(resultJSON)
+		if err != nil {
+			writer.WriteHeader(http.StatusInternalServerError)
+		}
+	}
 }
