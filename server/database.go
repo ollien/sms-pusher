@@ -184,7 +184,7 @@ func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, err
 //RegisterDeviceToUser registers a device for a user
 func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (string, error) {
 	deviceID := uuid.NewV4().String()
-	_, err := databaseConnection.Exec("INSERT INTO devices VALUES(DEFAULT, $1, $2);", deviceID, user.ID)
+	_, err := databaseConnection.Exec("INSERT INTO devices VALUES(DEFAULT, $1, NULL, $2);", deviceID, user.ID)
 	if err != nil {
 		return "", err
 	}
