@@ -24,6 +24,13 @@ type User struct {
 	passwordHash []byte
 }
 
+//Device represents a user within the database
+type Device struct {
+	ID         int
+	DeviceID   []byte
+	DeviceUser User
+}
+
 //InitDB intiializes the database connection and returns a DB
 func InitDB(configPath string) (*sql.DB, error) {
 	file, err := os.Open(configPath)
