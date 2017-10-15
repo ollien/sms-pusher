@@ -213,12 +213,21 @@ func GetDevice(databaseConnection *sql.DB, deviceID []byte) (Device, error) {
 }
 
 //RegisterDeviceToUser registers a device for a user
-func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (string, error) {
+func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error) {
 	deviceID := uuid.NewV4().String()
-	_, err := databaseConnection.Exec("INSERT INTO devices VALUES(DEFAULT, $1, $2);", deviceID, user.ID)
+	deviceRow := databaseConnection.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, $2) RETURNING *;", deviceID, user.ID)
+
+	var id int
+	var internalDeviceID []byte
+	var userID int
+	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
 	if err != nil {
-		return "", err
+		return Device{}, err
 	}
 
-	return deviceID, nil
+	return Device{
+		ID:         id,
+		DeviceID:   internalDeviceID,
+		DeviceUser: user,
+	}, nil
 }
