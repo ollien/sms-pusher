@@ -54,6 +54,9 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 	}
 
 	protected void updateTokenOnServer(Response.Listener<String> resListener, Response.ErrorListener errorListener) {
+		updateTokenOnServer(prefs, queue, resListener, errorListener);
+	}
+	protected static void updateTokenOnServer(SharedPreferences prefs, RequestQueue queue, Response.Listener<String> resListener, Response.ErrorListener errorListener) {
 		String hostURL = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
 		String deviceID = prefs.getString(MainActivity.DEVICE_ID_PREFS_KEY, "");
 		String token = prefs.getString(MainActivity.FCM_TOKEN_PREFS_KEY, "");
