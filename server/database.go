@@ -194,8 +194,9 @@ func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
 	deviceRow := databaseConnection.QueryRow("SELECT * FROM devices WHERE device_id = $1", deviceID)
 	var id int
 	var internalDeviceID uuid.UUID
+	var fcmID []byte
 	var userID int
-	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
+	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
 	if err != nil {
 		return Device{}, err
 	}
@@ -209,6 +210,7 @@ func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
 	return Device{
 		ID:         id,
 		DeviceID:   deviceID,
+		FCMID:      fcmID,
 		DeviceUser: user,
 	}, nil
 
