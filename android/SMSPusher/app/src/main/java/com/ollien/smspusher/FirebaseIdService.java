@@ -25,7 +25,8 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 	SharedPreferences prefs;
 	SharedPreferences.Editor prefsEditor;
 
-	public FirebaseIdService() {
+	@Override
+	public void onCreate() {
 		queue = Volley.newRequestQueue(this);
 		prefs = getSharedPreferences(MainActivity.PREFS_KEY, MODE_PRIVATE);
 		prefsEditor = prefs.edit();
