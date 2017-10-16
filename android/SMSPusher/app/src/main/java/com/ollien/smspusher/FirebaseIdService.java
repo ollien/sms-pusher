@@ -15,6 +15,8 @@ import com.android.volley.toolbox.Volley;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.FirebaseInstanceIdService;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -57,8 +59,11 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 	protected void updateTokenOnServer(Response.Listener<String> resListener, Response.ErrorListener errorListener) {
 		updateTokenOnServer(prefs, queue, resListener, errorListener);
 	}
+
+	//Assumes user is already authenticated
 	protected static void updateTokenOnServer(SharedPreferences prefs, RequestQueue queue, Response.Listener<String> resListener, Response.ErrorListener errorListener) {
 		String hostURL = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
+		String sessionID = prefs.getString(MainActivity.SESSION_ID_PREFS_KEY, "");
 		String deviceID = prefs.getString(MainActivity.DEVICE_ID_PREFS_KEY, "");
 		String token = prefs.getString(MainActivity.FCM_TOKEN_PREFS_KEY, "");
 		if (hostURL.equals("")) {
@@ -70,15 +75,23 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 		else if (token.equals("")) {
 			token = FirebaseInstanceId.getInstance().getToken();
 		}
-		final HashMap<String, String> reqMap = new HashMap<>();
-		reqMap.put("fcm_id", token);
-		StringRequest req = new StringRequest(Request.Method.POST, hostURL,  resListener, errorListener)
-		{
-			protected Map<String, String> getParams() {
-				return reqMap;
-			}
-		};
-		queue.add(req);
+		URL updateURL;
+		try {
+			updateURL = new URL(new URL(hostURL), "/set_fcm_id");
+			final HashMap<String, String> reqMap = new HashMap<>();
+			reqMap.put("fcm_id", token);
+			reqMap.put("device_id", deviceID);
+			reqMap.put("session_id", sessionID);
+			StringRequest req = new StringRequest(Request.Method.POST, updateURL.toString(),  resListener, errorListener)
+			{
+				protected Map<String, String> getParams() {
+					return reqMap;
+				}
+			};
+			queue.add(req);
+		} catch (MalformedURLException e) {
+			errorListener.onErrorResponse(new VolleyError(e));
+		}
 	}
 
 }
