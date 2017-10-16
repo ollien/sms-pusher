@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
 	protected static final String SESSION_ID_PREFS_KEY = "session_id";
 	protected static final String DEVICE_ID_PREFS_KEY = "device_id";
 	protected static final String HOST_URL_PREFS_KEY = "host_url";
+	protected static final String FCM_TOKEN_PREFS_KEY = "fcm_token";
 
 	private RequestQueue queue;
 	private EditText hostField;
