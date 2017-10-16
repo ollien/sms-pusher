@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	uuid "github.com/satori/go.uuid"
 )
 
 //RouteHandler holds all routes and allows them to share common variables
@@ -113,5 +114,44 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
+	}
+}
+
+func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	user, err := GetSessionUser(handler.databaseConnection, req)
+	if err != nil {
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	deviceID := req.FormValue("device_id")
+	fcmID := req.FormValue("fcm_id")
+	if deviceID == "" || fcmID == "" {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	deviceUUID, err := uuid.FromString(deviceID)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	//Check to make sure that the user is actually modifying their device
+	device, err := GetDevice(handler.databaseConnection, deviceUUID)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if device.DeviceUser.ID != user.ID {
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	err = RegisterFCMID(handler.databaseConnection, deviceUUID, []byte(fcmID))
+	if err != nil {
+		//TODO: Log why a 500 was returned.
+		writer.WriteHeader(http.StatusInternalServerError)
 	}
 }

@@ -29,9 +29,11 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-	protected final String PREFS_KEY = "SMSPusherPrefs";
-	protected final String SESSION_ID_PREFS_KEY = "session_id";
-	protected final String DEVICE_ID_PREFS_KEY = "device_id";
+	protected static final String PREFS_KEY = "SMSPusherPrefs";
+	protected static final String SESSION_ID_PREFS_KEY = "session_id";
+	protected static final String DEVICE_ID_PREFS_KEY = "device_id";
+	protected static final String HOST_URL_PREFS_KEY = "host_url";
+	protected static final String FCM_TOKEN_PREFS_KEY = "fcm_token";
 
 	private RequestQueue queue;
 	private EditText hostField;
@@ -67,8 +69,19 @@ public class MainActivity extends AppCompatActivity {
 						registerDevice(host, new Response.Listener<String>() {
 							@Override
 							public void onResponse(String response) {
-								Toast.makeText(MainActivity.this, R.string.registered_toast, Toast.LENGTH_SHORT).show();
-								updateDeviceIDDisplay();
+								FirebaseIdService.updateTokenOnServer(prefs, queue, new Response.Listener<String>() {
+									@Override
+									public void onResponse(String response) {
+										Toast.makeText(MainActivity.this, R.string.registered_toast, Toast.LENGTH_SHORT).show();
+										updateDeviceIDDisplay();
+									}
+								}, new Response.ErrorListener() {
+									@Override
+									public void onErrorResponse(VolleyError e) {
+										Toast.makeText(MainActivity.this, R.string.connection_error_toast, Toast.LENGTH_SHORT).show();
+										Log.e("SMSPusher", e.toString());
+									}
+								});
 							}
 						}, new Response.ErrorListener() {
 							@Override
@@ -106,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	//Assumes user is already authenticated. Authentication should be checked before use.
-	private void registerDevice(URL host, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
+	private void registerDevice(final URL host, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
 		final URL registerUrl = new URL(host, "/register_device");
 		final HashMap<String, String> authMap = new HashMap<String, String>();
 		authMap.put("session_id", prefs.getString(SESSION_ID_PREFS_KEY, ""));
@@ -118,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
 					resJSON = new JSONObject(response);
 					String deviceID = resJSON.getString("device_id");
 					prefsEditor.putString(DEVICE_ID_PREFS_KEY, deviceID);
+					prefsEditor.putString(HOST_URL_PREFS_KEY, host.toString());
 					prefsEditor.apply();
 					if (resListener != null) {
 						resListener.onResponse(deviceID);

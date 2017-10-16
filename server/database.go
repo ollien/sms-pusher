@@ -28,6 +28,7 @@ type User struct {
 type Device struct {
 	ID         int
 	DeviceID   uuid.UUID
+	FCMID      []byte
 	DeviceUser User
 }
 
@@ -70,6 +71,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
 		"id SERIAL PRIMARY KEY," +
 		"device_id uuid UNIQUE," +
+		"firebase_id bytea," +
 		"device_user INTEGER REFERENCES users(id));")
 
 	if err != nil {
@@ -192,8 +194,9 @@ func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
 	deviceRow := databaseConnection.QueryRow("SELECT * FROM devices WHERE device_id = $1", deviceID)
 	var id int
 	var internalDeviceID uuid.UUID
+	var fcmID []byte
 	var userID int
-	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
+	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
 	if err != nil {
 		return Device{}, err
 	}
@@ -207,6 +210,7 @@ func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
 	return Device{
 		ID:         id,
 		DeviceID:   deviceID,
+		FCMID:      fcmID,
 		DeviceUser: user,
 	}, nil
 
@@ -215,12 +219,13 @@ func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
 //RegisterDeviceToUser registers a device for a user
 func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error) {
 	deviceID := uuid.NewV4()
-	deviceRow := databaseConnection.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, $2) RETURNING *;", deviceID, user.ID)
+	deviceRow := databaseConnection.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, NULL, $2) RETURNING *;", deviceID, user.ID)
 
 	var id int
 	var internalDeviceID uuid.UUID
+	var fcmID []byte
 	var userID int
-	err := deviceRow.Scan(&id, &internalDeviceID, &userID)
+	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
 	if err != nil {
 		return Device{}, err
 	}
@@ -228,6 +233,13 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error)
 	return Device{
 		ID:         id,
 		DeviceID:   deviceID,
+		FCMID:      fcmID,
 		DeviceUser: user,
 	}, nil
+}
+
+//RegisterFCMID sets the FCM id (firebase_id) for a user's device, given a device id
+func RegisterFCMID(databaseConnection *sql.DB, deviceID uuid.UUID, fcmID []byte) error {
+	_, err := databaseConnection.Exec("UPDATE devices SET firebase_id = $1 WHERE device_id = $2;", fcmID, deviceID)
+	return err
 }
