@@ -134,12 +134,14 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 	deviceUUID, err := uuid.FromString(deviceID)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	//Check to make sure that the user is actually modifying their device
 	device, err := GetDevice(handler.databaseConnection, deviceUUID)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if device.DeviceUser.ID != user.ID {
