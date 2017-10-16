@@ -45,6 +45,15 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 	}
 
 	protected void updateTokenOnServer() {
+		updateTokenOnServer(null, new Response.ErrorListener() {
+			@Override
+			public void onErrorResponse(VolleyError e) {
+				Log.e("SMSPusher", e.toString());
+			}
+		});
+	}
+
+	protected void updateTokenOnServer(Response.Listener<String> resListener, Response.ErrorListener errorListener) {
 		String hostURL = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
 		String deviceID = prefs.getString(MainActivity.DEVICE_ID_PREFS_KEY, "");
 		String token = prefs.getString(MainActivity.FCM_TOKEN_PREFS_KEY, "");
@@ -59,12 +68,8 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 		}
 		final HashMap<String, String> reqMap = new HashMap<>();
 		reqMap.put("fcm_id", token);
-		StringRequest req = new StringRequest(Request.Method.POST, hostURL, null, new Response.ErrorListener() {
-			@Override
-			public void onErrorResponse(VolleyError e) {
-				Log.e("SMSPusher", e.toString());
-			}
-		}) {
+		StringRequest req = new StringRequest(Request.Method.POST, hostURL,  resListener, errorListener)
+		{
 			protected Map<String, String> getParams() {
 				return reqMap;
 			}
