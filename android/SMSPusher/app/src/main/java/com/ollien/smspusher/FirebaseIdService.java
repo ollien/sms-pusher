@@ -36,6 +36,12 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 		//TODO: Send this to server
 		//For now, just leaving it in here for reference.
 		String token = FirebaseInstanceId.getInstance().getToken();
+		prefsEditor.putString(MainActivity.FCM_TOKEN_PREFS_KEY, token);
+		String hostURL = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
+		String deviceID = prefs.getString(MainActivity.DEVICE_ID_PREFS_KEY, "");
+		if (!hostURL.equals("") && !deviceID.equals("")) {
+			updateTokenOnServer();
+		}
 	}
 
 	protected void updateTokenOnServer() {
