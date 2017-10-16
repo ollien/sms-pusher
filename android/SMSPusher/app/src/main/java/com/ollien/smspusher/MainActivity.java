@@ -69,8 +69,19 @@ public class MainActivity extends AppCompatActivity {
 						registerDevice(host, new Response.Listener<String>() {
 							@Override
 							public void onResponse(String response) {
-								Toast.makeText(MainActivity.this, R.string.registered_toast, Toast.LENGTH_SHORT).show();
-								updateDeviceIDDisplay();
+								FirebaseIdService.updateTokenOnServer(prefs, queue, new Response.Listener<String>() {
+									@Override
+									public void onResponse(String response) {
+										Toast.makeText(MainActivity.this, R.string.registered_toast, Toast.LENGTH_SHORT).show();
+										updateDeviceIDDisplay();
+									}
+								}, new Response.ErrorListener() {
+									@Override
+									public void onErrorResponse(VolleyError e) {
+										Toast.makeText(MainActivity.this, R.string.connection_error_toast, Toast.LENGTH_SHORT).show();
+										Log.e("SMSPusher", e.toString());
+									}
+								});
 							}
 						}, new Response.ErrorListener() {
 							@Override
