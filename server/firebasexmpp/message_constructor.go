@@ -35,6 +35,21 @@ type ACKPayload struct {
 	MessageType string `json:"message_type"`
 }
 
+//DownstreamPayload stores the data to be sent downstream. Used for marshaling JSON.
+//Because our client is Android specific, we ignore content_availabe and mutable_content, which do nothing for Android.
+type DownstreamPayload struct {
+	To                       string      `json:"to,omitempty"`
+	Condition                string      `json:"condition,omitempty"`
+	MessageID                string      `json:"message_id"`
+	CollapseKey              string      `json:"collapse_key,omitempty"`
+	Priority                 string      `json:"priority,omitempty"`
+	TTL                      int         `json:"time_to_live,omitempty"`
+	DeliveryReceiptRequested bool        `json:"delivery_receipt_requested,omitempty"`
+	DryRun                   bool        `json:"dry_run,omitempty"`
+	Data                     interface{} `json:"data,omitempty"`
+	Notification             bool        `json:"notification,omitempty"`
+}
+
 //NewGCMStanza makes a new GCMStanza. the XMLNS should always be google:mobile:data.
 func NewGCMStanza(payload string) GCMStanza {
 	return GCMStanza{
