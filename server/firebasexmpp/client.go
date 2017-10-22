@@ -94,7 +94,7 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 			}
 			recvChannel <- message.Data
 		} else if messageType == "ConnectionDrainingMessage" {
-			drainSignal := NewConnectionDrainingSignal(client, recvChannel)
+			drainSignal := NewConnectionDrainingSignal(client)
 			client.signalChannel <- &drainSignal
 		}
 		//TODO: Handle InboundACKMessage and NACKMessage
