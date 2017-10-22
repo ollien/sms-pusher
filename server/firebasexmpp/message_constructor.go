@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"log"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 //MessageStanza stores the data from the message stanza in outgoing messages. Used for marshalling XML.
@@ -74,6 +76,28 @@ func ConstructACK(registrationID, messageID string) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
+	messageStanza := MessageStanza{
+		Body: NewGCMStanza(string(marshaledPayload)),
+	}
+	marshaledMessageStanza, err := xml.Marshal(messageStanza)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return marshaledMessageStanza
+}
+
+//ConstructDownstreamSMS constructs a ConstreamPayload and returns the marshaled result
+func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) []byte {
+	messageID := uuid.NewV4()
+	payload := DownstreamPayload{
+		To:        string(deviceTo),
+		MessageID: messageID.String(),
+		Priority:  "high",
+		TTL:       3600,
+		Data:      message,
+	}
+	//TODO: Abstract this so we're not repeating this every time we need to send something downstream
+	marshaledPayload, err := json.Marshal(payload)
 	messageStanza := MessageStanza{
 		Body: NewGCMStanza(string(marshaledPayload)),
 	}
