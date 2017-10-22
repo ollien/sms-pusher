@@ -113,15 +113,17 @@ func (client *FirebaseClient) ListenForSend(sendChannel <-chan interface{}, erro
 }
 
 //Send sends a message to FirebaseXMPP
-//If the message is of type xmpp.Chat, the message will be sent normally. If it is of type []byte, it will be sent raw using SendOrg. Otherwise, an error will be returned.
+//If the message is of type xmpp.Chat, the message will be sent normally. If it is of type []byte or string, it will be sent raw using SendOrg. Otherwise, an error will be returned.
 func (client *FirebaseClient) Send(message interface{}) (int, error) {
 	switch convertedMessage := message.(type) {
 	case xmpp.Chat:
 		return client.xmppClient.Send(convertedMessage)
 	case []byte:
+		return client.xmppClient.SendOrg(string(convertedMessage))
+	case string:
 		return client.xmppClient.SendOrg(convertedMessage)
 	default:
-		err := errors.Error("message must be of type xmpp.Chat or []byte")
+		err := errors.Error("message must be of type xmpp.Chat, string, or []byte")
 		return 0, err
 	}
 }
