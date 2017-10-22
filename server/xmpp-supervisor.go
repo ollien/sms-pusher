@@ -15,6 +15,14 @@ type XMPPSupervisor struct {
 	drainChannel  chan *firebasexmpp.ConnectionDrainingSignal
 }
 
+//ClientContainer holds a client and its channels
+type ClientContainer struct {
+	client       firebasexmpp.FirebaseClient
+	sendChannel  chan interface{}
+	errorChannel chan error
+	recvChannel  chan firebasexmpp.SMSMessage
+}
+
 //NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
 func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 	supervisor := XMPPSupervisor{
