@@ -7,10 +7,10 @@ import (
 
 //XMPPSupervisor supervises all Firebase XMPP connections
 type XMPPSupervisor struct {
-	clients       map[string]firebasexmpp.FirebaseClient
+	clients       map[string]ClientContainer
 	ConfigPath    string
 	signalChannel chan firebasexmpp.Signal
-	spawnChannel  chan chan firebasexmpp.SMSMessage
+	spawnChannel  chan ClientContainer
 	closeChannel  chan *firebasexmpp.ConnectionClosedSignal
 	drainChannel  chan *firebasexmpp.ConnectionDrainingSignal
 }
@@ -26,10 +26,10 @@ type ClientContainer struct {
 //NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
 func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 	supervisor := XMPPSupervisor{
-		clients:       make(map[string]firebasexmpp.FirebaseClient),
+		clients:       make(map[string]ClientContainer),
 		ConfigPath:    configPath,
 		signalChannel: make(chan firebasexmpp.Signal),
-		spawnChannel:  make(chan chan firebasexmpp.SMSMessage),
+		spawnChannel:  make(chan ClientContainer),
 		closeChannel:  make(chan *firebasexmpp.ConnectionClosedSignal),
 		drainChannel:  make(chan *firebasexmpp.ConnectionDrainingSignal),
 	}
@@ -44,19 +44,29 @@ func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 }
 
 //SpawnClient spawns a new FirebaseClient
-func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage, sendChannel chan interface{}, sendErrorChannel chan error) {
+func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage, sendChannel chan interface{}, errorChannel chan error) {
+	container := ClientContainer{
+		sendChannel:  sendChannel,
+		errorChannel: errorChannel,
+		recvChannel:  messageChannel,
+	}
+	supervisor.spawnClientFromContainer(container)
+}
+
+func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientContainer) {
 	clientID := uuid.NewV4().String()
 	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.ConfigPath, clientID, supervisor.signalChannel)
-	supervisor.clients[clientID] = firebaseClient
-	go firebaseClient.StartRecv(messageChannel)
-	go firebaseClient.ListenForSend(sendChannel, sendErrorChannel)
+	container.client = firebaseClient
+	supervisor.clients[container.client.ClientID] = container
+	go container.client.StartRecv(container.recvChannel)
+	go container.client.ListenForSend(container.sendChannel, container.errorChannel)
 }
 
 //listenAndSpawns listens on supervisor.spawnChannel and spawns clients as necessary
 //Exits when supervisor.spawnChannel is closed
 func (supervisor *XMPPSupervisor) listenAndSpawn() {
-	for messageChannel := range supervisor.spawnChannel {
-		supervisor.SpawnClient(messageChannel)
+	for container := range supervisor.spawnChannel {
+		supervisor.spawnClientFromContainer(container)
 	}
 }
 
@@ -77,7 +87,7 @@ func (supervisor *XMPPSupervisor) listenForSignal() {
 //Exists when supervisor.drainChannel is closed
 func (supervisor *XMPPSupervisor) listenForDraining() {
 	for signal := range supervisor.drainChannel {
-		supervisor.spawnChannel <- signal.MessageChannel
+		supervisor.spawnChannel <- supervisor.clients[signal.Client.ClientID]
 	}
 }
 
