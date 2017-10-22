@@ -123,7 +123,7 @@ func (client *FirebaseClient) Send(message interface{}) (int, error) {
 	case string:
 		return client.xmppClient.SendOrg(convertedMessage)
 	default:
-		err := errors.Error("message must be of type xmpp.Chat, string, or []byte")
+		err := errors.New("message must be of type xmpp.Chat, string, or []byte")
 		return 0, err
 	}
 }
