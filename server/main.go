@@ -19,8 +19,10 @@ func main() {
 
 	supervisor := NewXMPPSupervisor("./xmpp-config.json")
 	outChannel := make(chan firebasexmpp.SMSMessage)
+	sendChannel := make(chan interface{})
+	sendErrorChannel := make(chan error)
 	go listenForSMS(databaseConnection, outChannel)
-	supervisor.SpawnClient(outChannel)
+	supervisor.SpawnClient(outChannel, sendChannel, sendErrorChannel)
 	fmt.Println("Listening for SMS")
 	server := NewWebserver("0.0.0.0:8080", databaseConnection)
 	fmt.Println("Server running")
