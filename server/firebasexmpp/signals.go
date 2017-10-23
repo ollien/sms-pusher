@@ -15,3 +15,19 @@ type Signal struct {
 	Client *FirebaseClient
 	Type   SignalType
 }
+
+//NewConnectionDrainingSignal is a convenience function to construct a Signal with type ConnectionDrainingSignal
+func NewConnectionDrainingSignal(client *FirebaseClient) Signal {
+	return Signal{
+		Client: client,
+		Type:   ConnectionDrainingSignal,
+	}
+}
+
+//NewConnectionClosedSignal is a convenience function to construct a Signal with type ConnectionDrainingSignal
+func NewConnectionClosedSignal(client *FirebaseClient) Signal {
+	return Signal{
+		Client: client,
+		Type:   ConnectionClosedSignal,
+	}
+}
