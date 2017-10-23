@@ -9,6 +9,7 @@ import (
 type XMPPSupervisor struct {
 	clients       map[string]ClientContainer
 	ConfigPath    string
+	SendChannel   chan interface{}
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan ClientContainer
 	closeChannel  chan *firebasexmpp.ConnectionClosedSignal
@@ -60,6 +61,14 @@ func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientConta
 	supervisor.clients[container.client.ClientID] = container
 	go container.client.StartRecv(container.recvChannel)
 	go container.client.ListenForSend(container.sendChannel, container.errorChannel)
+}
+
+func (supervisor *XMPPSupervisor) listenForSend() {
+	for message := range supervisor.SendChannel {
+		for _, client := range supervisor.clients {
+			client.sendChannel <- message
+		}
+	}
 }
 
 //listenAndSpawns listens on supervisor.spawnChannel and spawns clients as necessary
