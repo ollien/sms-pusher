@@ -12,8 +12,6 @@ type XMPPSupervisor struct {
 	SendChannel   chan interface{}
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan ClientContainer
-	closeChannel  chan *firebasexmpp.ConnectionClosedSignal
-	drainChannel  chan *firebasexmpp.ConnectionDrainingSignal
 }
 
 //ClientContainer holds a client and its channels
@@ -31,15 +29,11 @@ func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 		ConfigPath:    configPath,
 		signalChannel: make(chan firebasexmpp.Signal),
 		spawnChannel:  make(chan ClientContainer),
-		closeChannel:  make(chan *firebasexmpp.ConnectionClosedSignal),
-		drainChannel:  make(chan *firebasexmpp.ConnectionDrainingSignal),
 	}
 
 	//Launch handlers
 	go supervisor.listenAndSpawn()
 	go supervisor.listenForSignal()
-	go supervisor.listenForDraining()
-	go supervisor.listenForClose()
 
 	return supervisor
 }
@@ -83,28 +77,11 @@ func (supervisor *XMPPSupervisor) listenAndSpawn() {
 //Exists when supervisor.spawnChannel closes
 func (supervisor *XMPPSupervisor) listenForSignal() {
 	for signal := range supervisor.signalChannel {
-		switch convertedSignal := signal.(type) {
-		case *firebasexmpp.ConnectionDrainingSignal:
-			supervisor.drainChannel <- convertedSignal
-		case *firebasexmpp.ConnectionClosedSignal:
-			supervisor.closeChannel <- convertedSignal
+		if signal.Type == firebasexmpp.ConnectionDrainingSignal {
+			supervisor.spawnChannel <- supervisor.clients[signal.Client.ClientID]
+		} else {
+			clientID := signal.Client.ClientID
+			delete(supervisor.clients, clientID)
 		}
-	}
-}
-
-//listenForDraining listens on supervisor.drainChannel and spawns a new client as necessary
-//Exists when supervisor.drainChannel is closed
-func (supervisor *XMPPSupervisor) listenForDraining() {
-	for signal := range supervisor.drainChannel {
-		supervisor.spawnChannel <- supervisor.clients[signal.Client.ClientID]
-	}
-}
-
-//ListenForeClose listens on supervisor.closeChannel and deletes closed clients from supervisor.clients as necessary
-//Exits when supervisor.closeChannel is closed
-func (supervisor *XMPPSupervisor) listenForClose() {
-	for signal := range supervisor.closeChannel {
-		clientID := signal.Client.ClientID
-		delete(supervisor.clients, clientID)
 	}
 }
