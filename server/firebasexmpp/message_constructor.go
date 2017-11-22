@@ -5,8 +5,14 @@ import (
 	"encoding/xml"
 	"log"
 
+	"github.com/mattn/go-xmpp"
 	uuid "github.com/satori/go.uuid"
 )
+
+//OutboundMessage represents a single message to be sent out to the XMPP server
+type OutboundMessage interface {
+	Send(xmpp.Client) (int, error)
+}
 
 //MessageStanza stores the data from the message stanza in outgoing messages. Used for marshalling XML.
 type MessageStanza struct {
