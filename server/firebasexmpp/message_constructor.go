@@ -14,6 +14,16 @@ type OutboundMessage interface {
 	Send(xmpp.Client) (int, error)
 }
 
+//RawMessage represents a single message that will be sent as raw XML. It will ont be converted to an xmpp.Chat object
+type RawMessage struct {
+	data string
+}
+
+//ChatMessage represents a single message that will be sent as a xmpp.Chat objcet.
+type ChatMessage struct {
+	data xmpp.Chat
+}
+
 //MessageStanza stores the data from the message stanza in outgoing messages. Used for marshalling XML.
 type MessageStanza struct {
 	XMLName xml.Name `xml:"message"`
