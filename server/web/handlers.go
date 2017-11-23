@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ollien/sms-pusher/server/db"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -30,11 +31,11 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 	}
 
 	encodedPassword := []byte(password)
-	err := CreateUser(handler.databaseConnection, username, encodedPassword)
+	err := db.CreateUser(handler.databaseConnection, username, encodedPassword)
 
 	if err != nil {
 		//Postgres specific check
-		if err.Error() == duplicateUserError {
+		if err.Error() == db.DuplicateUserError {
 			writer.WriteHeader(http.StatusBadRequest)
 		} else {
 			writer.WriteHeader(http.StatusInternalServerError)
@@ -60,13 +61,13 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	}
 
 	encodedPassword := []byte(password)
-	user, err = VerifyUser(handler.databaseConnection, username, encodedPassword)
+	user, err = db.VerifyUser(handler.databaseConnection, username, encodedPassword)
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	sessionID, err := CreateSession(handler.databaseConnection, user)
+	sessionID, err := db.CreateSession(handler.databaseConnection, user)
 	if err != nil {
 		//TODO: Log data about 500
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -98,7 +99,7 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 		return
 	}
 
-	deviceID, err := RegisterDeviceToUser(handler.databaseConnection, user)
+	deviceID, err := db.RegisterDeviceToUser(handler.databaseConnection, user)
 	if err != nil {
 		//TODO: Log data about 500
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -138,7 +139,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 	}
 
 	//Check to make sure that the user is actually modifying their device
-	device, err := GetDevice(handler.databaseConnection, deviceUUID)
+	device, err := db.GetDevice(handler.databaseConnection, deviceUUID)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
@@ -149,7 +150,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	err = RegisterFCMID(handler.databaseConnection, deviceUUID, []byte(fcmID))
+	err = db.RegisterFCMID(handler.databaseConnection, deviceUUID, []byte(fcmID))
 	if err != nil {
 		//TODO: Log why a 500 was returned.
 		writer.WriteHeader(http.StatusInternalServerError)
