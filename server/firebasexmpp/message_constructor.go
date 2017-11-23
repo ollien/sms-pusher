@@ -113,7 +113,7 @@ func ConstructACK(registrationID, messageID string) []byte {
 }
 
 //ConstructDownstreamSMS constructs a ConstreamPayload and returns the marshaled result
-func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) []byte {
+func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) RawMessage {
 	messageID := uuid.NewV4()
 	payload := DownstreamPayload{
 		To:        string(deviceTo),
@@ -131,5 +131,8 @@ func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return marshaledMessageStanza
+
+	return RawMessage{
+		data: string(marshaledMessageStanza),
+	}
 }
