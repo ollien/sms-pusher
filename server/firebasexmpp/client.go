@@ -101,9 +101,9 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 
 //ListenForSend listens for a message on sendChannel and sends the message.
 //Terminates when sendChannel is closed
-func (client *FirebaseClient) ListenForSend(sendChannel <-chan interface{}, errorChannel chan<- error) {
+func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage, errorChannel chan<- error) {
 	for message := range sendChannel {
-		_, err := client.Send(message)
+		_, err := message.Send(client.xmppClient)
 		if err != nil {
 			errorChannel <- err
 		}
