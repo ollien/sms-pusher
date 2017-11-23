@@ -140,6 +140,6 @@ func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, e
 }
 
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
-	payload := ConstructACK(message.From, message.MessageID)
-	return client.xmppClient.SendOrg(string(payload))
+	ack := ConstructACK(message.From, message.MessageID)
+	return ack.Send(client.xmppClient)
 }

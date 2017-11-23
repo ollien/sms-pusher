@@ -96,7 +96,7 @@ func NewACKPayload(registrationID, messageID string) ACKPayload {
 }
 
 //ConstructACK constructs a full ACK message to be send to the server.
-func ConstructACK(registrationID, messageID string) []byte {
+func ConstructACK(registrationID, messageID string) RawMessage {
 	payload := NewACKPayload(registrationID, messageID)
 	marshaledPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -109,7 +109,10 @@ func ConstructACK(registrationID, messageID string) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return marshaledMessageStanza
+
+	return RawMessage{
+		data: string(marshaledMessageStanza),
+	}
 }
 
 //ConstructDownstreamSMS constructs a ConstreamPayload and returns the marshaled result
