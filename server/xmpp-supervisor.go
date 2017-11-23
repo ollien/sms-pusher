@@ -9,7 +9,7 @@ import (
 type XMPPSupervisor struct {
 	clients       map[string]ClientContainer
 	ConfigPath    string
-	SendChannel   chan interface{}
+	SendChannel   chan firebasexmpp.OutboundMessage
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan ClientContainer
 }
@@ -17,7 +17,7 @@ type XMPPSupervisor struct {
 //ClientContainer holds a client and its channels
 type ClientContainer struct {
 	client       firebasexmpp.FirebaseClient
-	sendChannel  chan interface{}
+	sendChannel  chan firebasexmpp.OutboundMessage
 	errorChannel chan error
 	recvChannel  chan firebasexmpp.SMSMessage
 }
@@ -39,7 +39,7 @@ func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 }
 
 //SpawnClient spawns a new FirebaseClient
-func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage, sendChannel chan interface{}, errorChannel chan error) {
+func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, errorChannel chan error) {
 	container := ClientContainer{
 		sendChannel:  sendChannel,
 		errorChannel: errorChannel,

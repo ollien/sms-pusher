@@ -5,8 +5,24 @@ import (
 	"encoding/xml"
 	"log"
 
+	"github.com/mattn/go-xmpp"
 	uuid "github.com/satori/go.uuid"
 )
+
+//OutboundMessage represents a single message to be sent out to the XMPP server
+type OutboundMessage interface {
+	Send(xmpp.Client) (int, error)
+}
+
+//RawMessage represents a single message that will be sent as raw XML. It will ont be converted to an xmpp.Chat object
+type RawMessage struct {
+	data string
+}
+
+//ChatMessage represents a single message that will be sent as a xmpp.Chat objcet.
+type ChatMessage struct {
+	data xmpp.Chat
+}
 
 //MessageStanza stores the data from the message stanza in outgoing messages. Used for marshalling XML.
 type MessageStanza struct {
@@ -52,6 +68,16 @@ type DownstreamPayload struct {
 	Notification             bool        `json:"notification,omitempty"`
 }
 
+//Send sends the data contained in the message to the server. Returns the number of bytes sent or an error
+func (message RawMessage) Send(xmppClient xmpp.Client) (int, error) {
+	return xmppClient.SendOrg(message.data)
+}
+
+//Send sends the data contained in the message to the server. Returns the number of bytes sent or an error
+func (message ChatMessage) Send(xmppClient xmpp.Client) (int, error) {
+	return xmppClient.Send(message.data)
+}
+
 //NewGCMStanza makes a new GCMStanza. the XMLNS should always be google:mobile:data.
 func NewGCMStanza(payload string) GCMStanza {
 	return GCMStanza{
@@ -70,7 +96,7 @@ func NewACKPayload(registrationID, messageID string) ACKPayload {
 }
 
 //ConstructACK constructs a full ACK message to be send to the server.
-func ConstructACK(registrationID, messageID string) []byte {
+func ConstructACK(registrationID, messageID string) RawMessage {
 	payload := NewACKPayload(registrationID, messageID)
 	marshaledPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -83,11 +109,14 @@ func ConstructACK(registrationID, messageID string) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return marshaledMessageStanza
+
+	return RawMessage{
+		data: string(marshaledMessageStanza),
+	}
 }
 
 //ConstructDownstreamSMS constructs a ConstreamPayload and returns the marshaled result
-func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) []byte {
+func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) RawMessage {
 	messageID := uuid.NewV4()
 	payload := DownstreamPayload{
 		To:        string(deviceTo),
@@ -105,5 +134,8 @@ func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return marshaledMessageStanza
+
+	return RawMessage{
+		data: string(marshaledMessageStanza),
+	}
 }

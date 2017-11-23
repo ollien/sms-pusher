@@ -2,13 +2,11 @@ package firebasexmpp
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/mattn/go-xmpp"
 )
@@ -103,43 +101,16 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 
 //ListenForSend listens for a message on sendChannel and sends the message.
 //Terminates when sendChannel is closed
-func (client *FirebaseClient) ListenForSend(sendChannel <-chan interface{}, errorChannel chan<- error) {
+func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage, errorChannel chan<- error) {
 	for message := range sendChannel {
-		_, err := client.Send(message)
+		_, err := message.Send(client.xmppClient)
 		if err != nil {
 			errorChannel <- err
 		}
 	}
 }
 
-//Send sends a message to FirebaseXMPP
-//If the message is of type xmpp.Chat, the message will be sent normally. If it is of type []byte or string, it will be sent raw using SendOrg. Otherwise, an error will be returned.
-func (client *FirebaseClient) Send(message interface{}) (int, error) {
-	switch convertedMessage := message.(type) {
-	case xmpp.Chat:
-		return client.xmppClient.Send(convertedMessage)
-	case []byte:
-		return client.xmppClient.SendOrg(string(convertedMessage))
-	case string:
-		return client.xmppClient.SendOrg(convertedMessage)
-	default:
-		err := errors.New("message must be of type xmpp.Chat, string, or []byte")
-		return 0, err
-	}
-}
-
-//ConstructAndSend constructs a xmpp.Chat object and send it using Send
-func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, error) {
-	chat := xmpp.Chat{
-		Remote: fcmServer,
-		Type:   messageType,
-		Text:   text,
-		Stamp:  time.Now(),
-	}
-	return client.Send(chat)
-}
-
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
-	payload := ConstructACK(message.From, message.MessageID)
-	return client.xmppClient.SendOrg(string(payload))
+	ack := ConstructACK(message.From, message.MessageID)
+	return ack.Send(client.xmppClient)
 }
