@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
 )
 
 //Webserver hosts a webserver for sms-pusher
@@ -15,9 +16,10 @@ type Webserver struct {
 }
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
-func NewWebserver(listenAddr string, databaseConnection *sql.DB) Webserver {
+func NewWebserver(listenAddr string, databaseConnection *sql.DB, sendChannel chan<- firebasexmpp.OutboundMessage) Webserver {
 	routeHandler := RouteHandler{
 		databaseConnection: databaseConnection,
+		sendChannel:        sendChannel,
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,

@@ -8,12 +8,15 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/ollien/sms-pusher/server/db"
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	uuid "github.com/satori/go.uuid"
 )
 
 //RouteHandler holds all routes and allows them to share common variables
 type RouteHandler struct {
 	databaseConnection *sql.DB
+	sendChannel        chan<- firebasexmpp.OutboundMessage
+	//TODO: add sendErrorChannel once websockets are implemented
 }
 
 func (handler RouteHandler) index(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
