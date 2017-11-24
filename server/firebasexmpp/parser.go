@@ -52,10 +52,12 @@ func GetMessageType(rawData []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	//Upstream Messages have no message type. thus, if MessageType is nil, the message therefore has no message type, and we can assume it's an upstream mesage.
 	if message.MessageType == nil {
 		return "UpstreamMessage", nil
 	}
+
 	switch *message.MessageType {
 	case "ack":
 		return "InboundACKMessage", nil
