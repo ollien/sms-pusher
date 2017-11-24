@@ -181,6 +181,11 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 		Message:     message,
 		Timestamp:   time.Now().Unix(),
 	}
-	outMessage := firebasexmpp.ConstructDownstreamSMS(device.FCMID, smsMessage)
+	outMessage, err := firebasexmpp.ConstructDownstreamSMS(device.FCMID, smsMessage)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	handler.sendChannel <- outMessage
 }
