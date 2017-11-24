@@ -27,7 +27,6 @@ func (handler RouteHandler) index(writer http.ResponseWriter, req *http.Request,
 func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 	username := req.FormValue("username")
 	password := req.FormValue("password")
-
 	if username == "" || password == "" || len(password) < 8 {
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
@@ -36,7 +35,6 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 
 	encodedPassword := []byte(password)
 	err := db.CreateUser(handler.databaseConnection, username, encodedPassword)
-
 	if err != nil {
 		//Postgres specific check
 		if err.Error() == db.DuplicateUserError {
@@ -58,7 +56,6 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 
 	username := req.FormValue("username")
 	password := req.FormValue("password")
-
 	if username == "" || password == "" {
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)

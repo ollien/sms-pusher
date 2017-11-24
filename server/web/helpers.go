@@ -15,6 +15,7 @@ func GetSessionCookie(req *http.Request) *http.Cookie {
 			return cookie
 		}
 	}
+
 	return nil
 }
 
@@ -31,7 +32,7 @@ func GetSessionUser(databaseConnection *sql.DB, req *http.Request) (db.User, err
 	}
 
 	user, err := db.GetUserFromSession(databaseConnection, sessionID)
-	//If err is nil, there is no valid session.
-	return user, err
 
+	//If err is not nil, there is no valid session.
+	return user, err
 }
