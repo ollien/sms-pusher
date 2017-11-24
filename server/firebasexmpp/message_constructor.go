@@ -139,3 +139,17 @@ func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) RawMessage {
 		data: string(marshaledMessageStanza),
 	}
 }
+
+func wrapInStanzas(payload []byte) (RawMessage, error) {
+	messageStanza := MessageStanza{
+		Body: NewGCMStanza(string(payload)),
+	}
+	marshaledStanza, err := xml.Marshal(messageStanza)
+	if err != nil {
+		return RawMessage{}, err
+	}
+
+	return RawMessage{
+		data: string(marshaledStanza),
+	}, nil
+}
