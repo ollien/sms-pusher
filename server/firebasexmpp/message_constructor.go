@@ -3,7 +3,6 @@ package firebasexmpp
 import (
 	"encoding/json"
 	"encoding/xml"
-	"log"
 
 	"github.com/mattn/go-xmpp"
 	uuid "github.com/satori/go.uuid"
@@ -96,19 +95,14 @@ func NewACKPayload(registrationID, messageID string) ACKPayload {
 }
 
 //ConstructACK constructs a full ACK message to be send to the server.
-func ConstructACK(registrationID, messageID string) RawMessage {
+func ConstructACK(registrationID, messageID string) (RawMessage, error) {
 	payload := NewACKPayload(registrationID, messageID)
 	marshaledPayload, err := json.Marshal(payload)
 	if err != nil {
-		log.Fatal(err)
+		return RawMessage{}, err
 	}
 
-	outMessage, err := wrapInStanzas(marshaledPayload)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return outMessage
+	return wrapInStanzas(marshaledPayload)
 }
 
 //ConstructDownstreamSMS constructs a ConstreamPayload and returns the marshaled result

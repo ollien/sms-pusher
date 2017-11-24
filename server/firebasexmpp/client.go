@@ -114,7 +114,10 @@ func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage, 
 }
 
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
-	ack := ConstructACK(message.From, message.MessageID)
+	ack, err := ConstructACK(message.From, message.MessageID)
+	if err != nil {
+		return 0, err
+	}
 
 	return ack.Send(client.xmppClient)
 }
