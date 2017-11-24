@@ -75,23 +75,12 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 		return
 	}
 
-	resultMap := make(map[string]string)
-	resultMap["session_id"] = sessionID
-	resultJSON, err := json.Marshal(resultMap)
-	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-	} else {
-		_, err := writer.Write(resultJSON)
-		if err != nil {
-			writer.WriteHeader(http.StatusInternalServerError)
-		} else {
-			cookie := &http.Cookie{
-				Name:  "session",
-				Value: sessionID,
-			}
-			http.SetCookie(writer, cookie)
-		}
+	cookie := &http.Cookie{
+		Name:  "session",
+		Value: sessionID,
 	}
+
+	http.SetCookie(writer, cookie)
 }
 
 func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
