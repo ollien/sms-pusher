@@ -2,6 +2,7 @@ package web
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
@@ -41,5 +42,8 @@ func (serv *Webserver) initHandlers() {
 
 //Start starts the webserver
 func (serv *Webserver) Start() {
-	http.ListenAndServe(serv.listenAddr, serv.router)
+	err := http.ListenAndServe(serv.listenAddr, serv.router)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
