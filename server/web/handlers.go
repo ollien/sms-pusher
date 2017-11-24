@@ -51,6 +51,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 		//If there is a valid session, we have a 200, which is already the default header, so we just reurn.
 		return
 	}
+
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 
@@ -71,6 +72,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	if err != nil {
 		//TODO: Log data about 500
 		writer.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	resultMap := make(map[string]string)
