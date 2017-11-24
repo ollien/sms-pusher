@@ -12,7 +12,6 @@ import (
 
 func main() {
 	databaseConnection, err := db.InitDB("./database-config.json")
-
 	if err != nil {
 		log.Fatal(err)
 	}
