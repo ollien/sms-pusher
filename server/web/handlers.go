@@ -55,6 +55,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 		//If there is a valid session, we have a 200, which is already the default header, so we just reurn.
 		return
 	}
+
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 
@@ -75,25 +76,15 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	if err != nil {
 		//TODO: Log data about 500
 		writer.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
-	resultMap := make(map[string]string)
-	resultMap["session_id"] = sessionID
-	resultJSON, err := json.Marshal(resultMap)
-	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-	} else {
-		_, err := writer.Write(resultJSON)
-		if err != nil {
-			writer.WriteHeader(http.StatusInternalServerError)
-		} else {
-			cookie := &http.Cookie{
-				Name:  "session",
-				Value: sessionID,
-			}
-			http.SetCookie(writer, cookie)
-		}
+	cookie := &http.Cookie{
+		Name:  "session",
+		Value: sessionID,
 	}
+
+	http.SetCookie(writer, cookie)
 }
 
 func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
