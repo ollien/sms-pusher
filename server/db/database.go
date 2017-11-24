@@ -38,6 +38,7 @@ func InitDB(configPath string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	jsonDecoder := json.NewDecoder(file)
 	configMap := make(map[string]string)
 	jsonDecoder.Decode(&configMap)
@@ -52,7 +53,6 @@ func InitDB(configPath string) (*sql.DB, error) {
 		"phone_number VARCHAR(16)," +
 		"time timestamp," +
 		"message TEXT);")
-
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,6 @@ func InitDB(configPath string) (*sql.DB, error) {
 		"id SERIAL PRIMARY KEY," +
 		"username VARCHAR(32) UNIQUE," +
 		"password_hash bytea);")
-
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +72,6 @@ func InitDB(configPath string) (*sql.DB, error) {
 		"device_id uuid UNIQUE," +
 		"firebase_id bytea," +
 		"device_user INTEGER REFERENCES users(id));")
-
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +80,6 @@ func InitDB(configPath string) (*sql.DB, error) {
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS sessions (" +
 		"id uuid PRIMARY KEY," +
 		"for_user INTEGER REFERENCES users(id));")
-
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +97,6 @@ func InsertMessage(databaseConnection *sql.DB, message firebasexmpp.SMSMessage) 
 //CreateUser insersts a user into the database
 func CreateUser(databaseConnection *sql.DB, username string, password []byte) error {
 	hash, err := bcrypt.GenerateFromPassword(password, passwordCost)
-
 	if err != nil {
 		return err
 	}
@@ -156,6 +152,7 @@ func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (U
 	if err != nil {
 		return User{}, err
 	}
+
 	err = bcrypt.CompareHashAndPassword(user.passwordHash, password)
 	if err != nil {
 		return User{}, err

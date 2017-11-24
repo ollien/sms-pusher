@@ -49,6 +49,7 @@ func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- 
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return FirebaseClient{
 		xmppClient:    *client,
 		ClientID:      clientID,
@@ -72,12 +73,14 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 				log.Fatal(err)
 			}
 		}
+
 		chat, ok := data.(xmpp.Chat)
 		if !ok {
 			//xmpp.Recv can return a xmpp.Chat or a xmpp.Presence. We don't care about presence notifications.
 			//Though the FCM spec makes no mention of them, because it doesn't explicitly say we will never recieve them, we must handle them somehow - in this case, ignoring them.
 			continue
 		}
+
 		messageBody := []byte(chat.Other[0])
 		messageType, err := GetMessageType(messageBody)
 		if err != nil {
@@ -112,5 +115,6 @@ func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage, 
 
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
 	ack := ConstructACK(message.From, message.MessageID)
+
 	return ack.Send(client.xmppClient)
 }
