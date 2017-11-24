@@ -102,17 +102,13 @@ func ConstructACK(registrationID, messageID string) RawMessage {
 	if err != nil {
 		log.Fatal(err)
 	}
-	messageStanza := MessageStanza{
-		Body: NewGCMStanza(string(marshaledPayload)),
-	}
-	marshaledMessageStanza, err := xml.Marshal(messageStanza)
+
+	outMessage, err := wrapInStanzas(marshaledPayload)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return RawMessage{
-		data: string(marshaledMessageStanza),
-	}
+	return outMessage
 }
 
 //ConstructDownstreamSMS constructs a ConstreamPayload and returns the marshaled result
@@ -125,19 +121,17 @@ func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) RawMessage {
 		TTL:       3600,
 		Data:      message,
 	}
-	//TODO: Abstract this so we're not repeating this every time we need to send something downstream
 	marshaledPayload, err := json.Marshal(payload)
-	messageStanza := MessageStanza{
-		Body: NewGCMStanza(string(marshaledPayload)),
-	}
-	marshaledMessageStanza, err := xml.Marshal(messageStanza)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return RawMessage{
-		data: string(marshaledMessageStanza),
+	outMessage, err := wrapInStanzas(marshaledPayload)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	return outMessage
 }
 
 func wrapInStanzas(payload []byte) (RawMessage, error) {
