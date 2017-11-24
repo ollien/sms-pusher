@@ -1,5 +1,6 @@
 package com.ollien.smspusher;
 
+import android.telephony.SmsManager;
 import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
@@ -8,9 +9,10 @@ import com.google.firebase.messaging.RemoteMessage;
 
 public class FirebaseMessageService extends FirebaseMessagingService {
 	@Override
-	public void onMessageReceived(RemoteMessage message) {
-		for (String key : message.getData().keySet()) {
-			Log.d("SMSPusherRemoteMessage", message.getData().get(key));
-		}
+	public void onMessageReceived(RemoteMessage remoteMessage) {
+		String phoneNumber = remoteMessage.getData().get("phone_number");
+		String message = remoteMessage.getData().get("message");
+		SmsManager smsManager = SmsManager.getDefault();
+		smsManager.sendTextMessage(phoneNumber, null, message, null, null);
 	}
 }
