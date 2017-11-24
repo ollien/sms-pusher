@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
 )
 
 //Webserver hosts a webserver for sms-pusher
@@ -16,9 +17,10 @@ type Webserver struct {
 }
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
-func NewWebserver(listenAddr string, databaseConnection *sql.DB) Webserver {
+func NewWebserver(listenAddr string, databaseConnection *sql.DB, sendChannel chan<- firebasexmpp.OutboundMessage) Webserver {
 	routeHandler := RouteHandler{
 		databaseConnection: databaseConnection,
+		sendChannel:        sendChannel,
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,
@@ -35,6 +37,7 @@ func (serv *Webserver) initHandlers() {
 	serv.router.POST("/authenticate", serv.routeHandler.authenticate)
 	serv.router.POST("/register_device", serv.routeHandler.registerDevice)
 	serv.router.POST("/set_fcm_id", serv.routeHandler.setFCMID)
+	serv.router.POST("/send_message", serv.routeHandler.sendMessage)
 }
 
 //Start starts the webserver

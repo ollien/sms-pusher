@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/mattn/go-xmpp"
 )
@@ -67,7 +66,7 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 			//encoding/xml adds a bunch of extra stuff to XML errors, including the line number. However, all we care about is whether or not an EOF was reached.
 			if strings.Contains(err.Error(), io.EOF.Error()) {
 				closeSignal := NewConnectionClosedSignal(client)
-				client.signalChannel <- &closeSignal
+				client.signalChannel <- closeSignal
 				break
 			} else {
 				log.Fatal(err)
@@ -93,30 +92,25 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 			}
 			recvChannel <- message.Data
 		} else if messageType == "ConnectionDrainingMessage" {
-			drainSignal := NewConnectionDrainingSignal(client, recvChannel)
-			client.signalChannel <- &drainSignal
+			drainSignal := NewConnectionDrainingSignal(client)
+			client.signalChannel <- drainSignal
 		}
 		//TODO: Handle InboundACKMessage and NACKMessage
 	}
 }
 
-//Send sends a message to FirebaseXMPP
-func (client *FirebaseClient) Send(chat xmpp.Chat) (int, error) {
-	return client.xmppClient.Send(chat)
-}
-
-//ConstructAndSend constructs a xmpp.Chat object and send it using Send
-func (client *FirebaseClient) ConstructAndSend(messageType, text string) (int, error) {
-	chat := xmpp.Chat{
-		Remote: fcmServer,
-		Type:   messageType,
-		Text:   text,
-		Stamp:  time.Now(),
+//ListenForSend listens for a message on sendChannel and sends the message.
+//Terminates when sendChannel is closed
+func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage, errorChannel chan<- error) {
+	for message := range sendChannel {
+		_, err := message.Send(client.xmppClient)
+		if err != nil {
+			errorChannel <- err
+		}
 	}
-	return client.Send(chat)
 }
 
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
-	payload := ConstructACK(message.From, message.MessageID)
-	return client.xmppClient.SendOrg(string(payload))
+	ack := ConstructACK(message.From, message.MessageID)
+	return ack.Send(client.xmppClient)
 }

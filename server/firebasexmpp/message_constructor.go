@@ -4,7 +4,25 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"log"
+
+	"github.com/mattn/go-xmpp"
+	uuid "github.com/satori/go.uuid"
 )
+
+//OutboundMessage represents a single message to be sent out to the XMPP server
+type OutboundMessage interface {
+	Send(xmpp.Client) (int, error)
+}
+
+//RawMessage represents a single message that will be sent as raw XML. It will ont be converted to an xmpp.Chat object
+type RawMessage struct {
+	data string
+}
+
+//ChatMessage represents a single message that will be sent as a xmpp.Chat objcet.
+type ChatMessage struct {
+	data xmpp.Chat
+}
 
 //MessageStanza stores the data from the message stanza in outgoing messages. Used for marshalling XML.
 type MessageStanza struct {
@@ -35,6 +53,31 @@ type ACKPayload struct {
 	MessageType string `json:"message_type"`
 }
 
+//DownstreamPayload stores the data to be sent downstream. Used for marshaling JSON.
+//Because our client is Android specific, we ignore content_availabe and mutable_content, which do nothing for Android.
+type DownstreamPayload struct {
+	To                       string      `json:"to,omitempty"`
+	Condition                string      `json:"condition,omitempty"`
+	MessageID                string      `json:"message_id"`
+	CollapseKey              string      `json:"collapse_key,omitempty"`
+	Priority                 string      `json:"priority,omitempty"`
+	TTL                      int         `json:"time_to_live,omitempty"`
+	DeliveryReceiptRequested bool        `json:"delivery_receipt_requested,omitempty"`
+	DryRun                   bool        `json:"dry_run,omitempty"`
+	Data                     interface{} `json:"data,omitempty"`
+	Notification             bool        `json:"notification,omitempty"`
+}
+
+//Send sends the data contained in the message to the server. Returns the number of bytes sent or an error
+func (message RawMessage) Send(xmppClient xmpp.Client) (int, error) {
+	return xmppClient.SendOrg(message.data)
+}
+
+//Send sends the data contained in the message to the server. Returns the number of bytes sent or an error
+func (message ChatMessage) Send(xmppClient xmpp.Client) (int, error) {
+	return xmppClient.Send(message.data)
+}
+
 //NewGCMStanza makes a new GCMStanza. the XMLNS should always be google:mobile:data.
 func NewGCMStanza(payload string) GCMStanza {
 	return GCMStanza{
@@ -53,7 +96,7 @@ func NewACKPayload(registrationID, messageID string) ACKPayload {
 }
 
 //ConstructACK constructs a full ACK message to be send to the server.
-func ConstructACK(registrationID, messageID string) []byte {
+func ConstructACK(registrationID, messageID string) RawMessage {
 	payload := NewACKPayload(registrationID, messageID)
 	marshaledPayload, err := json.Marshal(payload)
 	if err != nil {
@@ -66,5 +109,33 @@ func ConstructACK(registrationID, messageID string) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return marshaledMessageStanza
+
+	return RawMessage{
+		data: string(marshaledMessageStanza),
+	}
+}
+
+//ConstructDownstreamSMS constructs a ConstreamPayload and returns the marshaled result
+func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) RawMessage {
+	messageID := uuid.NewV4()
+	payload := DownstreamPayload{
+		To:        string(deviceTo),
+		MessageID: messageID.String(),
+		Priority:  "high",
+		TTL:       3600,
+		Data:      message,
+	}
+	//TODO: Abstract this so we're not repeating this every time we need to send something downstream
+	marshaledPayload, err := json.Marshal(payload)
+	messageStanza := MessageStanza{
+		Body: NewGCMStanza(string(marshaledPayload)),
+	}
+	marshaledMessageStanza, err := xml.Marshal(messageStanza)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return RawMessage{
+		data: string(marshaledMessageStanza),
+	}
 }
