@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/ollien/sms-pusher/server/db"
@@ -158,4 +159,40 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 		//TODO: Log why a 500 was returned.
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
+}
+
+func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	user, err := GetSessionUser(handler.databaseConnection, req)
+	if err != nil {
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	recipient := req.FormValue("recipient")
+	message := req.FormValue("message")
+	deviceID := req.FormValue("device-id")
+	if recipient == "" || message == "" || deviceID == "" {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	deviceUUID, err := uuid.FromString(deviceID)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	device, err := db.GetDevice(handler.databaseConnection, deviceUUID)
+	if device.DeviceUser.ID != user.ID {
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	smsMessage := firebasexmpp.SMSMessage{
+		PhoneNumber: recipient,
+		Message:     message,
+		Timestamp:   time.Now().Unix(),
+	}
+	outMessage := firebasexmpp.ConstructDownstreamSMS(device.FCMID, smsMessage)
+	handler.sendChannel <- outMessage
 }
