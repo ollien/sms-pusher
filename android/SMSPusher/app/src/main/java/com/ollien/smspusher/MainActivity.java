@@ -20,11 +20,15 @@ import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
+import java.net.CookieHandler;
+import java.net.CookieManager;
+import java.net.HttpCookie;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
 	private TextView deviceIDDisplay;
 	private SharedPreferences prefs;
 	private SharedPreferences.Editor prefsEditor;
+	private CookieManager cookieManager;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_main);
 		ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECEIVE_SMS}, 0);
 		queue = Volley.newRequestQueue(this);
+		cookieManager = new CookieManager();
+		CookieHandler.setDefault(cookieManager);
 		hostField = (EditText)findViewById(R.id.register_host);
 		usernameField = (EditText)findViewById(R.id.register_username);
 		passwordField = (EditText)findViewById(R.id.register_password);
@@ -153,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
 	}
 
 	private void authenticate(URL host, String username, String password, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
-		URL authURL = new URL(host, "/authenticate");
+		final URL authURL = new URL(host, "/authenticate");
 		final HashMap<String, String> authMap = new HashMap<String, String>();
 		authMap.put("username", username);
 		authMap.put("password", password);
@@ -161,15 +168,24 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onResponse(String response) {
 				try {
-					JSONObject resJSON = new JSONObject(response);
-					String sessionID = resJSON.getString("session_id");
+					List<HttpCookie> cookies = cookieManager.getCookieStore().get(authURL.toURI());
+					String sessionID = null;
+					for (HttpCookie cookie : cookies) {
+						if (cookie.getName().equals("session")) {
+							sessionID = cookie.getValue();
+						}
+					}
+					if (sessionID == null) {
+						throw new NoSuchFieldException("No session key exists.");
+					}
+
 					prefsEditor.putString(SESSION_ID_PREFS_KEY, sessionID);
 					prefsEditor.apply();
 					if (resListener != null) {
 						resListener.onResponse(sessionID);
 					}
 				}
-				catch (JSONException e) {
+				catch (NoSuchFieldException | URISyntaxException e) {
 					Log.e("SMSPusher", e.toString());
 					if (errorListener != null) {
 						errorListener.onErrorResponse(new VolleyError(e));
