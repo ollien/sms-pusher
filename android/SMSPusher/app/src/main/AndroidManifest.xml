@@ -23,6 +23,7 @@
 
 		<receiver
 			android:name=".SMSReceiver"
+			android:permission="android.permission.BROADCAST_SMS"
 			android:enabled="true"
 			android:exported="true">
 			<intent-filter>
@@ -33,7 +34,7 @@
 		<service
 			android:name=".FirebaseIdService"
 			android:enabled="true"
-			android:exported="true">
+			android:exported="false">
 			<intent-filter>
 				<action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
 			</intent-filter>
@@ -41,7 +42,7 @@
 		<service
 			android:name=".FirebaseMessageService"
 			android:enabled="true"
-			android:exported="true">
+			android:exported="false">
 			<intent-filter>
 				<action android:name="com.google.firebase.MESSAGING_EVENT" />
 			</intent-filter>
