@@ -35,9 +35,5 @@ func listenForSMS(databaseConnection *sql.DB, outChannel <-chan firebasexmpp.SMS
 		//TODO: Find some way to ping the client of this event. Maybe websockets?
 		message := <-outChannel
 		fmt.Printf("MESSAGE DETAILS\nFrom: %s\nAt: %d\nBody:%s\n\n", message.PhoneNumber, message.Timestamp, message.Message)
-		err := db.InsertMessage(databaseConnection, message)
-		if err != nil {
-			log.Fatal(err)
-		}
 	}
 }

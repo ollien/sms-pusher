@@ -47,16 +47,6 @@ func InitDB(configPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	//Create messages table
-	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS messages (" +
-		"id SERIAL PRIMARY KEY," +
-		"phone_number VARCHAR(16)," +
-		"time timestamp," +
-		"message TEXT);")
-	if err != nil {
-		return nil, err
-	}
-
 	//Create users table.
 	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS users (" +
 		"id SERIAL PRIMARY KEY," +
@@ -85,13 +75,6 @@ func InitDB(configPath string) (*sql.DB, error) {
 	}
 
 	return databaseConnection, nil
-}
-
-//InsertMessage inserts a SMS message into the database
-func InsertMessage(databaseConnection *sql.DB, message firebasexmpp.SMSMessage) error {
-	_, err := databaseConnection.Exec("INSERT INTO messages VALUES (DEFAULT, $1, to_timestamp($2), $3)", message.PhoneNumber, message.Timestamp, message.Message)
-
-	return err
 }
 
 //CreateUser insersts a user into the database
