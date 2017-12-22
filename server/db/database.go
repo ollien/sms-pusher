@@ -6,7 +6,6 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
-	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
