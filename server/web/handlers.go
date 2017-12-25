@@ -3,6 +3,7 @@ package web
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"time"
@@ -11,12 +12,21 @@ import (
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
+)
+
+const (
+	databaseErrorLogFormat   = "Database error: %s"
+	jsonErrorLogFormat       = "JSON error: %s"
+	xmppErrorLogFormat       = "XMPP error: %s"
+	notEnoughInfoErrorLogMsg = "Not enough info to continue."
 )
 
 //RouteHandler holds all routes and allows them to share common variables
 type RouteHandler struct {
 	databaseConnection *sql.DB
 	sendChannel        chan<- firebasexmpp.OutboundMessage
+	logger             *logrus.Logger
 	//TODO: add sendErrorChannel once websockets are implemented
 }
 
@@ -28,6 +38,7 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 	if username == "" || password == "" || len(password) < 8 {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -40,6 +51,7 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 		if err.Error() == db.DuplicateUserError {
 			writer.WriteHeader(http.StatusBadRequest)
 		} else {
+			logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -56,6 +68,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 	if username == "" || password == "" {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -70,7 +83,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 
 	sessionID, err := db.CreateSession(handler.databaseConnection, user)
 	if err != nil {
-		//TODO: Log data about 500
+		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -92,7 +105,7 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 
 	deviceID, err := db.RegisterDeviceToUser(handler.databaseConnection, user)
 	if err != nil {
-		//TODO: Log data about 500
+		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 
@@ -100,9 +113,12 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 	resultMap["device_id"] = deviceID.DeviceID.String()
 	resultJSON, err := json.Marshal(resultMap)
 	if err != nil {
+		resultMapString := fmt.Sprintf("%#v", resultMap)
+		logWithRouteField(handler.logger, req, "map", resultMapString).Errorf(jsonErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	} else {
 		_, err := writer.Write(resultJSON)
+		logWithRouteField(handler.logger, req, "json", resultJSON).Errorf(jsonErrorLogFormat, err)
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
@@ -119,12 +135,14 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 	deviceID := req.FormValue("device_id")
 	fcmID := req.FormValue("fcm_id")
 	if deviceID == "" || fcmID == "" {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	deviceUUID, err := uuid.FromString(deviceID)
 	if err != nil {
+		logWithRoute(handler.logger, req).Debug("Bad UUID for device")
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -132,6 +150,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 	//Check to make sure that the user is actually modifying their device
 	device, err := db.GetDevice(handler.databaseConnection, deviceUUID)
 	if err != nil {
+		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -143,7 +162,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 
 	err = db.RegisterFCMID(handler.databaseConnection, deviceUUID, []byte(fcmID))
 	if err != nil {
-		//TODO: Log why a 500 was returned.
+		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -159,6 +178,8 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	message := req.FormValue("message")
 	deviceID := req.FormValue("device-id")
 	if recipient == "" || message == "" || deviceID == "" {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
+		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -182,6 +203,7 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	}
 	outMessage, err := firebasexmpp.ConstructDownstreamSMS(device.FCMID, smsMessage)
 	if err != nil {
+		logWithRoute(handler.logger, req).Errorf(xmppErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
