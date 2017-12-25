@@ -16,6 +16,11 @@ const passwordCost = 10
 //DuplicateUserError is a postgres specific error for duplicate users in our users db
 const DuplicateUserError = "pq: duplicate key value violates unique constraint \"users_username_key\""
 
+//DatabaseConnection represents a single connection to the database
+type DatabaseConnection struct {
+	sql.DB
+}
+
 //User represents a user within the database
 type User struct {
 	ID           int
