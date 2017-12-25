@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	databaseErrorLogFormat = "Database error: %s"
-	jsonErrorLogFormat     = "JSON error: %s"
-	xmppErrorLogFormat     = "XMPP error: %s"
+	databaseErrorLogFormat   = "Database error: %s"
+	jsonErrorLogFormat       = "JSON error: %s"
+	xmppErrorLogFormat       = "XMPP error: %s"
+	notEnoughInfoErrorLogMsg = "Not enough info to continue."
 )
 
 //RouteHandler holds all routes and allows them to share common variables
@@ -37,6 +38,7 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 	if username == "" || password == "" || len(password) < 8 {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -66,6 +68,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 	if username == "" || password == "" {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -132,12 +135,14 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 	deviceID := req.FormValue("device_id")
 	fcmID := req.FormValue("fcm_id")
 	if deviceID == "" || fcmID == "" {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	deviceUUID, err := uuid.FromString(deviceID)
 	if err != nil {
+		logWithRoute(handler.logger, req).Debug("Bad UUID for device")
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -173,6 +178,8 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	message := req.FormValue("message")
 	deviceID := req.FormValue("device-id")
 	if recipient == "" || message == "" || deviceID == "" {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
+		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
