@@ -92,21 +92,24 @@ func (db DatabaseConnection) CreateSession(user User) (Session, error) {
 	}, nil
 }
 
-//GetUserFromSession gets the user associated with a session
-func (db DatabaseConnection) GetUserFromSession(sessionID string) (User, error) {
+//GetSession gets the user associated with a session
+func (db DatabaseConnection) GetSession(sessionID string) (Session, error) {
 	sessionRow := db.QueryRow("SELECT for_user FROM sessions WHERE id = $1", sessionID)
 	var userID int
 	err := sessionRow.Scan(&userID)
 	if err != nil {
-		return User{}, err
+		return Session{}, err
 	}
 
 	user, err := db.GetUserByID(userID)
 	if err != nil {
-		return User{}, err
+		return Session{}, err
 	}
 
-	return user, err
+	return Session{
+		ID:          sessionID,
+		SessionUser: user,
+	}, nil
 }
 
 //GetDevice gets a Device from the database, given a deviceID
