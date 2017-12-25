@@ -40,20 +40,20 @@ func GetSessionUser(databaseConnection *sql.DB, req *http.Request) (db.User, err
 	return user, err
 }
 
-//LogWithRoute returns a logrus.Entry that contains a field of the route that is being logged
-func LogWithRoute(logger *logrus.Logger, req *http.Request) *logrus.Entry {
+//logWithRoute returns a logrus.Entry that contains a field of the route that is being logged
+func logWithRoute(logger *logrus.Logger, req *http.Request) *logrus.Entry {
 	return logger.WithField(routeKey, req.RequestURI)
 }
 
-//LogWithRouteField is equivalent to logrus.WithField, but inserts information about the route that is being logged.
-func LogWithRouteField(logger *logrus.Logger, req *http.Request, key string, value interface{}) *logrus.Entry {
+//logWithRouteField is equivalent to logrus.WithField, but inserts information about the route that is being logged.
+func logWithRouteField(logger *logrus.Logger, req *http.Request, key string, value interface{}) *logrus.Entry {
 	fields := make(logrus.Fields)
 	fields[key] = value
-	return LogWithRouteFields(logger, req, fields)
+	return logWithRouteFields(logger, req, fields)
 }
 
-//LogWithRouteFields is equivalent to logrus.WithFields, but inserts information about the route that is being logged.
-func LogWithRouteFields(logger *logrus.Logger, req *http.Request, fields logrus.Fields) *logrus.Entry {
+//logWithRouteFields is equivalent to logrus.WithFields, but inserts information about the route that is being logged.
+func logWithRouteFields(logger *logrus.Logger, req *http.Request, fields logrus.Fields) *logrus.Entry {
 	fields[routeKey] = req.RequestURI
 	return logger.WithFields(fields)
 }

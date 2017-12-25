@@ -49,7 +49,7 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 		if err.Error() == db.DuplicateUserError {
 			writer.WriteHeader(http.StatusBadRequest)
 		} else {
-			LogWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
+			logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -80,7 +80,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 
 	sessionID, err := db.CreateSession(handler.databaseConnection, user)
 	if err != nil {
-		LogWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
+		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -102,7 +102,7 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 
 	deviceID, err := db.RegisterDeviceToUser(handler.databaseConnection, user)
 	if err != nil {
-		LogWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
+		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 
@@ -111,11 +111,11 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 	resultJSON, err := json.Marshal(resultMap)
 	if err != nil {
 		resultMapString := fmt.Sprintf("%#v", resultMap)
-		LogWithRouteField(handler.logger, req, "map", resultMapString).Errorf(jsonErrorLogFormat, err)
+		logWithRouteField(handler.logger, req, "map", resultMapString).Errorf(jsonErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	} else {
 		_, err := writer.Write(resultJSON)
-		LogWithRouteField(handler.logger, req, "json", resultJSON).Errorf(jsonErrorLogFormat, err)
+		logWithRouteField(handler.logger, req, "json", resultJSON).Errorf(jsonErrorLogFormat, err)
 		if err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
@@ -145,7 +145,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 	//Check to make sure that the user is actually modifying their device
 	device, err := db.GetDevice(handler.databaseConnection, deviceUUID)
 	if err != nil {
-		LogWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
+		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -157,7 +157,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 
 	err = db.RegisterFCMID(handler.databaseConnection, deviceUUID, []byte(fcmID))
 	if err != nil {
-		LogWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
+		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -196,7 +196,7 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	}
 	outMessage, err := firebasexmpp.ConstructDownstreamSMS(device.FCMID, smsMessage)
 	if err != nil {
-		LogWithRoute(handler.logger, req).Errorf(xmppErrorLogFormat, err)
+		logWithRoute(handler.logger, req).Errorf(xmppErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
