@@ -11,12 +11,14 @@ import (
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 )
 
 //RouteHandler holds all routes and allows them to share common variables
 type RouteHandler struct {
 	databaseConnection *sql.DB
 	sendChannel        chan<- firebasexmpp.OutboundMessage
+	logger             *logrus.Logger
 	//TODO: add sendErrorChannel once websockets are implemented
 }
 

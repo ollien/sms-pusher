@@ -8,6 +8,7 @@ import (
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/ollien/sms-pusher/server/web"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -19,13 +20,14 @@ func main() {
 	defer databaseConnection.Close()
 
 	supervisor := NewXMPPSupervisor("./xmpp-config.json")
+	logger := logrus.New()
 	outChannel := make(chan firebasexmpp.SMSMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
 	sendErrorChannel := make(chan error)
 	go listenForSMS(databaseConnection, outChannel)
 	supervisor.SpawnClient(outChannel, sendChannel, sendErrorChannel)
 	fmt.Println("Listening for SMS")
-	server := web.NewWebserver("0.0.0.0:8080", databaseConnection, sendChannel)
+	server := web.NewWebserver("0.0.0.0:8080", databaseConnection, sendChannel, logger)
 	fmt.Println("Server running")
 	server.Start()
 }
