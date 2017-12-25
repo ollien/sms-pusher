@@ -42,7 +42,6 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 		} else {
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
-
 	}
 }
 
