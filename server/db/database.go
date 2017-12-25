@@ -18,7 +18,7 @@ const DuplicateUserError = "pq: duplicate key value violates unique constraint \
 
 //DatabaseConnection represents a single connection to the database
 type DatabaseConnection struct {
-	sql.DB
+	*sql.DB
 }
 
 //User represents a user within the database
@@ -37,48 +37,50 @@ type Device struct {
 }
 
 //InitDB intiializes the database connection and returns a DB
-func InitDB(configPath string) (*sql.DB, error) {
+func InitDB(configPath string) (DatabaseConnection, error) {
 	file, err := os.Open(configPath)
 	if err != nil {
-		return nil, err
+		return DatabaseConnection{}, err
 	}
 
 	jsonDecoder := json.NewDecoder(file)
 	configMap := make(map[string]string)
 	jsonDecoder.Decode(&configMap)
-	databaseConnection, err := sql.Open("postgres", configMap[configURIKey])
+	rawConnection, err := sql.Open("postgres", configMap[configURIKey])
 	if err != nil {
-		return nil, err
+		return DatabaseConnection{}, err
 	}
 
+	connection := DatabaseConnection{rawConnection}
+
 	//Create users table.
-	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS users (" +
+	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS users (" +
 		"id SERIAL PRIMARY KEY," +
 		"username VARCHAR(32) UNIQUE," +
 		"password_hash bytea);")
 	if err != nil {
-		return nil, err
+		return DatabaseConnection{}, err
 	}
 
 	//Create devices table
-	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
+	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
 		"id SERIAL PRIMARY KEY," +
 		"device_id uuid UNIQUE," +
 		"firebase_id bytea," +
 		"device_user INTEGER REFERENCES users(id));")
 	if err != nil {
-		return nil, err
+		return DatabaseConnection{}, err
 	}
 
 	//Create sessions table
-	_, err = databaseConnection.Exec("CREATE TABLE IF NOT EXISTS sessions (" +
+	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS sessions (" +
 		"id uuid PRIMARY KEY," +
 		"for_user INTEGER REFERENCES users(id));")
 	if err != nil {
-		return nil, err
+		return DatabaseConnection{}, err
 	}
 
-	return databaseConnection, nil
+	return connection, nil
 }
 
 //CreateUser insersts a user into the database
