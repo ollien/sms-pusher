@@ -206,7 +206,6 @@ func (db DatabaseConnection) GetDevice(deviceID uuid.UUID) (Device, error) {
 func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
 	deviceID := uuid.NewV4()
 	deviceRow := db.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, NULL, $2) RETURNING *;", deviceID, user.ID)
-
 	var id int
 	var internalDeviceID uuid.UUID
 	var fcmID []byte
