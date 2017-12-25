@@ -84,20 +84,20 @@ func InitDB(configPath string) (DatabaseConnection, error) {
 }
 
 //CreateUser insersts a user into the database
-func CreateUser(databaseConnection *sql.DB, username string, password []byte) error {
+func (db DatabaseConnection) CreateUser(username string, password []byte) error {
 	hash, err := bcrypt.GenerateFromPassword(password, passwordCost)
 	if err != nil {
 		return err
 	}
 
-	_, err = databaseConnection.Exec("INSERT INTO users VALUES(DEFAULT, $1, $2)", username, hash)
+	_, err = db.Exec("INSERT INTO users VALUES(DEFAULT, $1, $2)", username, hash)
 
 	return err
 }
 
 //GetUser gets a user from the database and returns a User.
-func GetUser(databaseConnection *sql.DB, username string) (User, error) {
-	userRow := databaseConnection.QueryRow("SELECT * FROM users WHERE username = $1", username)
+func (db DatabaseConnection) GetUser(username string) (User, error) {
+	userRow := db.QueryRow("SELECT * FROM users WHERE username = $1", username)
 	var id int
 	var internalUsername string
 	var passwordHash []byte
@@ -116,8 +116,8 @@ func GetUser(databaseConnection *sql.DB, username string) (User, error) {
 }
 
 //GetUserByID gets a user from the database and returns a User.
-func GetUserByID(databaseConnection *sql.DB, id int) (User, error) {
-	userRow := databaseConnection.QueryRow("SELECT * FROM users WHERE id = $1", id)
+func (db DatabaseConnection) GetUserByID(id int) (User, error) {
+	userRow := db.QueryRow("SELECT * FROM users WHERE id = $1", id)
 	var internalID int
 	var username string
 	var passwordHash []byte
@@ -136,8 +136,8 @@ func GetUserByID(databaseConnection *sql.DB, id int) (User, error) {
 }
 
 //VerifyUser verifies a user against its authentication details. Returns the user if authed.
-func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (User, error) {
-	user, err := GetUser(databaseConnection, username)
+func (db DatabaseConnection) VerifyUser(username string, password []byte) (User, error) {
+	user, err := db.GetUser(username)
 	if err != nil {
 		return User{}, err
 	}
@@ -151,23 +151,23 @@ func VerifyUser(databaseConnection *sql.DB, username string, password []byte) (U
 }
 
 //CreateSession makes a session given a User
-func CreateSession(databaseConnection *sql.DB, user User) (string, error) {
+func (db DatabaseConnection) CreateSession(user User) (string, error) {
 	sessionID := uuid.NewV4().String()
-	_, err := databaseConnection.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
+	_, err := db.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
 
 	return sessionID, err
 }
 
 //GetUserFromSession gets the user associated with a session
-func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, error) {
-	sessionRow := databaseConnection.QueryRow("SELECT for_user FROM sessions WHERE id = $1", sessionID)
+func (db DatabaseConnection) GetUserFromSession(sessionID string) (User, error) {
+	sessionRow := db.QueryRow("SELECT for_user FROM sessions WHERE id = $1", sessionID)
 	var userID int
 	err := sessionRow.Scan(&userID)
 	if err != nil {
 		return User{}, err
 	}
 
-	user, err := GetUserByID(databaseConnection, userID)
+	user, err := db.GetUserByID(userID)
 	if err != nil {
 		return User{}, err
 	}
@@ -176,8 +176,8 @@ func GetUserFromSession(databaseConnection *sql.DB, sessionID string) (User, err
 }
 
 //GetDevice gets a Device from the database, given a deviceID
-func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
-	deviceRow := databaseConnection.QueryRow("SELECT * FROM devices WHERE device_id = $1", deviceID)
+func (db DatabaseConnection) GetDevice(deviceID uuid.UUID) (Device, error) {
+	deviceRow := db.QueryRow("SELECT * FROM devices WHERE device_id = $1", deviceID)
 	var id int
 	var internalDeviceID uuid.UUID
 	var fcmID []byte
@@ -187,7 +187,7 @@ func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
 		return Device{}, err
 	}
 
-	user, err := GetUserByID(databaseConnection, userID)
+	user, err := db.GetUserByID(userID)
 	//If there's an error, there's an invalid user for the device. (i.e. doesn't exist)
 	if err != nil {
 		return Device{}, err
@@ -203,9 +203,9 @@ func GetDevice(databaseConnection *sql.DB, deviceID uuid.UUID) (Device, error) {
 }
 
 //RegisterDeviceToUser registers a device for a user
-func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error) {
+func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
 	deviceID := uuid.NewV4()
-	deviceRow := databaseConnection.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, NULL, $2) RETURNING *;", deviceID, user.ID)
+	deviceRow := db.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, NULL, $2) RETURNING *;", deviceID, user.ID)
 
 	var id int
 	var internalDeviceID uuid.UUID
@@ -225,7 +225,7 @@ func RegisterDeviceToUser(databaseConnection *sql.DB, user User) (Device, error)
 }
 
 //RegisterFCMID sets the FCM id (firebase_id) for a user's device, given a device id
-func RegisterFCMID(databaseConnection *sql.DB, deviceID uuid.UUID, fcmID []byte) error {
-	_, err := databaseConnection.Exec("UPDATE devices SET firebase_id = $1 WHERE device_id = $2;", fcmID, deviceID)
+func (db DatabaseConnection) RegisterFCMID(deviceID uuid.UUID, fcmID []byte) error {
+	_, err := db.Exec("UPDATE devices SET firebase_id = $1 WHERE device_id = $2;", fcmID, deviceID)
 	return err
 }
