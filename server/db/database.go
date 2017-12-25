@@ -16,11 +16,6 @@ type DatabaseConnection struct {
 	*sql.DB
 }
 
-//DatabaseConnection represents a single connection to the database
-type DatabaseConnection struct {
-	*sql.DB
-}
-
 //User represents a user within the database
 type User struct {
 	ID           int
@@ -34,6 +29,12 @@ type Device struct {
 	DeviceID   uuid.UUID
 	FCMID      []byte
 	DeviceUser User
+}
+
+//Session represents a session for a user
+type Session struct {
+	ID          string
+	SessionUser User
 }
 
 //InitDB intiializes the database connection and returns a DB
