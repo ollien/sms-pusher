@@ -9,7 +9,10 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-const configURIKey = "uri"
+const (
+	configURIKey = "uri"
+	driver       = "postgres"
+)
 
 //DatabaseConnection represents a single connection to the database
 type DatabaseConnection struct {
@@ -47,7 +50,7 @@ func InitDB(configPath string) (DatabaseConnection, error) {
 	jsonDecoder := json.NewDecoder(file)
 	configMap := make(map[string]string)
 	jsonDecoder.Decode(&configMap)
-	rawConnection, err := sql.Open("postgres", configMap[configURIKey])
+	rawConnection, err := sql.Open(driver, configMap[configURIKey])
 	if err != nil {
 		return DatabaseConnection{}, err
 	}
