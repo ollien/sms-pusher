@@ -1,7 +1,6 @@
 package web
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -24,7 +23,7 @@ const (
 
 //RouteHandler holds all routes and allows them to share common variables
 type RouteHandler struct {
-	databaseConnection *sql.DB
+	databaseConnection db.DatabaseConnection
 	sendChannel        chan<- firebasexmpp.OutboundMessage
 	logger             *logrus.Logger
 	//TODO: add sendErrorChannel once websockets are implemented
@@ -45,7 +44,7 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 	}
 
 	encodedPassword := []byte(password)
-	err := db.CreateUser(handler.databaseConnection, username, encodedPassword)
+	err := handler.databaseConnection.CreateUser(username, encodedPassword)
 	if err != nil {
 		//Postgres specific check
 		if err.Error() == db.DuplicateUserError {
@@ -75,13 +74,13 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	}
 
 	encodedPassword := []byte(password)
-	user, err = db.VerifyUser(handler.databaseConnection, username, encodedPassword)
+	user, err = handler.databaseConnection.VerifyUser(username, encodedPassword)
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	sessionID, err := db.CreateSession(handler.databaseConnection, user)
+	session, err := handler.databaseConnection.CreateSession(user)
 	if err != nil {
 		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -90,7 +89,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 
 	cookie := &http.Cookie{
 		Name:  "session",
-		Value: sessionID,
+		Value: session.ID,
 	}
 
 	http.SetCookie(writer, cookie)
@@ -103,7 +102,7 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 		return
 	}
 
-	deviceID, err := db.RegisterDeviceToUser(handler.databaseConnection, user)
+	deviceID, err := handler.databaseConnection.RegisterDeviceToUser(user)
 	if err != nil {
 		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -148,7 +147,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 	}
 
 	//Check to make sure that the user is actually modifying their device
-	device, err := db.GetDevice(handler.databaseConnection, deviceUUID)
+	device, err := handler.databaseConnection.GetDevice(deviceUUID)
 	if err != nil {
 		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -160,7 +159,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	err = db.RegisterFCMID(handler.databaseConnection, deviceUUID, []byte(fcmID))
+	err = handler.databaseConnection.RegisterFCMID(deviceUUID, []byte(fcmID))
 	if err != nil {
 		logWithRoute(handler.logger, req).Errorf(databaseErrorLogFormat, err)
 		writer.WriteHeader(http.StatusInternalServerError)
@@ -190,7 +189,7 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 		return
 	}
 
-	device, err := db.GetDevice(handler.databaseConnection, deviceUUID)
+	device, err := handler.databaseConnection.GetDevice(deviceUUID)
 	if device.DeviceUser.ID != user.ID {
 		writer.WriteHeader(http.StatusUnauthorized)
 		return
