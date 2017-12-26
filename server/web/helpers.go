@@ -1,7 +1,6 @@
 package web
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 
@@ -23,7 +22,7 @@ func GetSessionCookie(req *http.Request) *http.Cookie {
 }
 
 //GetSessionUser gets the user associated with a session within a *http.Request.
-func GetSessionUser(databaseConnection *sql.DB, req *http.Request) (db.User, error) {
+func GetSessionUser(databaseConnection db.DatabaseConnection, req *http.Request) (db.User, error) {
 	cookie := GetSessionCookie(req)
 	sessionID := req.FormValue("session_id")
 	if sessionID == "" {
@@ -34,10 +33,10 @@ func GetSessionUser(databaseConnection *sql.DB, req *http.Request) (db.User, err
 		}
 	}
 
-	user, err := db.GetUserFromSession(databaseConnection, sessionID)
+	session, err := databaseConnection.GetSession(sessionID)
 
 	//If err is not nil, there is no valid session.
-	return user, err
+	return session.User, err
 }
 
 //logWithRoute returns a logrus.Entry that contains a field of the route that is being logged
