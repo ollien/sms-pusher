@@ -71,7 +71,7 @@ func InitDB(configPath string) (DatabaseConnection, error) {
 		"id SERIAL PRIMARY KEY," +
 		"device_id uuid UNIQUE," +
 		"firebase_id bytea," +
-		"device_user INTEGER REFERENCES users(id));")
+		"for_user INTEGER REFERENCES users(id));")
 	if err != nil {
 		return DatabaseConnection{}, err
 	}
