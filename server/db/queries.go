@@ -87,8 +87,8 @@ func (db DatabaseConnection) CreateSession(user User) (Session, error) {
 	}
 
 	return Session{
-		ID:          sessionID,
-		SessionUser: user,
+		ID:   sessionID,
+		User: user,
 	}, nil
 }
 
@@ -107,8 +107,8 @@ func (db DatabaseConnection) GetSession(sessionID string) (Session, error) {
 	}
 
 	return Session{
-		ID:          sessionID,
-		SessionUser: user,
+		ID:   sessionID,
+		User: user,
 	}, nil
 }
 

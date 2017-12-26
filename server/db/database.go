@@ -36,8 +36,8 @@ type Device struct {
 
 //Session represents a session for a user
 type Session struct {
-	ID          string
-	SessionUser User
+	ID   string
+	User User
 }
 
 //InitDB intiializes the database connection and returns a DB

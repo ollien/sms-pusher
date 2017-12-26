@@ -36,7 +36,7 @@ func GetSessionUser(databaseConnection db.DatabaseConnection, req *http.Request)
 	session, err := databaseConnection.GetSession(sessionID)
 
 	//If err is not nil, there is no valid session.
-	return session.SessionUser, err
+	return session.User, err
 }
 
 //logWithRoute returns a logrus.Entry that contains a field of the route that is being logged
