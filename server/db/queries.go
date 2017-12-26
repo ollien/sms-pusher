@@ -131,10 +131,10 @@ func (db DatabaseConnection) GetDevice(deviceID uuid.UUID) (Device, error) {
 	}
 
 	return Device{
-		ID:         id,
-		DeviceID:   deviceID,
-		FCMID:      fcmID,
-		DeviceUser: user,
+		ID:       id,
+		DeviceID: deviceID,
+		FCMID:    fcmID,
+		User:     user,
 	}, nil
 
 }
@@ -153,10 +153,10 @@ func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
 	}
 
 	return Device{
-		ID:         id,
-		DeviceID:   deviceID,
-		FCMID:      fcmID,
-		DeviceUser: user,
+		ID:       id,
+		DeviceID: deviceID,
+		FCMID:    fcmID,
+		User:     user,
 	}, nil
 }
 

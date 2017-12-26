@@ -28,10 +28,10 @@ type User struct {
 
 //Device represents a user within the database
 type Device struct {
-	ID         int
-	DeviceID   uuid.UUID
-	FCMID      []byte
-	DeviceUser User
+	ID       int
+	DeviceID uuid.UUID
+	FCMID    []byte
+	User     User
 }
 
 //Session represents a session for a user

@@ -154,7 +154,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	if device.DeviceUser.ID != user.ID {
+	if device.User.ID != user.ID {
 		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -190,7 +190,7 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	}
 
 	device, err := handler.databaseConnection.GetDevice(deviceUUID)
-	if device.DeviceUser.ID != user.ID {
+	if device.User.ID != user.ID {
 		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
