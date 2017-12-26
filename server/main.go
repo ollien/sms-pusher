@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 
@@ -24,7 +23,7 @@ func main() {
 	outChannel := make(chan firebasexmpp.SMSMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
 	sendErrorChannel := make(chan error)
-	go listenForSMS(databaseConnection, outChannel)
+	go listenForSMS(outChannel)
 	supervisor.SpawnClient(outChannel, sendChannel, sendErrorChannel)
 	fmt.Println("Listening for SMS")
 	server := web.NewWebserver("0.0.0.0:8080", databaseConnection, sendChannel, logger)
@@ -32,7 +31,7 @@ func main() {
 	server.Start()
 }
 
-func listenForSMS(databaseConnection *sql.DB, outChannel <-chan firebasexmpp.SMSMessage) {
+func listenForSMS(outChannel <-chan firebasexmpp.SMSMessage) {
 	for {
 		//TODO: Find some way to ping the client of this event. Maybe websockets?
 		message := <-outChannel
