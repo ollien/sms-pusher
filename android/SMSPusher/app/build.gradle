@@ -19,9 +19,6 @@ android {
 	}
 	productFlavors {
 	}
-	sourceSets {
-		main.java.srcDirs += "java/com/google/"
-	}
 }
 
 dependencies {
