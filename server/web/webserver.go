@@ -65,11 +65,12 @@ func NewRouter() *Router {
 }
 
 func (router *Router) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
+	loggableWriter := NewLoggableResponseWriter(writer)
 	if router.BeforeRequest != nil {
-		router.BeforeRequest(writer, req)
+		router.BeforeRequest(&loggableWriter, req)
 	}
-	router.Router.ServeHTTP(writer, req)
+	router.Router.ServeHTTP(&loggableWriter, req)
 	if router.AfterRequest != nil {
-		router.AfterRequest(writer, req)
+		router.AfterRequest(&loggableWriter, req)
 	}
 }
