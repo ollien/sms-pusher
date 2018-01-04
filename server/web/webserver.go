@@ -20,7 +20,7 @@ type Router struct {
 //Webserver hosts a webserver for sms-pusher
 type Webserver struct {
 	listenAddr   string
-	router       *httprouter.Router
+	router       *Router
 	routeHandler RouteHandler
 }
 
@@ -33,7 +33,7 @@ func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, s
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,
-		router:       httprouter.New(),
+		router:       NewRouter(),
 		routeHandler: routeHandler,
 	}
 	serv.initHandlers()
