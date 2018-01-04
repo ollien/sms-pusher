@@ -10,6 +10,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+//Router allows for us to direct http requests to the correct handlers with the addition of pre/post request hooks
+type Router struct {
+	BeforeRequest func(http.ResponseWriter, *http.Request)
+	AfterRequest  func(http.ResponseWriter, *http.Request)
+	httprouter.Router
+}
+
 //Webserver hosts a webserver for sms-pusher
 type Webserver struct {
 	listenAddr   string
@@ -47,5 +54,22 @@ func (serv *Webserver) Start() {
 	err := http.ListenAndServe(serv.listenAddr, serv.router)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+//NewRouter creates a new Router[:w
+func NewRouter() *Router {
+	return &Router{
+		Router: *httprouter.New(),
+	}
+}
+
+func (router *Router) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
+	if router.BeforeRequest != nil {
+		router.BeforeRequest(writer, req)
+	}
+	router.Router.ServeHTTP(writer, req)
+	if router.AfterRequest != nil {
+		router.AfterRequest(writer, req)
 	}
 }
