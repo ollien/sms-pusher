@@ -47,7 +47,7 @@ public class GenericPdu {
      *
      * @return A PduHeaders of this PDU.
      */
-    PduHeaders getPduHeaders() {
+    public PduHeaders getPduHeaders() {
         return mPduHeaders;
     }
 
