@@ -107,22 +107,28 @@ public class MMSReceiver extends BroadcastReceiver {
 		return dataPdu;
 	}
 
-	private Map<Integer, EncodedStringValue[]> getToFields(PduHeaders headers) {
+	private Map<Integer, EncodedStringValue[]> getToFields(Context context, PduHeaders headers) {
 		HashMap<Integer, EncodedStringValue[]> addresses = new HashMap<>();
 		for (int addressType : TO_ADDRESS_TYPES) {
-			EncodedStringValue[] fieldValues = headers.getEncodedStringValues(addressType);
-			addresses.put(addressType, fieldValues);
+			EncodedStringValue[] rawFieldValues = headers.getEncodedStringValues(addressType);
+			if (addressType != PduHeaders.TO && rawFieldValues != null) {
+				EncodedStringValue[] fieldValues = removeLine1Number(context, rawFieldValues);
+				addresses.put(addressType, fieldValues);
+			} else {
+				addresses.put(addressType, rawFieldValues);
+			}
 		}
 
 		return addresses;
 	}
 
-	private boolean isGroupText(MultimediaMessagePdu pdu) {
+	private boolean isGroupText(Context context, MultimediaMessagePdu pdu) {
 		PduHeaders headers = pdu.getPduHeaders();
-		Map<Integer, EncodedStringValue[]> addresses = getToFields(headers);
+		Map<Integer, EncodedStringValue[]> addresses = getToFields(context, headers);
 		int totalRecipients = 0;
 		for (int addressType : TO_ADDRESS_TYPES) {
-			totalRecipients += addresses.get(addressType).length;
+			EncodedStringValue[] addressesOfType = addresses.get(addressType);
+			totalRecipients += addressesOfType == null ? 0 : addressesOfType.length;
 		}
 
 		return totalRecipients > 1;
