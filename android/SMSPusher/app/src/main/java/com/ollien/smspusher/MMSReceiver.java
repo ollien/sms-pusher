@@ -9,6 +9,7 @@ import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Bundle;
+import android.telephony.TelephonyManager;
 
 import com.android.mms.transaction.HttpUtils;
 import com.android.mms.transaction.TransactionSettings;
@@ -21,6 +22,7 @@ import com.google.android.mms_clone.pdu.PduHeaders;
 import com.google.android.mms_clone.pdu.PduParser;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,6 +63,35 @@ public class MMSReceiver extends BroadcastReceiver {
 				}
 			});
 		}
+	}
+
+	private EncodedStringValue[] removeLine1Number(Context context, EncodedStringValue[] values) {
+		TelephonyManager telephonyManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
+		//TODO: deal with possible lack of phone permissions.
+		String line1Number = telephonyManager.getLine1Number();
+		ArrayList<Integer> numberIndexes = new ArrayList<Integer>();
+		//Find where the number is located in the list.
+		for (int i = 0; i < values.length; i++)	 {
+			if (values[i].getString().equals(line1Number)) {
+				numberIndexes.add(i);
+			}
+		}
+		if (numberIndexes.size() == 0) {
+			return values;
+		}
+		//Create a new list with that value removed.
+		EncodedStringValue[] correctedValues = new EncodedStringValue[values.length - 1];
+		int indexOffset = 0;
+		for (int i = 0; i < values.length; i++) {
+			if (numberIndexes.contains(i)) {
+				//We must offset the indexes we're assigning to within correctedValues.
+				indexOffset++;
+			} else {
+				correctedValues[i - indexOffset] = values[i];
+			}
+		}
+
+		return correctedValues;
 	}
 
 	private void getNetwork(ConnectivityManager connectivityManager, ConnectivityManager.NetworkCallback callback) {
