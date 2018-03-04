@@ -24,6 +24,7 @@ import com.google.android.mms_clone.pdu.PduParser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -122,15 +123,18 @@ public class MMSReceiver extends BroadcastReceiver {
 		return addresses;
 	}
 
-	private boolean isGroupText(Context context, MultimediaMessagePdu pdu) {
+	private HashSet<String> getRecipients(Context context, MultimediaMessagePdu pdu) {
 		PduHeaders headers = pdu.getPduHeaders();
 		Map<Integer, EncodedStringValue[]> addresses = getToFields(context, headers);
-		int totalRecipients = 0;
+		HashSet<String> recipients = new HashSet<>();
 		for (int addressType : TO_ADDRESS_TYPES) {
 			EncodedStringValue[] addressesOfType = addresses.get(addressType);
-			totalRecipients += addressesOfType == null ? 0 : addressesOfType.length;
+			for (EncodedStringValue rawAddress : addressesOfType) {
+				String address = rawAddress.getString();
+				recipients.add(address);
+			}
 		}
 
-		return totalRecipients > 1;
+		return recipients;
 	}
 }
