@@ -12,6 +12,7 @@ import android.os.Bundle;
 
 import com.android.mms.transaction.HttpUtils;
 import com.android.mms.transaction.TransactionSettings;
+import com.google.android.mms_clone.pdu.EncodedStringValue;
 import com.google.android.mms_clone.pdu.GenericPdu;
 import com.google.android.mms_clone.pdu.MultimediaMessagePdu;
 import com.google.android.mms_clone.pdu.NotificationInd;
@@ -20,12 +21,17 @@ import com.google.android.mms_clone.pdu.PduHeaders;
 import com.google.android.mms_clone.pdu.PduParser;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by nick on 12/19/17.
  */
 
 public class MMSReceiver extends BroadcastReceiver {
+	//Holds the different types of headers that represent the "to" field.
+	private static final int[] TO_ADDRESS_TYPES = {PduHeaders.TO, PduHeaders.BCC, PduHeaders.CC};
+
 	@Override
 	public void onReceive(final Context context, Intent intent) {
 		Bundle extras = intent.getExtras();
@@ -68,5 +74,26 @@ public class MMSReceiver extends BroadcastReceiver {
 		GenericPdu dataPdu = dataParser.parse();
 
 		return dataPdu;
+	}
+
+	private Map<Integer, EncodedStringValue[]> getToFields(PduHeaders headers) {
+		HashMap<Integer, EncodedStringValue[]> addresses = new HashMap<>();
+		for (int addressType : TO_ADDRESS_TYPES) {
+			EncodedStringValue[] fieldValues = headers.getEncodedStringValues(addressType);
+			addresses.put(addressType, fieldValues);
+		}
+
+		return addresses;
+	}
+
+	private boolean isGroupText(MultimediaMessagePdu pdu) {
+		PduHeaders headers = pdu.getPduHeaders();
+		Map<Integer, EncodedStringValue[]> addresses = getToFields(headers);
+		int totalRecipients = 0;
+		for (int addressType : TO_ADDRESS_TYPES) {
+			totalRecipients += addresses.get(addressType).length;
+		}
+
+		return totalRecipients > 1;
 	}
 }
