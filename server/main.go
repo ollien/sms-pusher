@@ -12,7 +12,12 @@ import (
 )
 
 func main() {
+	logFormatter := &logrus.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05-0700",
+	}
 	logger := logrus.New()
+	logger.Formatter = logFormatter
 	appConfig := config.ParseConfig(logger)
 	databaseConnection, err := db.InitDB(appConfig.Database)
 	if err != nil {
