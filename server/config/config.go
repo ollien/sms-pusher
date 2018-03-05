@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const configPath = "config.go"
+const configPath = "config.json"
 
 //Config represents the config for the application
 type Config struct {
