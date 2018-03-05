@@ -34,6 +34,7 @@ func ParseConfig(logger *logrus.Logger) Config {
 	}
 
 	defer configFile.Close()
+
 	decoder := json.NewDecoder(configFile)
 	var config Config
 	decoder.Decode(&config)
