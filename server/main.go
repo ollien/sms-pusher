@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/ollien/sms-pusher/server/web"
@@ -11,15 +12,16 @@ import (
 )
 
 func main() {
-	databaseConnection, err := db.InitDB("./database-config.json")
+	logger := logrus.New()
+	appConfig := config.ParseConfig(logger)
+	databaseConnection, err := db.InitDB(appConfig.Database)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer databaseConnection.Close()
 
-	supervisor := NewXMPPSupervisor("./xmpp-config.json")
-	logger := logrus.New()
+	supervisor := NewXMPPSupervisor(appConfig.XMPP)
 	outChannel := make(chan firebasexmpp.SMSMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
 	sendErrorChannel := make(chan error)
