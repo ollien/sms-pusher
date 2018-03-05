@@ -54,8 +54,6 @@ func (serv *Webserver) initHandlers() {
 func (serv *Webserver) afterRequest(writer http.ResponseWriter, req *http.Request) {
 	loggableWriter := writer.(*LoggableResponseWriter)
 	reqTime := time.Now().Format("2006-01-02 15:04:05-0700")
-	logrus.Info(loggableWriter.bytesWritten)
-	logrus.Infof("%d bytes", loggableWriter.bytesWritten)
 	serv.routeHandler.logger.Infof("[%s] - %s %s %s %s (%s); %d; %d bytes", reqTime, req.RemoteAddr, req.Proto, req.Method, req.RequestURI, req.UserAgent(), loggableWriter.statusCode, loggableWriter.bytesWritten)
 }
 
