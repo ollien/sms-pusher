@@ -2,17 +2,13 @@ package db
 
 import (
 	"database/sql"
-	"encoding/json"
-	"os"
 
 	_ "github.com/lib/pq"
+	"github.com/ollien/sms-pusher/server/config"
 	uuid "github.com/satori/go.uuid"
 )
 
-const (
-	configURIKey = "uri"
-	driver       = "postgres"
-)
+const driver = "postgres"
 
 //DatabaseConnection represents a single connection to the database
 type DatabaseConnection struct {
@@ -41,16 +37,8 @@ type Session struct {
 }
 
 //InitDB intiializes the database connection and returns a DB
-func InitDB(configPath string) (DatabaseConnection, error) {
-	file, err := os.Open(configPath)
-	if err != nil {
-		return DatabaseConnection{}, err
-	}
-
-	jsonDecoder := json.NewDecoder(file)
-	configMap := make(map[string]string)
-	jsonDecoder.Decode(&configMap)
-	rawConnection, err := sql.Open(driver, configMap[configURIKey])
+func InitDB(datbaseConfig config.DatabaseConfig) (DatabaseConnection, error) {
+	rawConnection, err := sql.Open(driver, datbaseConfig.URI)
 	if err != nil {
 		return DatabaseConnection{}, err
 	}
