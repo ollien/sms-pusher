@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/satori/go.uuid"
 )
@@ -8,7 +9,7 @@ import (
 //XMPPSupervisor supervises all Firebase XMPP connections
 type XMPPSupervisor struct {
 	clients       map[string]ClientContainer
-	ConfigPath    string
+	Config        config.XMPPConfig
 	SendChannel   chan firebasexmpp.OutboundMessage
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan ClientContainer
@@ -23,10 +24,10 @@ type ClientContainer struct {
 }
 
 //NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
-func NewXMPPSupervisor(configPath string) XMPPSupervisor {
+func NewXMPPSupervisor(xmppConfig config.XMPPConfig) XMPPSupervisor {
 	supervisor := XMPPSupervisor{
 		clients:       make(map[string]ClientContainer),
-		ConfigPath:    configPath,
+		Config:        xmppConfig,
 		signalChannel: make(chan firebasexmpp.Signal),
 		spawnChannel:  make(chan ClientContainer),
 	}
@@ -50,7 +51,7 @@ func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.S
 
 func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientContainer) {
 	clientID := uuid.NewV4().String()
-	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.ConfigPath, clientID, supervisor.signalChannel)
+	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.Config, clientID, supervisor.signalChannel)
 	container.client = firebaseClient
 	supervisor.clients[container.client.ClientID] = container
 	go container.client.StartRecv(container.recvChannel)

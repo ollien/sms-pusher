@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"strings"
 
 	"github.com/mattn/go-xmpp"
+	"github.com/ollien/sms-pusher/server/config"
 )
 
 const fcmServer = "fcm-xmpp.googleapis.com"
@@ -33,19 +33,12 @@ type Config struct {
 	ServerKey string
 }
 
-//NewFirebaseClient creates a FirebaseClient from configuration file.
-func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- Signal) FirebaseClient {
-	file, err := os.Open(configPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	jsonDecoder := json.NewDecoder(file)
-	var config Config
-	jsonDecoder.Decode(&config)
+//NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
+func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, signalChannel chan<- Signal) FirebaseClient {
 	//TODO: Detect if debug. For now, use dev port and set debug to true. For now, we will just always do this.
 	server := fmt.Sprintf("%s:%d", fcmServer, fcmDevPort)
-	username := fmt.Sprintf("%s@%s", config.SenderID, fcmUsernameAddres)
-	client, err := xmpp.NewClient(server, username, config.ServerKey, true)
+	username := fmt.Sprintf("%s@%s", xmppConfig.SenderID, fcmUsernameAddres)
+	client, err := xmpp.NewClient(server, username, xmppConfig.ServerKey, true)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -53,8 +46,8 @@ func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- 
 	return FirebaseClient{
 		xmppClient:    *client,
 		ClientID:      clientID,
-		senderID:      config.SenderID,
-		serverKey:     config.ServerKey,
+		senderID:      xmppConfig.SenderID,
+		serverKey:     xmppConfig.ServerKey,
 		signalChannel: signalChannel,
 	}
 }
