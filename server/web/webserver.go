@@ -3,7 +3,6 @@ package web
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/ollien/sms-pusher/server/db"
@@ -55,8 +54,7 @@ func (serv *Webserver) initHandlers() {
 
 func (serv *Webserver) afterRequest(writer http.ResponseWriter, req *http.Request) {
 	loggableWriter := writer.(*LoggableResponseWriter)
-	reqTime := time.Now().Format("2006-01-02 15:04:05-0700")
-	serv.logger.Infof("[%s] - %s %s %s %s (%s); %d; %d bytes", reqTime, req.RemoteAddr, req.Proto, req.Method, req.RequestURI, req.UserAgent(), loggableWriter.statusCode, loggableWriter.bytesWritten)
+	serv.logger.Infof("%s %s %s %s (%s); %d; %d bytes", req.RemoteAddr, req.Proto, req.Method, req.RequestURI, req.UserAgent(), loggableWriter.statusCode, loggableWriter.bytesWritten)
 }
 
 //Start starts the webserver
