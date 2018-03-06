@@ -21,6 +21,7 @@ type Router struct {
 //Webserver hosts a webserver for sms-pusher
 type Webserver struct {
 	listenAddr   string
+	logger       *logrus.Logger
 	router       *Router
 	routeHandler RouteHandler
 }
@@ -34,6 +35,7 @@ func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, s
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,
+		logger:       logger,
 		router:       NewRouter(),
 		routeHandler: routeHandler,
 	}
@@ -54,7 +56,7 @@ func (serv *Webserver) initHandlers() {
 func (serv *Webserver) afterRequest(writer http.ResponseWriter, req *http.Request) {
 	loggableWriter := writer.(*LoggableResponseWriter)
 	reqTime := time.Now().Format("2006-01-02 15:04:05-0700")
-	serv.routeHandler.logger.Infof("[%s] - %s %s %s %s (%s); %d; %d bytes", reqTime, req.RemoteAddr, req.Proto, req.Method, req.RequestURI, req.UserAgent(), loggableWriter.statusCode, loggableWriter.bytesWritten)
+	serv.logger.Infof("[%s] - %s %s %s %s (%s); %d; %d bytes", reqTime, req.RemoteAddr, req.Proto, req.Method, req.RequestURI, req.UserAgent(), loggableWriter.statusCode, loggableWriter.bytesWritten)
 }
 
 //Start starts the webserver
