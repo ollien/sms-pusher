@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
@@ -21,7 +20,7 @@ func main() {
 	appConfig := config.ParseConfig(logger)
 	databaseConnection, err := db.InitDB(appConfig.Database)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatalf("Database error: %s", err)
 	}
 
 	defer databaseConnection.Close()
