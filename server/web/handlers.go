@@ -18,6 +18,7 @@ const (
 	databaseErrorLogFormat   = "Database error: %s"
 	jsonErrorLogFormat       = "JSON error: %s"
 	xmppErrorLogFormat       = "XMPP error: %s"
+	badUUIDErrorLogMsg       = "Bad UUID for device"
 	notEnoughInfoErrorLogMsg = "Not enough info to continue."
 )
 
@@ -141,7 +142,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 
 	deviceUUID, err := uuid.FromString(deviceID)
 	if err != nil {
-		logWithRoute(handler.logger, req).Debug("Bad UUID for device")
+		logWithRoute(handler.logger, req).Debug(badUUIDErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
