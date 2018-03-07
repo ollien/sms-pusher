@@ -61,6 +61,7 @@ func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientConta
 	supervisor.clients[container.client.ClientID] = container
 	go container.client.StartRecv(container.recvChannel)
 	go container.client.ListenForSend(container.sendChannel)
+	go container.listenForError()
 }
 
 func (supervisor *XMPPSupervisor) listenForSend() {
@@ -88,6 +89,18 @@ func (supervisor *XMPPSupervisor) listenForSignal() {
 		} else {
 			clientID := signal.Client.ClientID
 			delete(supervisor.clients, clientID)
+		}
+	}
+}
+
+//listenForError listens on a client's error channel and logs it to the logrus logger.
+//Exits when container.errorChannel closes
+func (container ClientContainer) listenForError() {
+	for clientError := range container.errorChannel {
+		if clientError.Fatal {
+			container.logger.Fatal(clientError.Err)
+		} else {
+			container.logger.Error(clientError.Err)
 		}
 	}
 }
