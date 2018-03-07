@@ -51,11 +51,11 @@ func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.S
 
 func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientContainer) {
 	clientID := uuid.NewV4().String()
-	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.Config, clientID, supervisor.signalChannel)
+	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.Config, clientID, supervisor.signalChannel, container.errorChannel)
 	container.client = firebaseClient
 	supervisor.clients[container.client.ClientID] = container
 	go container.client.StartRecv(container.recvChannel)
-	go container.client.ListenForSend(container.sendChannel, container.errorChannel)
+	go container.client.ListenForSend(container.sendChannel)
 }
 
 func (supervisor *XMPPSupervisor) listenForSend() {
