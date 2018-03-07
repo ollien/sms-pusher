@@ -109,7 +109,11 @@ func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage) 
 	for message := range sendChannel {
 		_, err := message.Send(client.xmppClient)
 		if err != nil {
-			client.errorChannel <- err
+			errorToSend := ClientError{
+				err:   err,
+				fatal: false,
+			}
+			client.errorChannel <- errorToSend
 		}
 	}
 }
