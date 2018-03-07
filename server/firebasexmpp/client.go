@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 
 	"github.com/mattn/go-xmpp"
@@ -47,7 +46,12 @@ func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, signalChan
 	username := fmt.Sprintf("%s@%s", xmppConfig.SenderID, fcmUsernameAddres)
 	client, err := xmpp.NewClient(server, username, xmppConfig.ServerKey, true)
 	if err != nil {
-		log.Fatal(err)
+		//can't use logError because the client hasn't been created yet!
+		clientError := ClientError{
+			Err:   err,
+			Fatal: true,
+		}
+		errorChannel <- clientError
 	}
 
 	return FirebaseClient{
@@ -71,7 +75,7 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 				client.signalChannel <- closeSignal
 				break
 			} else {
-				log.Fatal(err)
+				client.logError(err, false)
 			}
 		}
 
@@ -85,14 +89,13 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 		messageBody := []byte(chat.Other[0])
 		messageType, err := GetMessageType(messageBody)
 		if err != nil {
-			//Don't need to quit for unknowm message types
-			log.Println(err)
+			client.logError(err, false)
 		} else if messageType == "UpstreamMessage" {
 			var message UpstreamMessage
 			json.Unmarshal(messageBody, &message)
 			_, err := client.sendACK(message)
 			if err != nil {
-				log.Fatal(err)
+				client.logError(err, false)
 			}
 			recvChannel <- message.Data
 		} else if messageType == "ConnectionDrainingMessage" {
@@ -109,13 +112,18 @@ func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage) 
 	for message := range sendChannel {
 		_, err := message.Send(client.xmppClient)
 		if err != nil {
-			errorToSend := ClientError{
-				Err:   err,
-				Fatal: false,
-			}
-			client.errorChannel <- errorToSend
+			client.logError(err, false)
 		}
 	}
+}
+
+//logError sends an error upstream to the error channel
+func (client *FirebaseClient) logError(err error, fatal bool) {
+	clientError := ClientError{
+		Err:   err,
+		Fatal: fatal,
+	}
+	client.errorChannel <- clientError
 }
 
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
