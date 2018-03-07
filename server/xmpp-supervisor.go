@@ -7,6 +7,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const clientErrorFormat = "Client %s: %s"
+
 //XMPPSupervisor supervises all Firebase XMPP connections
 type XMPPSupervisor struct {
 	clients       map[string]ClientContainer
@@ -90,9 +92,9 @@ func (supervisor *XMPPSupervisor) listenForSignal() {
 func (container ClientContainer) listenForError() {
 	for clientError := range container.errorChannel {
 		if clientError.Fatal {
-			container.logger.Fatal(clientError.Err)
+			container.logger.Fatalf(clientErrorFormat, container.client.ClientID, clientError.Err)
 		} else {
-			container.logger.Error(clientError.Err)
+			container.logger.Errorf(clientErrorFormat, container.client.ClientID, clientError.Err)
 		}
 	}
 }
