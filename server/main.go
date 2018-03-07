@@ -25,11 +25,11 @@ func main() {
 
 	defer databaseConnection.Close()
 
-	supervisor := NewXMPPSupervisor(appConfig.XMPP, logger)
 	outChannel := make(chan firebasexmpp.SMSMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
+	supervisor := NewXMPPSupervisor(appConfig.XMPP, outChannel, sendChannel, logger)
 	go listenForSMS(outChannel)
-	supervisor.SpawnClient(outChannel, sendChannel)
+	supervisor.SpawnClient()
 	fmt.Println("Listening for SMS")
 	server := web.NewWebserver("0.0.0.0:8080", databaseConnection, sendChannel, logger)
 	fmt.Println("Server running")

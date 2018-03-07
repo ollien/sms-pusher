@@ -23,6 +23,8 @@ type FirebaseClient struct {
 	ClientID      string
 	senderID      string
 	serverKey     string
+	recvChannel   chan<- SMSMessage
+	sendChannel   <-chan OutboundMessage
 	signalChannel chan<- Signal
 	errorChannel  chan<- ClientError
 }
@@ -40,7 +42,7 @@ type Config struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
-func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
+func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, recvChannel chan<- SMSMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
 	//TODO: Detect if debug. For now, use dev port and set debug to true. For now, we will just always do this.
 	server := fmt.Sprintf("%s:%d", fcmServer, fcmDevPort)
 	username := fmt.Sprintf("%s@%s", xmppConfig.SenderID, fcmUsernameAddres)
@@ -59,13 +61,15 @@ func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, signalChan
 		ClientID:      clientID,
 		senderID:      xmppConfig.SenderID,
 		serverKey:     xmppConfig.ServerKey,
+		recvChannel:   recvChannel,
+		sendChannel:   sendChannel,
 		signalChannel: signalChannel,
 		errorChannel:  errorChannel,
 	}
 }
 
 //StartRecv listens for incoming  messages from Firebase Cloud Messaging and sends them to recvChannel.
-func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
+func (client *FirebaseClient) StartRecv() {
 	for {
 		data, err := client.xmppClient.Recv()
 		if err != nil {
@@ -97,7 +101,7 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 			if err != nil {
 				client.logError(err, false)
 			}
-			recvChannel <- message.Data
+			client.recvChannel <- message.Data
 		} else if messageType == "ConnectionDrainingMessage" {
 			drainSignal := NewConnectionDrainingSignal(client)
 			client.signalChannel <- drainSignal
@@ -108,8 +112,8 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 
 //ListenForSend listens for a message on sendChannel and sends the message.
 //Terminates when sendChannel is closed
-func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage) {
-	for message := range sendChannel {
+func (client *FirebaseClient) ListenForSend() {
+	for message := range client.sendChannel {
 		_, err := message.Send(client.xmppClient)
 		if err != nil {
 			client.logError(err, false)
