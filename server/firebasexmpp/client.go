@@ -30,8 +30,8 @@ type FirebaseClient struct {
 
 //ClientError represents an error that occurs within a cient
 type ClientError struct {
-	err   error
-	fatal bool
+	Err   error
+	Fatal bool
 }
 
 //Config stores the details necessary for authenticating to Firebase Cloud Messaging's XMPP server, which cannot be hardcoded or put into version control.
@@ -110,8 +110,8 @@ func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage) 
 		_, err := message.Send(client.xmppClient)
 		if err != nil {
 			errorToSend := ClientError{
-				err:   err,
-				fatal: false,
+				Err:   err,
+				Fatal: false,
 			}
 			client.errorChannel <- errorToSend
 		}
