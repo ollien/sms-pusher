@@ -19,7 +19,7 @@ type XMPPSupervisor struct {
 type ClientContainer struct {
 	client       firebasexmpp.FirebaseClient
 	sendChannel  chan firebasexmpp.OutboundMessage
-	errorChannel chan error
+	errorChannel chan firebasexmpp.ClientError
 	recvChannel  chan firebasexmpp.SMSMessage
 }
 
@@ -40,10 +40,10 @@ func NewXMPPSupervisor(xmppConfig config.XMPPConfig) XMPPSupervisor {
 }
 
 //SpawnClient spawns a new FirebaseClient
-func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, errorChannel chan error) {
+func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage) {
 	container := ClientContainer{
 		sendChannel:  sendChannel,
-		errorChannel: errorChannel,
+		errorChannel: make(chan xmpp.ClientError),
 		recvChannel:  messageChannel,
 	}
 	supervisor.spawnClientFromContainer(container)
