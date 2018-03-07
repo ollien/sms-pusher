@@ -55,13 +55,14 @@ func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.S
 }
 
 func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientContainer) {
+	//Because errors can happen during creation, we need to strat the listening for errors routine now.
+	go container.listenForError()
 	clientID := uuid.NewV4().String()
 	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.Config, clientID, supervisor.signalChannel, container.errorChannel)
 	container.client = firebaseClient
 	supervisor.clients[container.client.ClientID] = container
 	go container.client.StartRecv(container.recvChannel)
 	go container.client.ListenForSend(container.sendChannel)
-	go container.listenForError()
 }
 
 func (supervisor *XMPPSupervisor) listenForSend() {
