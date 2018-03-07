@@ -25,7 +25,13 @@ type FirebaseClient struct {
 	senderID      string
 	serverKey     string
 	signalChannel chan<- Signal
-	errorChannel  chan<- error
+	errorChannel  chan<- ClientError
+}
+
+//ClientError represents an error that occurs within a cient
+type ClientError struct {
+	err   error
+	fatal bool
 }
 
 //Config stores the details necessary for authenticating to Firebase Cloud Messaging's XMPP server, which cannot be hardcoded or put into version control.
@@ -35,7 +41,7 @@ type Config struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
-func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, signalChannel chan<- Signal, errorChannel chan<- error) FirebaseClient {
+func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
 	//TODO: Detect if debug. For now, use dev port and set debug to true. For now, we will just always do this.
 	server := fmt.Sprintf("%s:%d", fcmServer, fcmDevPort)
 	username := fmt.Sprintf("%s@%s", xmppConfig.SenderID, fcmUsernameAddres)
