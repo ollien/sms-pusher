@@ -48,7 +48,7 @@ func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.S
 	container := ClientContainer{
 		logger:       supervisor.logger,
 		sendChannel:  sendChannel,
-		errorChannel: make(chan xmpp.ClientError),
+		errorChannel: make(chan firebasexmpp.ClientError),
 		recvChannel:  messageChannel,
 	}
 	supervisor.spawnClientFromContainer(container)

@@ -25,7 +25,7 @@ func main() {
 
 	defer databaseConnection.Close()
 
-	supervisor := NewXMPPSupervisor(appConfig.XMPP)
+	supervisor := NewXMPPSupervisor(appConfig.XMPP, logger)
 	outChannel := make(chan firebasexmpp.SMSMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
 	go listenForSMS(outChannel)
