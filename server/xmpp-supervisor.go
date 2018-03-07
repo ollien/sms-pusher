@@ -27,7 +27,7 @@ type ClientContainer struct {
 	errorChannel chan firebasexmpp.ClientError
 }
 
-//NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
+//NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers, given the channels to receive messages from firebase, and the channels to send messages to firebase.
 func NewXMPPSupervisor(xmppConfig config.XMPPConfig, recvChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, logger *logrus.Logger) XMPPSupervisor {
 	supervisor := XMPPSupervisor{
 		clients:       make(map[string]ClientContainer),
