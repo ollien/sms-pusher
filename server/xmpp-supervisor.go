@@ -1,15 +1,21 @@
 package main
 
 import (
+	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 )
+
+const clientErrorFormat = "Client %s: %s"
 
 //XMPPSupervisor supervises all Firebase XMPP connections
 type XMPPSupervisor struct {
 	clients       map[string]ClientContainer
-	ConfigPath    string
-	SendChannel   chan firebasexmpp.OutboundMessage
+	Config        config.XMPPConfig
+	logger        *logrus.Logger
+	recvChannel   chan firebasexmpp.SMSMessage
+	sendChannel   chan firebasexmpp.OutboundMessage
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan ClientContainer
 }
@@ -17,17 +23,19 @@ type XMPPSupervisor struct {
 //ClientContainer holds a client and its channels
 type ClientContainer struct {
 	client       firebasexmpp.FirebaseClient
-	sendChannel  chan firebasexmpp.OutboundMessage
-	errorChannel chan error
-	recvChannel  chan firebasexmpp.SMSMessage
+	logger       *logrus.Logger
+	errorChannel chan firebasexmpp.ClientError
 }
 
-//NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers.
-func NewXMPPSupervisor(configPath string) XMPPSupervisor {
+//NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers, given the channels to receive messages from firebase, and the channels to send messages to firebase.
+func NewXMPPSupervisor(xmppConfig config.XMPPConfig, recvChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, logger *logrus.Logger) XMPPSupervisor {
 	supervisor := XMPPSupervisor{
 		clients:       make(map[string]ClientContainer),
-		ConfigPath:    configPath,
+		Config:        xmppConfig,
+		logger:        logger,
 		signalChannel: make(chan firebasexmpp.Signal),
+		recvChannel:   recvChannel,
+		sendChannel:   sendChannel,
 		spawnChannel:  make(chan ClientContainer),
 	}
 
@@ -39,30 +47,23 @@ func NewXMPPSupervisor(configPath string) XMPPSupervisor {
 }
 
 //SpawnClient spawns a new FirebaseClient
-func (supervisor *XMPPSupervisor) SpawnClient(messageChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, errorChannel chan error) {
+func (supervisor *XMPPSupervisor) SpawnClient() {
 	container := ClientContainer{
-		sendChannel:  sendChannel,
-		errorChannel: errorChannel,
-		recvChannel:  messageChannel,
+		logger:       supervisor.logger,
+		errorChannel: make(chan firebasexmpp.ClientError),
 	}
 	supervisor.spawnClientFromContainer(container)
 }
 
 func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientContainer) {
+	//Because errors can happen during creation, we need to strat the listening for errors routine now.
+	go container.listenForError()
 	clientID := uuid.NewV4().String()
-	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.ConfigPath, clientID, supervisor.signalChannel)
+	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.Config, clientID, supervisor.recvChannel, supervisor.sendChannel, supervisor.signalChannel, container.errorChannel)
 	container.client = firebaseClient
 	supervisor.clients[container.client.ClientID] = container
-	go container.client.StartRecv(container.recvChannel)
-	go container.client.ListenForSend(container.sendChannel, container.errorChannel)
-}
-
-func (supervisor *XMPPSupervisor) listenForSend() {
-	for message := range supervisor.SendChannel {
-		for _, client := range supervisor.clients {
-			client.sendChannel <- message
-		}
-	}
+	go container.client.StartRecv()
+	go container.client.ListenForSend()
 }
 
 //listenAndSpawns listens on supervisor.spawnChannel and spawns clients as necessary
@@ -82,6 +83,18 @@ func (supervisor *XMPPSupervisor) listenForSignal() {
 		} else {
 			clientID := signal.Client.ClientID
 			delete(supervisor.clients, clientID)
+		}
+	}
+}
+
+//listenForError listens on a client's error channel and logs it to the logrus logger.
+//Exits when container.errorChannel closes
+func (container ClientContainer) listenForError() {
+	for clientError := range container.errorChannel {
+		if clientError.Fatal {
+			container.logger.Fatalf(clientErrorFormat, container.client.ClientID, clientError.Err)
+		} else {
+			container.logger.Errorf(clientErrorFormat, container.client.ClientID, clientError.Err)
 		}
 	}
 }

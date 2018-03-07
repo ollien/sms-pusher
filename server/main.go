@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"log"
 
+	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/ollien/sms-pusher/server/web"
@@ -11,20 +11,25 @@ import (
 )
 
 func main() {
-	databaseConnection, err := db.InitDB("./database-config.json")
+	logFormatter := &logrus.TextFormatter{
+		FullTimestamp:   true,
+		TimestampFormat: "2006-01-02 15:04:05-0700",
+	}
+	logger := logrus.New()
+	logger.Formatter = logFormatter
+	appConfig := config.ParseConfig(logger)
+	databaseConnection, err := db.InitDB(appConfig.Database)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatalf("Database error: %s", err)
 	}
 
 	defer databaseConnection.Close()
 
-	supervisor := NewXMPPSupervisor("./xmpp-config.json")
-	logger := logrus.New()
 	outChannel := make(chan firebasexmpp.SMSMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
-	sendErrorChannel := make(chan error)
+	supervisor := NewXMPPSupervisor(appConfig.XMPP, outChannel, sendChannel, logger)
 	go listenForSMS(outChannel)
-	supervisor.SpawnClient(outChannel, sendChannel, sendErrorChannel)
+	supervisor.SpawnClient()
 	fmt.Println("Listening for SMS")
 	server := web.NewWebserver("0.0.0.0:8080", databaseConnection, sendChannel, logger)
 	fmt.Println("Server running")

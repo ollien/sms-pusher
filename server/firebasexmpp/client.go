@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
-	"os"
 	"strings"
 
 	"github.com/mattn/go-xmpp"
+	"github.com/ollien/sms-pusher/server/config"
 )
 
 const fcmServer = "fcm-xmpp.googleapis.com"
@@ -24,7 +23,16 @@ type FirebaseClient struct {
 	ClientID      string
 	senderID      string
 	serverKey     string
+	recvChannel   chan<- SMSMessage
+	sendChannel   <-chan OutboundMessage
 	signalChannel chan<- Signal
+	errorChannel  chan<- ClientError
+}
+
+//ClientError represents an error that occurs within a cient
+type ClientError struct {
+	Err   error
+	Fatal bool
 }
 
 //Config stores the details necessary for authenticating to Firebase Cloud Messaging's XMPP server, which cannot be hardcoded or put into version control.
@@ -33,34 +41,35 @@ type Config struct {
 	ServerKey string
 }
 
-//NewFirebaseClient creates a FirebaseClient from configuration file.
-func NewFirebaseClient(configPath string, clientID string, signalChannel chan<- Signal) FirebaseClient {
-	file, err := os.Open(configPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	jsonDecoder := json.NewDecoder(file)
-	var config Config
-	jsonDecoder.Decode(&config)
+//NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
+func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, recvChannel chan<- SMSMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
 	//TODO: Detect if debug. For now, use dev port and set debug to true. For now, we will just always do this.
 	server := fmt.Sprintf("%s:%d", fcmServer, fcmDevPort)
-	username := fmt.Sprintf("%s@%s", config.SenderID, fcmUsernameAddres)
-	client, err := xmpp.NewClient(server, username, config.ServerKey, true)
+	username := fmt.Sprintf("%s@%s", xmppConfig.SenderID, fcmUsernameAddres)
+	client, err := xmpp.NewClient(server, username, xmppConfig.ServerKey, true)
 	if err != nil {
-		log.Fatal(err)
+		//can't use logError because the client hasn't been created yet!
+		clientError := ClientError{
+			Err:   err,
+			Fatal: true,
+		}
+		errorChannel <- clientError
 	}
 
 	return FirebaseClient{
 		xmppClient:    *client,
 		ClientID:      clientID,
-		senderID:      config.SenderID,
-		serverKey:     config.ServerKey,
+		senderID:      xmppConfig.SenderID,
+		serverKey:     xmppConfig.ServerKey,
+		recvChannel:   recvChannel,
+		sendChannel:   sendChannel,
 		signalChannel: signalChannel,
+		errorChannel:  errorChannel,
 	}
 }
 
 //StartRecv listens for incoming  messages from Firebase Cloud Messaging and sends them to recvChannel.
-func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
+func (client *FirebaseClient) StartRecv() {
 	for {
 		data, err := client.xmppClient.Recv()
 		if err != nil {
@@ -70,7 +79,7 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 				client.signalChannel <- closeSignal
 				break
 			} else {
-				log.Fatal(err)
+				client.logError(err, false)
 			}
 		}
 
@@ -84,16 +93,15 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 		messageBody := []byte(chat.Other[0])
 		messageType, err := GetMessageType(messageBody)
 		if err != nil {
-			//Don't need to quit for unknowm message types
-			log.Println(err)
+			client.logError(err, false)
 		} else if messageType == "UpstreamMessage" {
 			var message UpstreamMessage
 			json.Unmarshal(messageBody, &message)
 			_, err := client.sendACK(message)
 			if err != nil {
-				log.Fatal(err)
+				client.logError(err, false)
 			}
-			recvChannel <- message.Data
+			client.recvChannel <- message.Data
 		} else if messageType == "ConnectionDrainingMessage" {
 			drainSignal := NewConnectionDrainingSignal(client)
 			client.signalChannel <- drainSignal
@@ -104,13 +112,22 @@ func (client *FirebaseClient) StartRecv(recvChannel chan SMSMessage) {
 
 //ListenForSend listens for a message on sendChannel and sends the message.
 //Terminates when sendChannel is closed
-func (client *FirebaseClient) ListenForSend(sendChannel <-chan OutboundMessage, errorChannel chan<- error) {
-	for message := range sendChannel {
+func (client *FirebaseClient) ListenForSend() {
+	for message := range client.sendChannel {
 		_, err := message.Send(client.xmppClient)
 		if err != nil {
-			errorChannel <- err
+			client.logError(err, false)
 		}
 	}
+}
+
+//logError sends an error upstream to the error channel
+func (client *FirebaseClient) logError(err error, fatal bool) {
+	clientError := ClientError{
+		Err:   err,
+		Fatal: fatal,
+	}
+	client.errorChannel <- clientError
 }
 
 func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
