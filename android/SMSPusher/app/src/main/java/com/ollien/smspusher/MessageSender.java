@@ -45,7 +45,7 @@ public class MessageSender {
 
 	protected static void sendMessageUpstream(Message message) {
 		FirebaseMessaging firebaseMessaging = FirebaseMessaging.getInstance();
-		RemoteMessage.Builder payloadBuilder = new RemoteMessage.Builder(SENDER_SUFFIX)
+		RemoteMessage.Builder payloadBuilder = new RemoteMessage.Builder(SENDER_ID + SENDER_SUFFIX)
 			.setMessageId(generateMessageId())
 			.addData(message.PHONE_NUMBER_KEY, message.phoneNumber)
 			.addData(message.TEXT_KEY, message.text)
