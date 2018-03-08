@@ -43,6 +43,7 @@ public class MMSReceiver extends BroadcastReceiver {
 		GenericPdu genericPdu = parser.parse();
 		if (genericPdu.getMessageType() == PduHeaders.MESSAGE_TYPE_NOTIFICATION_IND) {
 			NotificationInd pdu = (NotificationInd) genericPdu;
+			//Get the location of the MMS content, and get the message content.
 			byte[] rawContentLocation = pdu.getContentLocation();
 			final String contentLocation = new String(rawContentLocation);
 			final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -54,9 +55,11 @@ public class MMSReceiver extends BroadcastReceiver {
 					TransactionSettings transactionSettings = new TransactionSettings(context, extraInfo);
 					try {
 						GenericPdu dataPdu = getDataPdu(context, contentLocation, transactionSettings);
+						//If we have an MMS, we can parse it and send it upstream
 						if (dataPdu instanceof MultimediaMessagePdu) {
 							MultimediaMessagePdu mmsPdu = (MultimediaMessagePdu) dataPdu;
 							PduBody body = mmsPdu.getBody();
+							//TODO: Send upstream
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -110,6 +113,7 @@ public class MMSReceiver extends BroadcastReceiver {
 
 	private Map<Integer, EncodedStringValue[]> getToFields(Context context, PduHeaders headers) {
 		HashMap<Integer, EncodedStringValue[]> addresses = new HashMap<>();
+		//Iterate through all the different types of to fields and add them to the addresses set
 		for (int addressType : TO_ADDRESS_TYPES) {
 			EncodedStringValue[] rawFieldValues = headers.getEncodedStringValues(addressType);
 			if (addressType != PduHeaders.TO && rawFieldValues != null) {
