@@ -48,6 +48,7 @@ public class MessageSender {
 		RemoteMessage.Builder payloadBuilder = new RemoteMessage.Builder(SENDER_ID + SENDER_SUFFIX)
 			.setMessageId(generateMessageId())
 			.addData(message.PHONE_NUMBER_KEY, message.phoneNumber)
+			.addData(message.TEXT_KEY, message.text)
 			.addData(message.TIMESTAMP_KEY, String.valueOf(message.timestamp))
 			.setTtl(0); //Hotfix for issue with ACKs.
 		if (message.otherData != null) {
