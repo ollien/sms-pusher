@@ -96,12 +96,22 @@ func (client *FirebaseClient) StartRecv() {
 			client.logError(err, false)
 		} else if messageType == "UpstreamMessage" {
 			var message UpstreamMessage
-			json.Unmarshal(messageBody, &message)
-			_, err := client.sendACK(message)
+			err := json.Unmarshal(messageBody, &message)
 			if err != nil {
 				client.logError(err, false)
 			}
-			client.recvChannel <- message.Data
+
+			textMessage, err := message.extractTextMessage()
+			if err != nil {
+				client.logError(err, false)
+			}
+
+			_, err = client.sendACK(message)
+			if err != nil {
+				client.logError(err, false)
+			}
+
+			client.recvChannel <- textMessage
 		} else if messageType == "ConnectionDrainingMessage" {
 			drainSignal := NewConnectionDrainingSignal(client)
 			client.signalChannel <- drainSignal

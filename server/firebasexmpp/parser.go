@@ -44,7 +44,7 @@ type UpstreamMessage struct {
 	TTL       int    `json:"time_to_live"`
 	MessageID string `json:"message_id"`
 	Category  string `json:"category"`
-	Data      TextMessage
+	Data      json.RawMessage
 }
 
 //InboundACKMessage stores the basic data from an ACK message that Firebase CLoud Messaging when we send a message downstream.
@@ -90,8 +90,31 @@ func GetMessageType(rawData []byte) (string, error) {
 	}
 }
 
+func (message UpstreamMessage) extractTextMessage() (TextMessage, error) {
+	mms := MMSMessage{}
+	err := json.Unmarshal(message.Data, &mms)
+	if err != nil {
+		return nil, err
+	}
+
+	if mms.isMMS() {
+		return mms, nil
+	}
+
+	sms := SMSMessage{}
+	sms.convertFromMMS(mms)
+
+	return sms, nil
+}
+
 func (message SMSMessage) isMMS() bool {
 	return false
+}
+
+func (message *SMSMessage) convertFromMMS(mms MMSMessage) {
+	message.PhoneNumber = mms.PhoneNumber
+	message.Timestamp = mms.Timestamp
+	message.Message = mms.Message
 }
 
 func (message MMSMessage) isMMS() bool {
