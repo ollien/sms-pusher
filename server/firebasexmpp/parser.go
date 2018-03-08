@@ -90,10 +90,10 @@ func GetMessageType(rawData []byte) (string, error) {
 	}
 }
 
-func (message *SMSMessage) isMMS() {
+func (message SMSMessage) isMMS() bool {
 	return false
 }
 
-func (message *MMSMessage) isMMS() {
-	return len(messge.recipients) > 1 && len(message.Parts) != nil
+func (message MMSMessage) isMMS() bool {
+	return len(message.Recipients) > 1 && message.Parts != nil
 }
