@@ -10,9 +10,11 @@ import android.net.NetworkInfo;
 import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
+import android.util.Base64;
 
 import com.android.mms.transaction.HttpUtils;
 import com.android.mms.transaction.TransactionSettings;
+import com.google.android.mms_clone.ContentType;
 import com.google.android.mms_clone.pdu.EncodedStringValue;
 import com.google.android.mms_clone.pdu.GenericPdu;
 import com.google.android.mms_clone.pdu.MultimediaMessagePdu;
@@ -20,11 +22,16 @@ import com.google.android.mms_clone.pdu.NotificationInd;
 import com.google.android.mms_clone.pdu.PduBody;
 import com.google.android.mms_clone.pdu.PduHeaders;
 import com.google.android.mms_clone.pdu.PduParser;
+import com.google.android.mms_clone.pdu.PduPart;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -34,6 +41,8 @@ import java.util.Map;
 public class MMSReceiver extends BroadcastReceiver {
 	//Holds the different types of headers that represent the "to" field.
 	private static final int[] TO_ADDRESS_TYPES = {PduHeaders.TO, PduHeaders.BCC, PduHeaders.CC};
+	public static final String CONTENT_TYPE_KEY = "type";
+	public static final String DATA_KEY = "data";
 
 	@Override
 	public void onReceive(final Context context, Intent intent) {
@@ -140,5 +149,32 @@ public class MMSReceiver extends BroadcastReceiver {
 		}
 
 		return recipients;
+	}
+
+	private List<String> makePartsList(MultimediaMessagePdu pdu) {
+		PduBody body = pdu.getBody();
+		int numParts = body.getPartsNum();
+		List<String> partsList = new ArrayList<>();
+
+		//Iterate through all the parts. If the type is supported, we add it to the list of parts.
+		for (int i = 0; i < numParts; i++) {
+			PduPart part = body.getPart(i);
+			String contentType = new String(part.getContentType());
+			if (ContentType.isSupportedType(contentType) && !ContentType.isDrmType(contentType)) {
+				try {
+					byte[] partData = part.getData();
+					String b64String = Base64.encodeToString(partData, Base64.DEFAULT);
+					JSONObject partJSON = new JSONObject();
+					partJSON.put(CONTENT_TYPE_KEY, contentType);
+					partJSON.put(DATA_KEY, b64String);
+					partsList.add(partJSON.toString());
+				} catch (JSONException e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
+		}
+
+		return partsList;
 	}
 }
