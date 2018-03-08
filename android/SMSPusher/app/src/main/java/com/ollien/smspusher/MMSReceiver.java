@@ -30,7 +30,6 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -136,10 +135,10 @@ public class MMSReceiver extends BroadcastReceiver {
 		return addresses;
 	}
 
-	private HashSet<String> getRecipients(Context context, MultimediaMessagePdu pdu) {
+	private List<String> getRecipients(Context context, MultimediaMessagePdu pdu) {
 		PduHeaders headers = pdu.getPduHeaders();
 		Map<Integer, EncodedStringValue[]> addresses = getToFields(context, headers);
-		HashSet<String> recipients = new HashSet<>();
+		List<String> recipients = new ArrayList<>();
 		for (int addressType : TO_ADDRESS_TYPES) {
 			EncodedStringValue[] addressesOfType = addresses.get(addressType);
 			for (EncodedStringValue rawAddress : addressesOfType) {
