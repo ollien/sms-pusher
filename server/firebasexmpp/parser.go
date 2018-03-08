@@ -10,6 +10,27 @@ type TextMessage interface {
 	isMMS() bool
 }
 
+//SMSMessage stores the data sent by the app upstream about incoming SMS messages.
+type SMSMessage struct {
+	PhoneNumber string `json:"phone_number"`
+	Message     string `json:"message,omitempty"`
+	Timestamp   int64  `json:"timestamp,string"`
+}
+
+//MMSMessage represents an MMS message that comes in
+type MMSMessage struct {
+	SMSMessage
+	Recipients []string `json:"recipients"`
+	//Holds any message components that aren't just a message.
+	Parts []MMSPart `json:"parts,string"`
+}
+
+//MMSPart represents a part of an MMS message.
+type MMSPart struct {
+	PartType string `json:"type"`
+	Data     []byte `json:"data"`
+}
+
 //UnknownMessage represents a message a message of undetermined type
 type UnknownMessage struct {
 	MessageType *string `json:"message_type"`
@@ -38,27 +59,6 @@ type NACKMessage struct {
 	MessageID        string `json:"message_id"`
 	Error            string `json:"error"`
 	ErrorDescription string `json:"error_description"`
-}
-
-//SMSMessage stores the data sent by the app upstream about incoming SMS messages.
-type SMSMessage struct {
-	PhoneNumber string `json:"phone_number"`
-	Message     string `json:"message,omitempty"`
-	Timestamp   int64  `json:"timestamp,string"`
-}
-
-//MMSMessage represents an MMS message that comes in
-type MMSMessage struct {
-	SMSMessage
-	Recipients []string `json:"recipients"`
-	//Holds any message components that aren't just a message.
-	Parts []MMSPart `json:"parts,string"`
-}
-
-//MMSPart represents a part of an MMS message.
-type MMSPart struct {
-	PartType string `json:"type"`
-	Data     []byte `json:"data"`
 }
 
 //ConnectionDrainingMessage indicates a CONNECTION_DRAINING message.
