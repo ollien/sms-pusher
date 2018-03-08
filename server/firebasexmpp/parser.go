@@ -95,5 +95,5 @@ func (message SMSMessage) isMMS() bool {
 }
 
 func (message MMSMessage) isMMS() bool {
-	return len(message.Recipients) > 1 && message.Parts != nil
+	return len(message.Recipients) > 1 || message.Parts != nil
 }
