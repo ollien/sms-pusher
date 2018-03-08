@@ -40,8 +40,8 @@ import java.util.Map;
 public class MMSReceiver extends BroadcastReceiver {
 	//Holds the different types of headers that represent the "to" field.
 	private static final int[] TO_ADDRESS_TYPES = {PduHeaders.TO, PduHeaders.BCC, PduHeaders.CC};
-	public static final String CONTENT_TYPE_KEY = "type";
-	public static final String DATA_KEY = "data";
+	private static final String CONTENT_TYPE_KEY = "type";
+	private static final String DATA_KEY = "data";
 
 	@Override
 	public void onReceive(final Context context, Intent intent) {
