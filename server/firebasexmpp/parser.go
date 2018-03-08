@@ -38,7 +38,7 @@ type NACKMessage struct {
 //SMSMessage stores the data sent by the app upstream about incoming SMS messages.
 type SMSMessage struct {
 	PhoneNumber string `json:"phone_number"`
-	Message     string `json:"message"`
+	Message     string `json:"message,omitempty"`
 	Timestamp   int64  `json:"timestamp,string"`
 }
 
