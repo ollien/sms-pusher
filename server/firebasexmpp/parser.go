@@ -5,6 +5,11 @@ import (
 	"errors"
 )
 
+//TextMessage represents either a SMS or an MMS.
+type TextMessage interface {
+	isMMS() bool
+}
+
 //UnknownMessage represents a message a message of undetermined type
 type UnknownMessage struct {
 	MessageType *string `json:"message_type"`
