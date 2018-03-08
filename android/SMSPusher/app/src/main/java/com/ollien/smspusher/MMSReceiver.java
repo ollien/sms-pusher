@@ -24,6 +24,7 @@ import com.google.android.mms_clone.pdu.PduHeaders;
 import com.google.android.mms_clone.pdu.PduParser;
 import com.google.android.mms_clone.pdu.PduPart;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -42,6 +43,8 @@ public class MMSReceiver extends BroadcastReceiver {
 	private static final int[] TO_ADDRESS_TYPES = {PduHeaders.TO, PduHeaders.BCC, PduHeaders.CC};
 	private static final String CONTENT_TYPE_KEY = "type";
 	private static final String DATA_KEY = "data";
+	private static final String RECIPIENTS_KEY = "recipients";
+	private static final String PARTS_KEY = "parts";
 
 	@Override
 	public void onReceive(final Context context, Intent intent) {
@@ -66,8 +69,7 @@ public class MMSReceiver extends BroadcastReceiver {
 						//If we have an MMS, we can parse it and send it upstream
 						if (dataPdu instanceof MultimediaMessagePdu) {
 							MultimediaMessagePdu mmsPdu = (MultimediaMessagePdu) dataPdu;
-							PduBody body = mmsPdu.getBody();
-							//TODO: Send upstream
+							sendUpstream(context, mmsPdu);
 						}
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -175,5 +177,19 @@ public class MMSReceiver extends BroadcastReceiver {
 		}
 
 		return partsList;
+	}
+
+	private void sendUpstream(Context context, MultimediaMessagePdu pdu) {
+		List<String> recipients = getRecipients(context, pdu);
+		List<String> partsList = makePartsList(pdu);
+		JSONArray recipientsJSONArray = new JSONArray(recipients);
+		JSONArray partsListJSONArray = new JSONArray(partsList);
+		Map<String, String> mmsComponentsMap = new HashMap<>();
+		mmsComponentsMap.put(RECIPIENTS_KEY, recipientsJSONArray.toString());
+		mmsComponentsMap.put(PARTS_KEY, partsListJSONArray.toString());
+		String fromNumber = pdu.getFrom().toString();
+		long timestamp = pdu.getDate();
+		MessageSender.Message upstreamMessage = new MessageSender.Message(fromNumber, null, timestamp, mmsComponentsMap);
+		MessageSender.sendMessageUpstream(upstreamMessage);
 	}
 }
