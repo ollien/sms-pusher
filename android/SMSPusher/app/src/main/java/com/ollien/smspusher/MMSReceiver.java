@@ -143,9 +143,11 @@ public class MMSReceiver extends BroadcastReceiver {
 		List<String> recipients = new ArrayList<>();
 		for (int addressType : TO_ADDRESS_TYPES) {
 			EncodedStringValue[] addressesOfType = addresses.get(addressType);
-			for (EncodedStringValue rawAddress : addressesOfType) {
-				String address = rawAddress.getString();
-				recipients.add(address);
+			if (addressesOfType != null) {
+				for (EncodedStringValue rawAddress : addressesOfType) {
+					String address = rawAddress.getString();
+					recipients.add(address);
+				}
 			}
 		}
 
