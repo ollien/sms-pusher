@@ -89,3 +89,11 @@ func GetMessageType(rawData []byte) (string, error) {
 		return *message.MessageType, errors.New("Unknown message type")
 	}
 }
+
+func (message *SMSMessage) isMMS() {
+	return false
+}
+
+func (message *MMSMessage) isMMS() {
+	return len(messge.recipients) > 1 && len(message.Parts) != nil
+}
