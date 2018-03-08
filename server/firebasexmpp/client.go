@@ -23,7 +23,7 @@ type FirebaseClient struct {
 	ClientID      string
 	senderID      string
 	serverKey     string
-	recvChannel   chan<- SMSMessage
+	recvChannel   chan<- TextMessage
 	sendChannel   <-chan OutboundMessage
 	signalChannel chan<- Signal
 	errorChannel  chan<- ClientError
@@ -42,7 +42,7 @@ type Config struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
-func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, recvChannel chan<- SMSMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
+func NewFirebaseClient(xmppConfig config.XMPPConfig, clientID string, recvChannel chan<- TextMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
 	//TODO: Detect if debug. For now, use dev port and set debug to true. For now, we will just always do this.
 	server := fmt.Sprintf("%s:%d", fcmServer, fcmDevPort)
 	username := fmt.Sprintf("%s@%s", xmppConfig.SenderID, fcmUsernameAddres)

@@ -14,7 +14,7 @@ type XMPPSupervisor struct {
 	clients       map[string]ClientContainer
 	Config        config.XMPPConfig
 	logger        *logrus.Logger
-	recvChannel   chan firebasexmpp.SMSMessage
+	recvChannel   chan firebasexmpp.TextMessage
 	sendChannel   chan firebasexmpp.OutboundMessage
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan ClientContainer
@@ -28,7 +28,7 @@ type ClientContainer struct {
 }
 
 //NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers, given the channels to receive messages from firebase, and the channels to send messages to firebase.
-func NewXMPPSupervisor(xmppConfig config.XMPPConfig, recvChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, logger *logrus.Logger) XMPPSupervisor {
+func NewXMPPSupervisor(xmppConfig config.XMPPConfig, recvChannel chan firebasexmpp.TextMessage, sendChannel chan firebasexmpp.OutboundMessage, logger *logrus.Logger) XMPPSupervisor {
 	supervisor := XMPPSupervisor{
 		clients:       make(map[string]ClientContainer),
 		Config:        xmppConfig,
