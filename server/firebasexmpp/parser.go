@@ -38,13 +38,13 @@ type UnknownMessage struct {
 }
 
 //UpstreamMessage stores the basic data from any upstream Firebase Cloud Messaging XML Message.
-//This isn't as general as it could be. Because the app only sends SMS messages upstream, I've included an SMSMessage in UpstreaMessage.
+//This isn't as general as it could be. Because the app only sends SMS/MMSes upstream, TextMessage is included in UpstreamMessage.
 type UpstreamMessage struct {
 	From      string `json:"from"`
 	TTL       int    `json:"time_to_live"`
 	MessageID string `json:"message_id"`
 	Category  string `json:"category"`
-	Data      SMSMessage
+	Data      TextMessage
 }
 
 //InboundACKMessage stores the basic data from an ACK message that Firebase CLoud Messaging when we send a message downstream.
