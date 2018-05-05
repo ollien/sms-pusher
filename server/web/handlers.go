@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	uuid "github.com/satori/go.uuid"
@@ -27,6 +28,8 @@ type RouteHandler struct {
 	databaseConnection db.DatabaseConnection
 	sendChannel        chan<- firebasexmpp.OutboundMessage
 	logger             *logrus.Logger
+	//TODO: We really don't need to have an entire field for this, and should probably refactor config to be a bit cleaner about things like this...
+	mmsConfig config.MMSConfig
 	//TODO: add sendErrorChannel once websockets are implemented
 }
 
