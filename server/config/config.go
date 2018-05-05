@@ -3,11 +3,11 @@ package config
 import (
 	"encoding/json"
 	"os"
-
-	"github.com/sirupsen/logrus"
 )
 
 const configPath = "config.json"
+
+var config Config
 
 //Config represents the config for the application
 type Config struct {
@@ -33,17 +33,31 @@ type MMSConfig struct {
 }
 
 //ParseConfig parses the default configPath into a Config
-func ParseConfig(logger *logrus.Logger) Config {
+func ParseConfig() error {
 	configFile, err := os.Open(configPath)
 	if err != nil {
-		logger.Fatalf("Error reading config: %s", err)
+		return err
 	}
 
 	defer configFile.Close()
 
 	decoder := json.NewDecoder(configFile)
-	var config Config
-	decoder.Decode(&config)
+	var parsedConfig Config
+	decoder.Decode(&parsedConfig)
 
-	return config
+	config = parsedConfig
+
+	return nil
+}
+
+//GetConfig will get the currently stored config
+func GetConfig() (Config, error) {
+	if config == (Config{}) {
+		err := ParseConfig()
+		if err != nil {
+			return Config{}, err
+		}
+	}
+
+	return config, nil
 }
