@@ -37,8 +37,13 @@ type Session struct {
 }
 
 //InitDB intiializes the database connection and returns a DB
-func InitDB(datbaseConfig config.DatabaseConfig) (DatabaseConnection, error) {
-	rawConnection, err := sql.Open(driver, datbaseConfig.URI)
+func InitDB() (DatabaseConnection, error) {
+	appConfig, err := config.GetConfig()
+	if err != nil {
+		return DatabaseConnection{}, err
+	}
+
+	rawConnection, err := sql.Open(driver, appConfig.Database.URI)
 	if err != nil {
 		return DatabaseConnection{}, err
 	}

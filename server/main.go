@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 
-	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/ollien/sms-pusher/server/web"
@@ -17,8 +16,7 @@ func main() {
 	}
 	logger := logrus.New()
 	logger.Formatter = logFormatter
-	appConfig := config.ParseConfig(logger)
-	databaseConnection, err := db.InitDB(appConfig.Database)
+	databaseConnection, err := db.InitDB()
 	if err != nil {
 		logger.Fatalf("Database error: %s", err)
 	}
@@ -27,7 +25,7 @@ func main() {
 
 	outChannel := make(chan firebasexmpp.SMSMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
-	supervisor := NewXMPPSupervisor(appConfig.XMPP, outChannel, sendChannel, logger)
+	supervisor := NewXMPPSupervisor(outChannel, sendChannel, logger)
 	go listenForSMS(outChannel)
 	supervisor.SpawnClient()
 	fmt.Println("Listening for SMS")

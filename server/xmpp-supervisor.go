@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
@@ -12,7 +11,6 @@ const clientErrorFormat = "Client %s: %s"
 //XMPPSupervisor supervises all Firebase XMPP connections
 type XMPPSupervisor struct {
 	clients       map[string]ClientContainer
-	Config        config.XMPPConfig
 	logger        *logrus.Logger
 	recvChannel   chan firebasexmpp.SMSMessage
 	sendChannel   chan firebasexmpp.OutboundMessage
@@ -28,10 +26,9 @@ type ClientContainer struct {
 }
 
 //NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers, given the channels to receive messages from firebase, and the channels to send messages to firebase.
-func NewXMPPSupervisor(xmppConfig config.XMPPConfig, recvChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, logger *logrus.Logger) XMPPSupervisor {
+func NewXMPPSupervisor(recvChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, logger *logrus.Logger) XMPPSupervisor {
 	supervisor := XMPPSupervisor{
 		clients:       make(map[string]ClientContainer),
-		Config:        xmppConfig,
 		logger:        logger,
 		signalChannel: make(chan firebasexmpp.Signal),
 		recvChannel:   recvChannel,
@@ -59,7 +56,7 @@ func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientConta
 	//Because errors can happen during creation, we need to strat the listening for errors routine now.
 	go container.listenForError()
 	clientID := uuid.NewV4().String()
-	firebaseClient := firebasexmpp.NewFirebaseClient(supervisor.Config, clientID, supervisor.recvChannel, supervisor.sendChannel, supervisor.signalChannel, container.errorChannel)
+	firebaseClient := firebasexmpp.NewFirebaseClient(clientID, supervisor.recvChannel, supervisor.sendChannel, supervisor.signalChannel, container.errorChannel)
 	container.client = firebaseClient
 	supervisor.clients[container.client.ClientID] = container
 	go container.client.StartRecv()
