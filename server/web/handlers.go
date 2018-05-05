@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,6 +22,7 @@ const (
 	xmppErrorLogFormat       = "XMPP error: %s"
 	badUUIDErrorLogMsg       = "Bad UUID for device"
 	notEnoughInfoErrorLogMsg = "Not enough info to continue."
+	badB64ErrorLogMsg        = "Invalid B64 for uploaded file."
 )
 
 //RouteHandler holds all routes and allows them to share common variables
@@ -212,4 +214,36 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	}
 
 	handler.sendChannel <- outMessage
+}
+
+func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	user, err := GetSessionUser(handler.databaseConnection, req)
+	if err != nil {
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	//TODO: check if supported MIME type
+
+	b64 := req.FormValue("data")
+	deviceID := req.FormValue("device-id")
+	if b64 == "" || deviceID == "" {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	b64Encoding := base64.NewEncoding("base64")
+	fileBytes, err := b64Encoding.DecodeString(b64)
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(badB64ErrorLogMsg)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	_, err = StoreFile(handler.databaseConnection, handler.mmsConfig.UploadLocation, user, fileBytes)
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
