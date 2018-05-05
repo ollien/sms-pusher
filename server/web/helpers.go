@@ -81,12 +81,13 @@ func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWrite
 }
 
 //StoreFile stores an incoming file to disk, with its SHA256 as its username
-func StoreFile(bytes []byte, uploadLocation string) (int, error) {
+func StoreFile(databaseConnection db.DatabaseConnection, uploadLocation string, user db.User, bytes []byte) (int, error) {
 	fileName, err := getFileName(bytes)
 	if err != nil {
 		return 0, err
 	}
-	//TODO: store this path in the database
+
+	databaseConnection.RecordFile(fileName, user)
 
 	filePath := path.Join(uploadLocation, fileName)
 	file, err := os.OpenFile(filePath, os.O_WRONLY, uploadedFileMode)
