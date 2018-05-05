@@ -45,3 +45,12 @@ func ParseConfig(logger *logrus.Logger) Config {
 
 	return config
 }
+
+//GetConfig will get the currently stored config
+func GetConfig(logger *logrus.Logger) Config {
+	if config == (Config{}) {
+		ParseConfig(logger)
+	}
+
+	return config
+}
