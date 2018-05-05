@@ -3,8 +3,6 @@ package config
 import (
 	"encoding/json"
 	"os"
-
-	"github.com/sirupsen/logrus"
 )
 
 const configPath = "config.json"
@@ -29,10 +27,10 @@ type XMPPConfig struct {
 }
 
 //ParseConfig parses the default configPath into a Config
-func ParseConfig(logger *logrus.Logger) Config {
+func ParseConfig() error {
 	configFile, err := os.Open(configPath)
 	if err != nil {
-		logger.Fatalf("Error reading config: %s", err)
+		return err
 	}
 
 	defer configFile.Close()
@@ -43,14 +41,17 @@ func ParseConfig(logger *logrus.Logger) Config {
 
 	config = parsedConfig
 
-	return config
+	return nil
 }
 
 //GetConfig will get the currently stored config
-func GetConfig(logger *logrus.Logger) Config {
+func GetConfig() (Config, error) {
 	if config == (Config{}) {
-		ParseConfig(logger)
+		err := ParseConfig()
+		if err != nil {
+			return Config{}, err
+		}
 	}
 
-	return config
+	return config, nil
 }
