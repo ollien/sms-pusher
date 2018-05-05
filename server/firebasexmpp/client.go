@@ -51,6 +51,7 @@ func NewFirebaseClient(clientID string, recvChannel chan<- SMSMessage, sendChann
 			Fatal: true,
 		}
 		errorChannel <- clientError
+		return FirebaseClient{}
 	}
 
 	xmppConfig := appConfig.XMPP
@@ -65,6 +66,7 @@ func NewFirebaseClient(clientID string, recvChannel chan<- SMSMessage, sendChann
 			Fatal: true,
 		}
 		errorChannel <- clientError
+		return FirebaseClient{}
 	}
 
 	return FirebaseClient{
