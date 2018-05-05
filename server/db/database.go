@@ -37,8 +37,13 @@ type Session struct {
 }
 
 //InitDB intiializes the database connection and returns a DB
-func InitDB(datbaseConfig config.DatabaseConfig) (DatabaseConnection, error) {
-	rawConnection, err := sql.Open(driver, datbaseConfig.URI)
+func InitDB() (DatabaseConnection, error) {
+	appConfig, err := config.GetConfig()
+	if err != nil {
+		return DatabaseConnection{}, err
+	}
+
+	rawConnection, err := sql.Open(driver, appConfig.Database.URI)
 	if err != nil {
 		return DatabaseConnection{}, err
 	}
@@ -67,6 +72,16 @@ func InitDB(datbaseConfig config.DatabaseConfig) (DatabaseConnection, error) {
 	//Create sessions table
 	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS sessions (" +
 		"id uuid PRIMARY KEY," +
+		"for_user INTEGER REFERENCES users(id));")
+	if err != nil {
+		return DatabaseConnection{}, err
+	}
+
+	//Create mms_files table
+	//name is 128 bytes, as the file hash will be 64 bytes, plus we need room for the extension. Rounded up to the nearest power of two, 128.
+	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS mms_files(" +
+		"id SERIAL PRIMARY KEY," +
+		"name VARCHAR(128)," +
 		"for_user INTEGER REFERENCES users(id));")
 	if err != nil {
 		return DatabaseConnection{}, err

@@ -139,6 +139,13 @@ func (db DatabaseConnection) GetDevice(deviceID uuid.UUID) (Device, error) {
 
 }
 
+//RecordFile stores an MMS file to the database
+func (db DatabaseConnection) RecordFile(fileName string, user User) error {
+	_, err := db.Exec("INSERT INTO mms_files VALUES(DEFAULT, $1, $2);", fileName, user.ID)
+
+	return err
+}
+
 //RegisterDeviceToUser registers a device for a user
 func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
 	deviceID := uuid.NewV4()
