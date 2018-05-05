@@ -5,13 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"path"
 
 	"github.com/h2non/filetype"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/sirupsen/logrus"
 )
 
-const routeKey = "_route"
+const (
+	uploadedFileMode = 0644
+	routeKey         = "_route"
+)
 
 //LoggableResponseWriter allows access to otherwise hidden information within ResponseWriter
 type LoggableResponseWriter struct {
@@ -73,6 +78,23 @@ func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWrite
 	return LoggableResponseWriter{
 		ResponseWriter: writer,
 	}
+}
+
+//StoreFile stores an incoming file to disk, with its SHA256 as its username
+func StoreFile(bytes []byte, uploadLocation string) (int, error) {
+	fileName, err := getFileName(bytes)
+	if err != nil {
+		return 0, err
+	}
+	//TODO: store this path in the database
+
+	filePath := path.Join(uploadLocation, fileName)
+	file, err := os.OpenFile(filePath, os.O_WRONLY, uploadedFileMode)
+	if err != nil {
+		return 0, err
+	}
+
+	return file.Write(bytes)
 }
 
 //Get the name for a file that we will be storing
