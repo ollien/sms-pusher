@@ -52,6 +52,7 @@ func (serv *Webserver) initHandlers() {
 	serv.router.POST("/register_device", serv.routeHandler.registerDevice)
 	serv.router.POST("/set_fcm_id", serv.routeHandler.setFCMID)
 	serv.router.POST("/send_message", serv.routeHandler.sendMessage)
+	serv.router.POST("/upload_mms_file", serv.routeHandler.uploadMMSFile)
 }
 
 func (serv *Webserver) afterRequest(writer http.ResponseWriter, req *http.Request) {
