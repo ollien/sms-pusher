@@ -118,8 +118,8 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 		writer.WriteHeader(http.StatusInternalServerError)
 	} else {
 		_, err := writer.Write(resultJSON)
-		logWithRouteField(handler.logger, req, "json", resultJSON).Errorf(jsonErrorLogFormat, err)
 		if err != nil {
+			logWithRouteField(handler.logger, req, "json", string(resultJSON)).Errorf(jsonErrorLogFormat, err)
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
 	}
