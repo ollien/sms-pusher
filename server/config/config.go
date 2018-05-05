@@ -26,6 +26,11 @@ type XMPPConfig struct {
 	SenderID  string `json:"sender_id"`
 }
 
+//MMSConfig represents the config for the MMS portion of the FCM XMPP server
+type MMSConfig struct {
+	UploadLocation string `json:"upload_location"`
+}
+
 //ParseConfig parses the default configPath into a Config
 func ParseConfig(logger *logrus.Logger) Config {
 	configFile, err := os.Open(configPath)
