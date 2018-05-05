@@ -13,6 +13,7 @@ const configPath = "config.json"
 type Config struct {
 	Database DatabaseConfig `json:"db"`
 	XMPP     XMPPConfig     `json:"xmpp"`
+	MMS      MMSConfig      `json:"mms"`
 }
 
 //DatabaseConfig represents the config for the database
