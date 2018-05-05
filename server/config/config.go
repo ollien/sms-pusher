@@ -9,6 +9,8 @@ import (
 
 const configPath = "config.json"
 
+var config Config
+
 //Config represents the config for the application
 type Config struct {
 	Database DatabaseConfig `json:"db"`
@@ -36,8 +38,10 @@ func ParseConfig(logger *logrus.Logger) Config {
 	defer configFile.Close()
 
 	decoder := json.NewDecoder(configFile)
-	var config Config
-	decoder.Decode(&config)
+	var parsedConfig Config
+	decoder.Decode(&parsedConfig)
+
+	config = parsedConfig
 
 	return config
 }
