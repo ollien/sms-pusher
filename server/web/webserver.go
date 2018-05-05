@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/sirupsen/logrus"
@@ -27,12 +26,11 @@ type Webserver struct {
 }
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
-func NewWebserver(listenAddr string, mmsConfig config.MMSConfig, databaseConnection db.DatabaseConnection, sendChannel chan<- firebasexmpp.OutboundMessage, logger *logrus.Logger) Webserver {
+func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, sendChannel chan<- firebasexmpp.OutboundMessage, logger *logrus.Logger) Webserver {
 	routeHandler := RouteHandler{
 		databaseConnection: databaseConnection,
 		sendChannel:        sendChannel,
 		logger:             logger,
-		mmsConfig:          mmsConfig,
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,

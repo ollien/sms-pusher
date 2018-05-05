@@ -30,8 +30,6 @@ type RouteHandler struct {
 	databaseConnection db.DatabaseConnection
 	sendChannel        chan<- firebasexmpp.OutboundMessage
 	logger             *logrus.Logger
-	//TODO: We really don't need to have an entire field for this, and should probably refactor config to be a bit cleaner about things like this...
-	mmsConfig config.MMSConfig
 	//TODO: add sendErrorChannel once websockets are implemented
 }
 
@@ -240,7 +238,14 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 		return
 	}
 
-	_, err = StoreFile(handler.databaseConnection, handler.mmsConfig.UploadLocation, user, fileBytes)
+	appConfig, err := config.GetConfig()
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = StoreFile(handler.databaseConnection, appConfig.MMS.UploadLocation, user, fileBytes)
 	if err != nil {
 		logWithRoute(handler.logger, req).Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)

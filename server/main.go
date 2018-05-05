@@ -29,7 +29,7 @@ func main() {
 	go listenForSMS(outChannel)
 	supervisor.SpawnClient()
 	fmt.Println("Listening for SMS")
-	server := web.NewWebserver("0.0.0.0:8080", appConfig.MMS, databaseConnection, sendChannel, logger)
+	server := web.NewWebserver("0.0.0.0:8080", databaseConnection, sendChannel, logger)
 	fmt.Println("Server running")
 	server.Start()
 }
