@@ -1,9 +1,12 @@
 package web
 
 import (
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"net/http"
 
+	"github.com/h2non/filetype"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/sirupsen/logrus"
 )
@@ -70,6 +73,17 @@ func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWrite
 	return LoggableResponseWriter{
 		ResponseWriter: writer,
 	}
+}
+
+//Get the name for a file that we will be storing
+func getFileName(bytes []byte) (string, error) {
+	fileHash := sha256.Sum256(bytes)
+	theType, err := filetype.Match(bytes)
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s.%x", theType, fileHash), nil
 }
 
 //Write is identical to http.ResponseWriter.Write, but stores the bytes sent and accounts for the 200 special case that Write normally handles by the interface's definition.
