@@ -230,8 +230,7 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 		return
 	}
 
-	b64Encoding := base64.NewEncoding("base64")
-	fileBytes, err := b64Encoding.DecodeString(b64)
+	fileBytes, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
 		logWithRoute(handler.logger, req).Error(badB64ErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
