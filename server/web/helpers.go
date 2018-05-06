@@ -90,7 +90,7 @@ func StoreFile(databaseConnection db.DatabaseConnection, uploadLocation string, 
 	databaseConnection.RecordFile(fileName, user)
 
 	filePath := path.Join(uploadLocation, fileName)
-	file, err := os.OpenFile(filePath, os.O_WRONLY, uploadedFileMode)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, uploadedFileMode)
 	if err != nil {
 		return 0, err
 	}
@@ -106,7 +106,7 @@ func getFileName(bytes []byte) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s.%x", theType, fileHash), nil
+	return fmt.Sprintf("%x.%s", fileHash, theType.Extension), nil
 }
 
 //Write is identical to http.ResponseWriter.Write, but stores the bytes sent and accounts for the 200 special case that Write normally handles by the interface's definition.
