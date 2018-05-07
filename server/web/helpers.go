@@ -10,6 +10,7 @@ import (
 
 	"github.com/h2non/filetype"
 	"github.com/ollien/sms-pusher/server/db"
+	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -81,13 +82,13 @@ func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWrite
 }
 
 //StoreFile stores an incoming file to disk, with its SHA256 as its username
-func StoreFile(databaseConnection db.DatabaseConnection, uploadLocation string, user db.User, bytes []byte) (int, error) {
+func StoreFile(databaseConnection db.DatabaseConnection, uploadLocation string, blockID uuid.UUID, bytes []byte) (int, error) {
 	fileName, err := getFileName(bytes)
 	if err != nil {
 		return 0, err
 	}
 
-	databaseConnection.RecordFile(fileName, user)
+	databaseConnection.RecordFile(fileName, blockID)
 
 	filePath := path.Join(uploadLocation, fileName)
 	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, uploadedFileMode)
