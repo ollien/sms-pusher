@@ -3,6 +3,7 @@ package com.ollien.smspusher;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -11,9 +12,16 @@ import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 import android.util.Base64;
+import android.util.Log;
 
 import com.android.mms.transaction.HttpUtils;
 import com.android.mms.transaction.TransactionSettings;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.mms_clone.ContentType;
 import com.google.android.mms_clone.pdu.EncodedStringValue;
 import com.google.android.mms_clone.pdu.GenericPdu;
@@ -29,10 +37,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Created by nick on 12/19/17.
@@ -44,7 +56,94 @@ public class MMSReceiver extends BroadcastReceiver {
 	private static final String CONTENT_TYPE_KEY = "type";
 	private static final String DATA_KEY = "data";
 	private static final String RECIPIENTS_KEY = "recipients";
-	private static final String PARTS_KEY = "parts";
+	private static final String BLOCK_ID_KEY = "block-id";
+	private static final String ILLEGAL_NO_HOST_MESSAGE = "No host has been set";
+	private static final String ILLEGAL_NO_ID_MESSAGE = "No device id has been set";
+
+	private class PartSender {
+		private AtomicInteger numSent;
+		private List<String> partsList;
+		private String blockId = null;
+		private Consumer<String> callback;
+		private RequestQueue reqQueue;
+		private PartSender(Context context, List<String> partsList, Consumer<String> callback) {
+			this.partsList = partsList;
+			this.callback = callback;
+			this.numSent = new AtomicInteger();
+			this.reqQueue = Volley.newRequestQueue(context);
+		}
+
+		private void send(Context context) {
+			SharedPreferences prefs = context.getSharedPreferences(MainActivity.PREFS_KEY, Context.MODE_PRIVATE);
+			String host = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
+			final String deviceId = prefs.getString(MainActivity.DEVICE_ID_PREFS_KEY, "");
+			if (host.length() == 0) {
+				Log.wtf("SMSPusher", ILLEGAL_NO_HOST_MESSAGE);
+			}
+			if (deviceId.length() == 0) {
+				Log.wtf("SMSPusher", ILLEGAL_NO_ID_MESSAGE);
+			}
+			try {
+				final URL hostUrl = new URL(host);
+				final URL uploadUrl = new URL(hostUrl, "/upload_mms_file");
+				final String firstPart = partsList.remove(0);
+				final Response.Listener<String> respListener = new Response.Listener<String>() {
+					@Override
+					public void onResponse(String response) {
+						try {
+							JSONObject resObject = new JSONObject(response);
+							blockId = (String) resObject.get("block-id");
+							int numSentSoFar = numSent.incrementAndGet();
+							if (numSentSoFar == partsList.size()) {
+								callback.accept(blockId);
+							}
+						} catch (JSONException e) {
+							Log.e("SMSPusher", e.toString());
+						}
+					}
+				};
+
+				final Response.ErrorListener errorListener = new Response.ErrorListener() {
+					@Override
+					public void onErrorResponse(VolleyError e) {
+						Log.e("SMSPusher", e.toString());
+					}
+				};
+
+				//Make a request that will add all the others once it is done - this allows for us to have the block-id set.
+				Request req = new StringRequest(Request.Method.POST, uploadUrl.toString(), new Response.Listener<String>() {
+					@Override
+					public void onResponse(String response) {
+						respListener.onResponse(response);
+						for (final String part : partsList) {
+							Request req = new StringRequest(Request.Method.POST, uploadUrl.toString(), respListener, errorListener) {
+								protected Map<String, String> getParams() {
+									Map<String, String> paramsMap = new HashMap<>();
+									paramsMap.put("device-id", deviceId);
+									paramsMap.put("data", part);
+									paramsMap.put("block-id", blockId);
+									return paramsMap;
+								}
+							};
+							reqQueue.add(req);
+						}
+					}
+				}, errorListener) {
+					protected Map<String, String> getParams() {
+						Map<String, String> paramsMap = new HashMap<>();
+						paramsMap.put("device-id", deviceId);
+						paramsMap.put("data", firstPart);
+						return paramsMap;
+					}
+				};
+
+				reqQueue.add(req);
+			} catch (MalformedURLException e) {
+				Log.wtf("SMSPusher", e);
+				e.printStackTrace();
+			}
+		}
+	}
 
 	@Override
 	public void onReceive(final Context context, Intent intent) {
@@ -181,17 +280,19 @@ public class MMSReceiver extends BroadcastReceiver {
 		return partsList;
 	}
 
-	private void sendUpstream(Context context, MultimediaMessagePdu pdu) {
+	private void sendUpstream(Context context, final MultimediaMessagePdu pdu) {
 		List<String> recipients = getRecipients(context, pdu);
-		List<String> partsList = makePartsList(pdu);
-		JSONArray recipientsJSONArray = new JSONArray(recipients);
-		JSONArray partsListJSONArray = new JSONArray(partsList);
-		Map<String, String> mmsComponentsMap = new HashMap<>();
-		mmsComponentsMap.put(RECIPIENTS_KEY, recipientsJSONArray.toString());
-		mmsComponentsMap.put(PARTS_KEY, partsListJSONArray.toString());
-		String fromNumber = pdu.getFrom().toString();
-		long timestamp = pdu.getDate();
-		MessageSender.Message upstreamMessage = new MessageSender.Message(fromNumber, null, timestamp, mmsComponentsMap);
-		MessageSender.sendMessageUpstream(upstreamMessage);
+		final List<String> partsList = makePartsList(pdu);
+		final JSONArray recipientsJSONArray = new JSONArray(recipients);
+		final PartSender partSender = new PartSender(context, partsList, (String blockId) -> {
+			Map<String, String> mmsComponentsMap = new HashMap<>();
+			mmsComponentsMap.put(RECIPIENTS_KEY, recipientsJSONArray.toString());
+			mmsComponentsMap.put(BLOCK_ID_KEY, blockId);
+			String fromNumber = pdu.getFrom().toString();
+			long timestamp = pdu.getDate();
+			MessageSender.Message upstreamMessage = new MessageSender.Message(fromNumber, null, timestamp, mmsComponentsMap);
+			MessageSender.sendMessageUpstream(upstreamMessage);
+		});
+		partSender.send(context);
 	}
 }

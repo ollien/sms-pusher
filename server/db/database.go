@@ -77,12 +77,20 @@ func InitDB() (DatabaseConnection, error) {
 		return DatabaseConnection{}, err
 	}
 
+	//Create mms_file_blocks table
+	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS mms_file_blocks(" +
+		"id uuid PRIMARY KEY," +
+		"for_user INTEGER REFERENCES users(id));")
+	if err != nil {
+		return DatabaseConnection{}, err
+	}
+
 	//Create mms_files table
 	//name is 128 bytes, as the file hash will be 64 bytes, plus we need room for the extension. Rounded up to the nearest power of two, 128.
 	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS mms_files(" +
 		"id SERIAL PRIMARY KEY," +
 		"name VARCHAR(128)," +
-		"for_user INTEGER REFERENCES users(id));")
+		"block uuid REFERENCES mms_file_blocks(id));")
 	if err != nil {
 		return DatabaseConnection{}, err
 	}
