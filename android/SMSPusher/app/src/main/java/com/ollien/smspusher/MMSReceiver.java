@@ -87,46 +87,35 @@ public class MMSReceiver extends BroadcastReceiver {
 				final URL hostUrl = new URL(host);
 				final URL uploadUrl = new URL(hostUrl, "/upload_mms_file");
 				final String firstPart = partsList.remove(0);
-				final Response.Listener<String> respListener = new Response.Listener<String>() {
-					@Override
-					public void onResponse(String response) {
-						try {
-							JSONObject resObject = new JSONObject(response);
-							blockId = (String) resObject.get("block-id");
-							int numSentSoFar = numSent.incrementAndGet();
-							if (numSentSoFar == partsList.size()) {
-								callback.accept(blockId);
-							}
-						} catch (JSONException e) {
-							Log.e("SMSPusher", e.toString());
+				final Response.Listener<String> respListener = (String response) -> {
+					try {
+						JSONObject resObject = new JSONObject(response);
+						blockId = (String) resObject.get("block-id");
+						int numSentSoFar = numSent.incrementAndGet();
+						if (numSentSoFar == partsList.size()) {
+							callback.accept(blockId);
 						}
-					}
-				};
-
-				final Response.ErrorListener errorListener = new Response.ErrorListener() {
-					@Override
-					public void onErrorResponse(VolleyError e) {
+					} catch (JSONException e) {
 						Log.e("SMSPusher", e.toString());
 					}
 				};
 
+				final Response.ErrorListener errorListener = (VolleyError e) -> Log.e("SMSPusher", e.toString());
+
 				//Make a request that will add all the others once it is done - this allows for us to have the block-id set.
-				Request req = new StringRequest(Request.Method.POST, uploadUrl.toString(), new Response.Listener<String>() {
-					@Override
-					public void onResponse(String response) {
-						respListener.onResponse(response);
-						for (final String part : partsList) {
-							Request req = new StringRequest(Request.Method.POST, uploadUrl.toString(), respListener, errorListener) {
-								protected Map<String, String> getParams() {
-									Map<String, String> paramsMap = new HashMap<>();
-									paramsMap.put("device-id", deviceId);
-									paramsMap.put("data", part);
-									paramsMap.put("block-id", blockId);
-									return paramsMap;
-								}
-							};
-							reqQueue.add(req);
-						}
+				Request req = new StringRequest(Request.Method.POST, uploadUrl.toString(), (String response) -> {
+					respListener.onResponse(response);
+					for (final String part : partsList) {
+						Request req1 = new StringRequest(Request.Method.POST, uploadUrl.toString(), respListener, errorListener) {
+							protected Map<String, String> getParams() {
+								Map<String, String> paramsMap = new HashMap<>();
+								paramsMap.put("device-id", deviceId);
+								paramsMap.put("data", part);
+								paramsMap.put("block-id", blockId);
+								return paramsMap;
+							}
+						};
+						reqQueue.add(req1);
 					}
 				}, errorListener) {
 					protected Map<String, String> getParams() {
