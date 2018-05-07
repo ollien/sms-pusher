@@ -139,6 +139,17 @@ func (db DatabaseConnection) GetDevice(deviceID uuid.UUID) (Device, error) {
 
 }
 
+//MakeFileBlock makes a file block in the database
+func (db DatabaseConnection) MakeFileBlock(user User) (uuid.UUID, error) {
+	blockID := uuid.NewV4()
+	_, err := db.Exec("INSERT INTO mms_file_blocks VALUES($1, $2)", blockID, user.ID)
+	if err != nil {
+		return uuid.UUID{}, err
+	}
+
+	return blockID, nil
+}
+
 //RecordFile stores an MMS file to the database
 func (db DatabaseConnection) RecordFile(fileName string, blockID uuid.UUID) error {
 	_, err := db.Exec("INSERT INTO mms_files VALUES(DEFAULT, $1, $2);", fileName, blockID)
