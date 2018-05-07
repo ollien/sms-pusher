@@ -224,10 +224,28 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 
 	b64 := req.FormValue("data")
 	deviceID := req.FormValue("device-id")
+	submittedBlockID := req.FormValue("block-id")
 	if b64 == "" || deviceID == "" {
 		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	var blockID uuid.UUID
+	if submittedBlockID == "" {
+		blockID, err = handler.databaseConnection.MakeFileBlock(user)
+		if err != nil {
+			logWithRoute(handler.logger, req).Error(err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	} else {
+		blockID, err = uuid.FromString(submittedBlockID)
+		if err != nil {
+			logWithRoute(handler.logger, req).Error(err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	fileBytes, err := base64.StdEncoding.DecodeString(b64)
@@ -244,10 +262,22 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 		return
 	}
 
-	_, err = StoreFile(handler.databaseConnection, appConfig.MMS.UploadLocation, user, fileBytes)
+	_, err = StoreFile(handler.databaseConnection, appConfig.MMS.UploadLocation, blockID, fileBytes)
 	if err != nil {
 		logWithRoute(handler.logger, req).Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
+	rawRes := struct {
+		BlockID string `json:"block-id"`
+	}{blockID.String()}
+	res, err := json.Marshal(rawRes)
+	if err != nil {
+		logWithRoute(handler.logger, req)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	writer.Write(res)
 }
