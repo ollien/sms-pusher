@@ -20,15 +20,8 @@ type SMSMessage struct {
 //MMSMessage represents an MMS message that comes in
 type MMSMessage struct {
 	SMSMessage
-	Recipients []string `json:"recipients"`
-	//Holds any message components that aren't just a message.
-	Parts []MMSPart `json:"parts,string"`
-}
-
-//MMSPart represents a part of an MMS message.
-type MMSPart struct {
-	PartType string `json:"type"`
-	Data     []byte `json:"data"`
+	Recipients  []string `json:"recipients"`
+	PartBlockID string   `json:"block-id"`
 }
 
 //UnknownMessage represents a message a message of undetermined type
@@ -118,5 +111,5 @@ func (message *SMSMessage) convertFromMMS(mms MMSMessage) {
 }
 
 func (message MMSMessage) isMMS() bool {
-	return len(message.Recipients) > 1 || message.Parts != nil
+	return len(message.Recipients) > 1 || message.PartBlockID != ""
 }
