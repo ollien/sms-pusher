@@ -64,7 +64,9 @@ func (serv *Webserver) wrapHandlerFunctionWithLimit(handler handlerFunction, siz
 		loggableWriter := NewLoggableResponseWriter(writer)
 		//Enforce a max file size
 		req.Body = http.MaxBytesReader(&loggableWriter, req.Body, sizeLimit)
+		//Pass our request along to the handler
 		handler(&loggableWriter, req, params)
+		//Perform after-request hook
 		serv.afterRequest(&loggableWriter, req)
 	}
 }
