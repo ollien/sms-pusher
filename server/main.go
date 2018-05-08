@@ -41,7 +41,7 @@ func listenForSMS(outChannel <-chan firebasexmpp.TextMessage) {
 		case firebasexmpp.SMSMessage:
 			fmt.Printf("MESSAGE DETAILS\nFrom: %s\nAt: %d\nBody:%s\n\n", message.PhoneNumber, message.Timestamp, message.Message)
 		case firebasexmpp.MMSMessage:
-			//TODO: implement
+			fmt.Printf("MESSAGE DETAILS\nFrom: %s\nTo:%v\nAt: %d\nBody:%s\nPartsBlockID:%s\n\n", message.PhoneNumber, message.Recipients, message.Timestamp, message.Message, message.PartBlockID)
 		}
 	}
 }
