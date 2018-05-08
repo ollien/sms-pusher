@@ -71,8 +71,7 @@ func (serv *Webserver) wrapHandlerFunctionWithLimit(handler handlerFunction, siz
 	}
 }
 
-func (serv *Webserver) afterRequest(writer http.ResponseWriter, req *http.Request) {
-	loggableWriter := writer.(*LoggableResponseWriter)
+func (serv *Webserver) afterRequest(loggableWriter *LoggableResponseWriter, req *http.Request) {
 	serv.logger.Infof("%s %s %s %s (%s); %d; %d bytes", req.RemoteAddr, req.Proto, req.Method, req.RequestURI, req.UserAgent(), loggableWriter.statusCode, loggableWriter.bytesWritten)
 }
 
