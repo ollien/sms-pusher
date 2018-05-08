@@ -53,21 +53,21 @@ func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, s
 }
 
 func (serv *Webserver) initHandlers() {
-	serv.router.GET("/", wrapHandlerFunction(serv.routeHandler.index))
-	serv.router.POST("/register", wrapHandlerFunction(serv.routeHandler.register))
-	serv.router.POST("/authenticate", wrapHandlerFunction(serv.routeHandler.authenticate))
-	serv.router.POST("/register_device", wrapHandlerFunction(serv.routeHandler.registerDevice))
-	serv.router.POST("/set_fcm_id", wrapHandlerFunction(serv.routeHandler.setFCMID))
-	serv.router.POST("/send_message", wrapHandlerFunction(serv.routeHandler.sendMessage))
+	serv.router.GET("/", serv.wrapHandlerFunction(serv.routeHandler.index))
+	serv.router.POST("/register", serv.wrapHandlerFunction(serv.routeHandler.register))
+	serv.router.POST("/authenticate", serv.wrapHandlerFunction(serv.routeHandler.authenticate))
+	serv.router.POST("/register_device", serv.wrapHandlerFunction(serv.routeHandler.registerDevice))
+	serv.router.POST("/set_fcm_id", serv.wrapHandlerFunction(serv.routeHandler.setFCMID))
+	serv.router.POST("/send_message", serv.wrapHandlerFunction(serv.routeHandler.sendMessage))
 }
 
 //wrapHandlerFunction allows us to enforce a file size limit
 //Though we could theoretically put this in ServeHTTP, this allows us to set different sizes for different routes after httprouter has taken care of the route handling for us.
-func wrapHandlerFunction(handler handlerFunction) handlerFunction {
-	return wrapHandlerFunctionWithLimit(handler, maxRequestSize)
+func (serv *Webserver) wrapHandlerFunction(handler handlerFunction) handlerFunction {
+	return serv.wrapHandlerFunctionWithLimit(handler, maxRequestSize)
 }
 
-func wrapHandlerFunctionWithLimit(handler handlerFunction, sizeLimit int64) handlerFunction {
+func (serv *Webserver) wrapHandlerFunctionWithLimit(handler handlerFunction, sizeLimit int64) handlerFunction {
 	return func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		//Enforce a max file size
 		req.Body = http.MaxBytesReader(writer, req.Body, sizeLimit)
