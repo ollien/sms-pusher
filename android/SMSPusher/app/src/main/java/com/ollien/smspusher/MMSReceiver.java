@@ -264,7 +264,7 @@ public class MMSReceiver extends BroadcastReceiver {
 		for (int i = 0; i < numParts; i++) {
 			PduPart part = body.getPart(i);
 			String contentType = new String(part.getContentType());
-			if (ContentType.isSupportedType(contentType) && !ContentType.isDrmType(contentType)) {
+			if (ContentType.isSupportedType(contentType) && !ContentType.isDrmType(contentType) && !contentType.equals(ContentType.APP_SMIL)) {
 				byte[] partData = part.getData();
 				String b64String = Base64.encodeToString(partData, Base64.DEFAULT);
 				partsList.add(b64String);
