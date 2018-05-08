@@ -51,7 +51,7 @@ func (serv *Webserver) initHandlers() {
 	serv.router.POST("/register_device", serv.wrapHandlerFunction(serv.routeHandler.registerDevice))
 	serv.router.POST("/set_fcm_id", serv.wrapHandlerFunction(serv.routeHandler.setFCMID))
 	serv.router.POST("/send_message", serv.wrapHandlerFunction(serv.routeHandler.sendMessage))
-	serv.router.POST("/upload_mms_file", serv.wrapHandlerFunction(serv.routeHandler.uploadMMSFile))
+	serv.router.POST("/upload_mms_file", serv.wrapHandlerFunctionWithLimit(serv.routeHandler.uploadMMSFile, maxFileSize))
 }
 
 //wrapHandlerFunction allows us to enforce a file size limit
