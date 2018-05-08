@@ -156,6 +156,7 @@ public class MMSReceiver extends BroadcastReceiver {
 			getNetwork(connectivityManager, new ConnectivityManager.NetworkCallback() {
 				@Override
 				public void onAvailable(Network network) {
+					connectivityManager.bindProcessToNetwork(network);
 					NetworkInfo info = connectivityManager.getNetworkInfo(network);
 					String extraInfo = info.getExtraInfo();
 					TransactionSettings transactionSettings = new TransactionSettings(context, extraInfo);
@@ -204,7 +205,10 @@ public class MMSReceiver extends BroadcastReceiver {
 	}
 
 	private void getNetwork(ConnectivityManager connectivityManager, ConnectivityManager.NetworkCallback callback) {
-		NetworkRequest networkRequest = (new NetworkRequest.Builder()).addCapability(NetworkCapabilities.NET_CAPABILITY_MMS).build();
+		NetworkRequest networkRequest = (new NetworkRequest.Builder())
+				.addCapability(NetworkCapabilities.NET_CAPABILITY_MMS)
+				.addTransportType(NetworkCapabilities.TRANSPORT_CELLULAR)
+				.build();
 		connectivityManager.requestNetwork(networkRequest, callback);
 	}
 
