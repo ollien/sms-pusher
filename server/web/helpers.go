@@ -8,10 +8,11 @@ import (
 	"os"
 	"path"
 
-	"github.com/h2non/filetype"
 	"github.com/ollien/sms-pusher/server/db"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/h2non/filetype.v1"
+	fttypes "gopkg.in/h2non/filetype.v1/types"
 )
 
 const (
@@ -107,7 +108,13 @@ func getFileName(bytes []byte) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%x.%s", fileHash, theType.Extension), nil
+	extension := theType.Extension
+	//If we can't figure out the type, assume it's a text entry
+	if theType.MIME == (fttypes.MIME{}) {
+		extension = "txt"
+	}
+
+	return fmt.Sprintf("%x.%s", fileHash, extension), nil
 }
 
 //Write is identical to http.ResponseWriter.Write, but stores the bytes sent and accounts for the 200 special case that Write normally handles by the interface's definition.
