@@ -231,6 +231,26 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 		return
 	}
 
+	deviceUUID, err := uuid.FromString(deviceID)
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	device, err := handler.databaseConnection.GetDevice(deviceUUID)
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if device.User.ID != user.ID {
+		logWithRoute(handler.logger, req).Debug(err)
+		writer.WriteHeader(http.StatusForbidden)
+		return
+	}
+
 	var blockID uuid.UUID
 	if submittedBlockID == "" {
 		blockID, err = handler.databaseConnection.MakeFileBlock(user)
