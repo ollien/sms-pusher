@@ -231,26 +231,26 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 		return
 	}
 
+	//Get the device's ID as a UUID and check if it matches the user in the database
 	deviceUUID, err := uuid.FromString(deviceID)
 	if err != nil {
 		logWithRoute(handler.logger, req).Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	device, err := handler.databaseConnection.GetDevice(deviceUUID)
 	if err != nil {
 		logWithRoute(handler.logger, req).Error(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	if device.User.ID != user.ID {
 		logWithRoute(handler.logger, req).Debug(err)
 		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
 
+	//If we don't have a block ID, make a new file block. Otherwuse, use the one we're given.
 	var blockID uuid.UUID
 	if submittedBlockID == "" {
 		blockID, err = handler.databaseConnection.MakeFileBlock(user)
@@ -282,6 +282,7 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 		return
 	}
 
+	//Save the file, and then return the block it belongs to
 	_, err = StoreFile(handler.databaseConnection, appConfig.MMS.UploadLocation, blockID, fileBytes)
 	if err != nil {
 		logWithRoute(handler.logger, req).Error(err)
@@ -289,6 +290,7 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 		return
 	}
 
+	//Return the block ID in JSON form
 	rawRes := struct {
 		BlockID string `json:"block_id"`
 	}{blockID.String()}
