@@ -59,6 +59,7 @@ func (serv *Webserver) wrapHandlerFunction(handler handlerFunction) handlerFunct
 	return serv.wrapHandlerFunctionWithLimit(handler, maxRequestSize)
 }
 
+//wrapHandlerFunctionWithLimit is the same as wrapHandlerFunction but allows us to set a size limit on the request
 func (serv *Webserver) wrapHandlerFunctionWithLimit(handler handlerFunction, sizeLimit int64) handlerFunction {
 	return func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		loggableWriter := NewLoggableResponseWriter(writer)
