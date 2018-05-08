@@ -179,7 +179,7 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 
 	recipient := req.FormValue("recipient")
 	message := req.FormValue("message")
-	deviceID := req.FormValue("device-id")
+	deviceID := req.FormValue("device_id")
 	if recipient == "" || message == "" || deviceID == "" {
 		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		//TODO: Return data explaining why a 400 was returned
@@ -223,8 +223,8 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 	//TODO: check if supported MIME type
 
 	b64 := req.FormValue("data")
-	deviceID := req.FormValue("device-id")
-	submittedBlockID := req.FormValue("block-id")
+	deviceID := req.FormValue("device_id")
+	submittedBlockID := req.FormValue("block_id")
 	if b64 == "" || deviceID == "" {
 		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
@@ -270,7 +270,7 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 	}
 
 	rawRes := struct {
-		BlockID string `json:"block-id"`
+		BlockID string `json:"block_id"`
 	}{blockID.String()}
 	res, err := json.Marshal(rawRes)
 	if err != nil {

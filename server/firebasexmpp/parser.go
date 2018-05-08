@@ -21,7 +21,7 @@ type SMSMessage struct {
 type MMSMessage struct {
 	SMSMessage
 	Recipients  []string `json:"recipients"`
-	PartBlockID string   `json:"block-id"`
+	PartBlockID string   `json:"block_id"`
 }
 
 //UnknownMessage represents a message a message of undetermined type

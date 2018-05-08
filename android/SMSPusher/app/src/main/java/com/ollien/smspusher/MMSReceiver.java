@@ -56,7 +56,7 @@ public class MMSReceiver extends BroadcastReceiver {
 	private static final String CONTENT_TYPE_KEY = "type";
 	private static final String DATA_KEY = "data";
 	private static final String RECIPIENTS_KEY = "recipients";
-	private static final String BLOCK_ID_KEY = "block-id";
+	private static final String BLOCK_ID_KEY = "block_id";
 	private static final String ILLEGAL_NO_HOST_MESSAGE = "No host has been set";
 	private static final String ILLEGAL_NO_ID_MESSAGE = "No device id has been set";
 
@@ -90,7 +90,7 @@ public class MMSReceiver extends BroadcastReceiver {
 				final Response.Listener<String> respListener = (String response) -> {
 					try {
 						JSONObject resObject = new JSONObject(response);
-						blockId = (String) resObject.get("block-id");
+						blockId = (String) resObject.get("block_id");
 						int numSentSoFar = numSent.incrementAndGet();
 						if (numSentSoFar == partsList.size()) {
 							callback.accept(blockId);
@@ -109,9 +109,10 @@ public class MMSReceiver extends BroadcastReceiver {
 						Request req1 = new StringRequest(Request.Method.POST, uploadUrl.toString(), respListener, errorListener) {
 							protected Map<String, String> getParams() {
 								Map<String, String> paramsMap = new HashMap<>();
-								paramsMap.put("device-id", deviceId);
+								paramsMap.put("device_id", deviceId);
 								paramsMap.put("data", part);
-								paramsMap.put("block-id", blockId);
+								paramsMap.put("session_id", sessionId);
+								paramsMap.put("block_id", blockId);
 								return paramsMap;
 							}
 						};
@@ -120,8 +121,9 @@ public class MMSReceiver extends BroadcastReceiver {
 				}, errorListener) {
 					protected Map<String, String> getParams() {
 						Map<String, String> paramsMap = new HashMap<>();
-						paramsMap.put("device-id", deviceId);
+						paramsMap.put("device_id", deviceId);
 						paramsMap.put("data", firstPart);
+						paramsMap.put("session_id", sessionId);
 						return paramsMap;
 					}
 				};
