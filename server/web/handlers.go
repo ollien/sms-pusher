@@ -220,7 +220,6 @@ func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.
 		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
-	//TODO: check if supported MIME type
 
 	b64 := req.FormValue("data")
 	deviceID := req.FormValue("device_id")
