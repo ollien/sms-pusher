@@ -259,17 +259,9 @@ public class MMSReceiver extends BroadcastReceiver {
 			PduPart part = body.getPart(i);
 			String contentType = new String(part.getContentType());
 			if (ContentType.isSupportedType(contentType) && !ContentType.isDrmType(contentType)) {
-				try {
-					byte[] partData = part.getData();
-					String b64String = Base64.encodeToString(partData, Base64.DEFAULT);
-					JSONObject partJSON = new JSONObject();
-					partJSON.put(CONTENT_TYPE_KEY, contentType);
-					partJSON.put(DATA_KEY, b64String);
-					partsList.add(partJSON.toString());
-				} catch (JSONException e) {
-					e.printStackTrace();
-					return null;
-				}
+				byte[] partData = part.getData();
+				String b64String = Base64.encodeToString(partData, Base64.DEFAULT);
+				partsList.add(b64String);
 			}
 		}
 
