@@ -165,6 +165,8 @@ public class MMSReceiver extends BroadcastReceiver {
 						//If we have an MMS, we can parse it and send it upstream
 						if (dataPdu instanceof MultimediaMessagePdu) {
 							MultimediaMessagePdu mmsPdu = (MultimediaMessagePdu) dataPdu;
+							//Undo binding so we don't send raw mms data upstream over mobile data
+							connectivityManager.bindProcessToNetwork(null);
 							sendUpstream(context, mmsPdu);
 						}
 					} catch (IOException e) {
