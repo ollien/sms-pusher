@@ -5,6 +5,9 @@ import (
 	"errors"
 )
 
+//StringEncodedStringSlice represents an array of strings that is encoded as JSON
+type StringEncodedStringSlice []string
+
 //TextMessage represents either a SMS or an MMS.
 type TextMessage interface {
 	isMMS() bool
@@ -20,8 +23,8 @@ type SMSMessage struct {
 //MMSMessage represents an MMS message that comes in
 type MMSMessage struct {
 	SMSMessage
-	Recipients  []string `json:"recipients"`
-	PartBlockID string   `json:"block_id"`
+	Recipients  StringEncodedStringSlice `json:"recipients"`
+	PartBlockID string                   `json:"block_id"`
 }
 
 //UnknownMessage represents a message a message of undetermined type
@@ -112,4 +115,16 @@ func (message *SMSMessage) convertFromMMS(mms MMSMessage) {
 
 func (message MMSMessage) isMMS() bool {
 	return len(message.Recipients) > 1 || message.PartBlockID != ""
+}
+
+//UnmarshalJSON allows StringEncodedString slice to implement the Unmarshaler interface
+func (encodedSlice *StringEncodedStringSlice) UnmarshalJSON(data []byte) error {
+	var decodedString string
+	err := json.Unmarshal(data, &decodedString)
+	if err != nil {
+		return err
+	}
+	stringSlice := (*[]string)(encodedSlice)
+
+	return json.Unmarshal([]byte(decodedString), stringSlice)
 }
