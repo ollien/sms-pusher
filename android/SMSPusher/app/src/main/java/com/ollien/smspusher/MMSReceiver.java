@@ -59,6 +59,7 @@ public class MMSReceiver extends BroadcastReceiver {
 	private static final String BLOCK_ID_KEY = "block_id";
 	private static final String ILLEGAL_NO_HOST_MESSAGE = "No host has been set";
 	private static final String ILLEGAL_NO_ID_MESSAGE = "No device id has been set";
+	private static final String ILLEGAL_NO_SESSION_MESSAGE = "No session id has been set";
 
 	private class PartSender {
 		private AtomicInteger numSent;
@@ -76,12 +77,16 @@ public class MMSReceiver extends BroadcastReceiver {
 		private void send(Context context) {
 			SharedPreferences prefs = context.getSharedPreferences(MainActivity.PREFS_KEY, Context.MODE_PRIVATE);
 			String host = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
+			String sessionId = prefs.getString(MainActivity.SESSION_ID_PREFS_KEY, "");
 			final String deviceId = prefs.getString(MainActivity.DEVICE_ID_PREFS_KEY, "");
 			if (host.length() == 0) {
 				Log.wtf("SMSPusher", ILLEGAL_NO_HOST_MESSAGE);
 			}
 			if (deviceId.length() == 0) {
 				Log.wtf("SMSPusher", ILLEGAL_NO_ID_MESSAGE);
+			}
+			if (sessionId.length() == 0) {
+				Log.wtf("SMSPusher", ILLEGAL_NO_SESSION_MESSAGE);
 			}
 			try {
 				final URL hostUrl = new URL(host);
