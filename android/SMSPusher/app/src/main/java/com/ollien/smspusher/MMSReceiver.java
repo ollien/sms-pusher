@@ -67,6 +67,13 @@ public class MMSReceiver extends BroadcastReceiver {
 		private String blockId = null;
 		private Consumer<String> callback;
 		private RequestQueue reqQueue;
+
+		/**
+		 * Construct a PartSender
+		 * @param context The context in which the receiver is running
+		 * @param partsList A list of the parts as b64 encoded strings.
+		 * @param callback A callback that takes the block id once the parts have been sent upstream.
+		 */
 		private PartSender(Context context, List<String> partsList, Consumer<String> callback) {
 			this.partsList = partsList;
 			this.callback = callback;
@@ -74,6 +81,10 @@ public class MMSReceiver extends BroadcastReceiver {
 			this.reqQueue = Volley.newRequestQueue(context);
 		}
 
+		/**
+		 * Send the MMS parts upstream.
+		 * @param context The context in which the receiver is running.
+		 */
 		private void send(Context context) {
 			SharedPreferences prefs = context.getSharedPreferences(MainActivity.PREFS_KEY, Context.MODE_PRIVATE);
 			String host = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
