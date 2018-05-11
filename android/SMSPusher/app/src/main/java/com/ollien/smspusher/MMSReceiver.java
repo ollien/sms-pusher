@@ -53,8 +53,6 @@ import java.util.function.Consumer;
 public class MMSReceiver extends BroadcastReceiver {
 	//Holds the different types of headers that represent the "to" field.
 	private static final int[] TO_ADDRESS_TYPES = {PduHeaders.TO, PduHeaders.BCC, PduHeaders.CC};
-	private static final String CONTENT_TYPE_KEY = "type";
-	private static final String DATA_KEY = "data";
 	private static final String RECIPIENTS_KEY = "recipients";
 	private static final String BLOCK_ID_KEY = "block_id";
 	private static final String ILLEGAL_NO_HOST_MESSAGE = "No host has been set";
