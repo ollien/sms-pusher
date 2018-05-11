@@ -95,6 +95,7 @@ public class MMSReceiver extends BroadcastReceiver {
 						JSONObject resObject = new JSONObject(response);
 						blockId = (String) resObject.get("block_id");
 						int numSentSoFar = numSent.incrementAndGet();
+						//If we have all of the parts, call our callback.
 						if (numSentSoFar == partsList.size()) {
 							callback.accept(blockId);
 						}
@@ -103,13 +104,15 @@ public class MMSReceiver extends BroadcastReceiver {
 					}
 				};
 
+				//A consistent error listener for all requests, simply logs the error for us.
 				final Response.ErrorListener errorListener = (VolleyError e) -> Log.e("SMSPusher", e.toString());
 
 				//Make a request that will add all the others once it is done - this allows for us to have the block-id set.
-				Request req = new StringRequest(Request.Method.POST, uploadUrl.toString(), (String response) -> {
+				StringRequest req = new StringRequest(Request.Method.POST, uploadUrl.toString(), (String response) -> {
 					respListener.onResponse(response);
 					for (final String part : partsList) {
-						Request req1 = new StringRequest(Request.Method.POST, uploadUrl.toString(), respListener, errorListener) {
+						//subsequentReq is a request that will include the current block id of the mms parts.
+						StringRequest subsequentReq = new StringRequest(Request.Method.POST, uploadUrl.toString(), respListener, errorListener) {
 							protected Map<String, String> getParams() {
 								Map<String, String> paramsMap = new HashMap<>();
 								paramsMap.put("device_id", deviceId);
@@ -119,7 +122,7 @@ public class MMSReceiver extends BroadcastReceiver {
 								return paramsMap;
 							}
 						};
-						reqQueue.add(req1);
+						reqQueue.add(subsequentReq);
 					}
 				}, errorListener) {
 					protected Map<String, String> getParams() {
