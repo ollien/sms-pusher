@@ -1,9 +1,6 @@
 package com.ollien.smspusher;
 
-import android.app.Service;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.IBinder;
 import android.util.Log;
 
 import com.android.volley.Request;
@@ -21,12 +18,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+/**
+ * Id service to handle FCM registration.
+ */
 public class FirebaseIdService extends FirebaseInstanceIdService {
 
 	RequestQueue queue;
 	SharedPreferences prefs;
 	SharedPreferences.Editor prefsEditor;
 
+	/**
+	 * Initializes the ID service.
+	 */
 	@Override
 	public void onCreate() {
 		queue = Volley.newRequestQueue(this);
@@ -34,10 +37,11 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 		prefsEditor = prefs.edit();
 	}
 
+	/**
+	 * Sends a new token upstream when a refresh is required.
+	 */
 	@Override
 	public void onTokenRefresh() {
-		//TODO: Send this to server
-		//For now, just leaving it in here for reference.
 		String token = FirebaseInstanceId.getInstance().getToken();
 		prefsEditor.putString(MainActivity.FCM_TOKEN_PREFS_KEY, token);
 		String hostURL = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
@@ -47,8 +51,11 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 		}
 	}
 
+	/**
+	 * Updates the FCM token on the server with a default error handler.
+	 */
 	protected void updateTokenOnServer() {
-		updateTokenOnServer(null, new Response.ErrorListener() {
+		updateTokenOnServer(prefs, queue, null, new Response.ErrorListener() {
 			@Override
 			public void onErrorResponse(VolleyError e) {
 				Log.e("SMSPusher", e.toString());
@@ -56,11 +63,13 @@ public class FirebaseIdService extends FirebaseInstanceIdService {
 		});
 	}
 
-	protected void updateTokenOnServer(Response.Listener<String> resListener, Response.ErrorListener errorListener) {
-		updateTokenOnServer(prefs, queue, resListener, errorListener);
-	}
-
-	//Assumes user is already authenticated
+	/**
+	 * Updates the FCM token on the server.
+	 * @param prefs The app's SharedPreferences
+	 * @param queue The request queue to process the request within.
+	 * @param resListener A response listener for the server's response.
+	 * @param errorListener An error listener for the server's response.
+	 */
 	protected static void updateTokenOnServer(SharedPreferences prefs, RequestQueue queue, Response.Listener<String> resListener, Response.ErrorListener errorListener) {
 		String hostURL = prefs.getString(MainActivity.HOST_URL_PREFS_KEY, "");
 		String sessionID = prefs.getString(MainActivity.SESSION_ID_PREFS_KEY, "");

@@ -47,9 +47,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
- * Created by nick on 12/19/17.
+ * Receives SMS messages from the system to send upstream.
  */
-
 public class MMSReceiver extends BroadcastReceiver {
 	//Holds the different types of headers that represent the "to" field.
 	private static final int[] TO_ADDRESS_TYPES = {PduHeaders.TO, PduHeaders.BCC, PduHeaders.CC};
@@ -59,6 +58,9 @@ public class MMSReceiver extends BroadcastReceiver {
 	private static final String ILLEGAL_NO_ID_MESSAGE = "No device id has been set";
 	private static final String ILLEGAL_NO_SESSION_MESSAGE = "No session id has been set";
 
+	/**
+	 * Sends different MMS parts upstream
+	 */
 	private class PartSender {
 		private AtomicInteger numSent;
 		private List<String> partsList;
@@ -142,6 +144,11 @@ public class MMSReceiver extends BroadcastReceiver {
 		}
 	}
 
+	/**
+	 * Handles the receipt of an MMS message, sending it upstream
+	 * @param context The context in which the receiver is running
+	 * @param intent The intent being received.
+	 */
 	@Override
 	public void onReceive(final Context context, Intent intent) {
 		Bundle extras = intent.getExtras();
@@ -178,6 +185,12 @@ public class MMSReceiver extends BroadcastReceiver {
 		}
 	}
 
+	/**
+	 * Removes the Line 1 number from a list of phone numbers.
+	 * @param context The context in which the receiver is running.
+	 * @param values The values to check for the line 1 number in.
+	 * @return
+	 */
 	private EncodedStringValue[] removeLine1Number(Context context, EncodedStringValue[] values) {
 		TelephonyManager telephonyManager = (TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE);
 		//TODO: deal with possible lack of phone permissions.
@@ -207,6 +220,13 @@ public class MMSReceiver extends BroadcastReceiver {
 		return correctedValues;
 	}
 
+	/**
+	 * Gets the necessary network to send upstream.
+	 *
+	 * Specifically, we need to send on cellular, with MMS capabilities
+	 * @param connectivityManager The system's connectivity manager.
+	 * @param callback A callback for once the proper network has been acquired by the system.
+	 */
 	private void getNetwork(ConnectivityManager connectivityManager, ConnectivityManager.NetworkCallback callback) {
 		NetworkRequest networkRequest = (new NetworkRequest.Builder())
 				.addCapability(NetworkCapabilities.NET_CAPABILITY_MMS)
@@ -215,6 +235,14 @@ public class MMSReceiver extends BroadcastReceiver {
 		connectivityManager.requestNetwork(networkRequest, callback);
 	}
 
+	/**
+	 * Get a PDU with the MMS' data.
+	 * @param context The context in which the receiver is running.
+	 * @param contentLocation The remote location that the carrier is hosting the MMS content within.
+	 * @param transactionSettings The TransactionSettings object representing the network/APN settings necessary to retrieve the MMS.
+	 * @return The PDU with the extracted data.
+	 * @throws IOException Thrown when there is an error in retrieving the data from the specified remote.
+	 */
 	private GenericPdu getDataPdu(Context context, String contentLocation, TransactionSettings transactionSettings) throws IOException {
 		byte[] rawPdu = HttpUtils.httpConnection(context, 0, contentLocation, null, HttpUtils.HTTP_GET_METHOD, transactionSettings.isProxySet(), transactionSettings.getProxyAddress(), transactionSettings.getProxyPort());
 		PduParser dataParser = new PduParser(rawPdu);
@@ -223,6 +251,12 @@ public class MMSReceiver extends BroadcastReceiver {
 		return dataPdu;
 	}
 
+	/**
+	 * Gets the to, cc, and bcc fields from a PDU header.
+	 * @param context The context in which the receiver is running.
+	 * @param headers The headers of the PDU to extract the addresses from.
+	 * @return A map of the various 'to' fields in the MMS.
+	 */
 	private Map<Integer, EncodedStringValue[]> getToFields(Context context, PduHeaders headers) {
 		HashMap<Integer, EncodedStringValue[]> addresses = new HashMap<>();
 		//Iterate through all the different types of to fields and add them to the addresses set
@@ -239,6 +273,14 @@ public class MMSReceiver extends BroadcastReceiver {
 		return addresses;
 	}
 
+	/**
+	 * Gets the recipients from an MMS message.
+	 *
+	 * This is just a merged list of the result from 'getToFields'.
+	 * @param context The context in which the receiver is running.
+	 * @param pdu The PDU to extract the recipients from.
+	 * @return The recipients for the message.
+	 */
 	private List<String> getRecipients(Context context, MultimediaMessagePdu pdu) {
 		PduHeaders headers = pdu.getPduHeaders();
 		Map<Integer, EncodedStringValue[]> addresses = getToFields(context, headers);
@@ -256,6 +298,11 @@ public class MMSReceiver extends BroadcastReceiver {
 		return recipients;
 	}
 
+	/**
+	 * Make a list of the parts within a PDU.
+	 * @param pdu The PDU to extract the parts from.
+	 * @return A list of the parts within the PDU.
+	 */
 	private List<String> makePartsList(MultimediaMessagePdu pdu) {
 		PduBody body = pdu.getBody();
 		int numParts = body.getPartsNum();
@@ -275,6 +322,11 @@ public class MMSReceiver extends BroadcastReceiver {
 		return partsList;
 	}
 
+	/**
+	 * Send the MMS upstream to the sms-pusher server.
+	 * @param context The context in which the receiver is running.
+	 * @param pdu The pdu that contains the MMS' data.
+	 */
 	private void sendUpstream(Context context, final MultimediaMessagePdu pdu) {
 		List<String> recipients = getRecipients(context, pdu);
 		final List<String> partsList = makePartsList(pdu);

@@ -31,6 +31,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * The main activity of the application.
+ */
 public class MainActivity extends AppCompatActivity {
 
 	protected static final String PREFS_KEY = "SMSPusherPrefs";
@@ -48,6 +51,10 @@ public class MainActivity extends AppCompatActivity {
 	private SharedPreferences.Editor prefsEditor;
 	private CookieManager cookieManager;
 
+	/**
+	 * Handles the creation of the activity.
+	 * @param savedInstanceState The saved state of the activity..
+	 */
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -65,6 +72,10 @@ public class MainActivity extends AppCompatActivity {
 		updateDeviceIDDisplay();
 	}
 
+	/**
+	 * Registers the user based on the entered information.
+	 * @param v The view of the button that was pressed.
+	 */
 	protected void handleRegisterButtonPress(View v) {
 		Toast.makeText(this, R.string.registering_toast, Toast.LENGTH_SHORT).show();
 		try {
@@ -125,7 +136,15 @@ public class MainActivity extends AppCompatActivity {
 		}
 	}
 
-	//Assumes user is already authenticated. Authentication should be checked before use.
+	/**
+	 * Registers a device in the remote database.
+	 *
+	 * Assumes user is already authenticated. Authentication should be checked before use.
+	 * @param host The host to register the device on.
+	 * @param resListener A response listener for the server's response.
+	 * @param errorListener An error listener for the server's response.
+	 * @throws MalformedURLException Thrown when an invalid host is passed.
+	 */
 	private void registerDevice(final URL host, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
 		final URL registerUrl = new URL(host, "/register_device");
 		final HashMap<String, String> authMap = new HashMap<String, String>();
@@ -159,6 +178,15 @@ public class MainActivity extends AppCompatActivity {
 		queue.add(req);
 	}
 
+	/**
+	 * Authenticates the user against the server.
+	 * @param host The host to verify the registration against.
+	 * @param username The username of the user.
+	 * @param password The password of the user.
+	 * @param resListener A response listener for the server's response.
+	 * @param errorListener An error listener for the server's response.
+	 * @throws MalformedURLException Thrown when an invalid host is passed.
+	 */
 	private void authenticate(URL host, String username, String password, final Response.Listener<String> resListener, final Response.ErrorListener errorListener) throws MalformedURLException {
 		final URL authURL = new URL(host, "/authenticate");
 		final HashMap<String, String> authMap = new HashMap<String, String>();
@@ -200,6 +228,9 @@ public class MainActivity extends AppCompatActivity {
 		queue.add(req);
 	}
 
+	/**
+	 * Updates the displayed device ID.
+	 */
 	private void updateDeviceIDDisplay(){
 		String deviceID = prefs.getString(DEVICE_ID_PREFS_KEY, "");
 		if (deviceID.equals("")) {
