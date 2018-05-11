@@ -23,7 +23,7 @@ type FirebaseClient struct {
 	ClientID      string
 	senderID      string
 	serverKey     string
-	recvChannel   chan<- SMSMessage
+	recvChannel   chan<- TextMessage
 	sendChannel   <-chan OutboundMessage
 	signalChannel chan<- Signal
 	errorChannel  chan<- ClientError
@@ -42,7 +42,7 @@ type Config struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
-func NewFirebaseClient(clientID string, recvChannel chan<- SMSMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
+func NewFirebaseClient(clientID string, recvChannel chan<- TextMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
 	appConfig, err := config.GetConfig()
 	if err != nil {
 		//can't use logError because the client hasn't been created yet!
@@ -109,12 +109,22 @@ func (client *FirebaseClient) StartRecv() {
 			client.logError(err, false)
 		} else if messageType == "UpstreamMessage" {
 			var message UpstreamMessage
-			json.Unmarshal(messageBody, &message)
-			_, err := client.sendACK(message)
+			err := json.Unmarshal(messageBody, &message)
 			if err != nil {
 				client.logError(err, false)
 			}
-			client.recvChannel <- message.Data
+
+			textMessage, err := message.extractTextMessage()
+			if err != nil {
+				client.logError(err, false)
+			}
+
+			_, err = client.sendACK(message)
+			if err != nil {
+				client.logError(err, false)
+			}
+
+			client.recvChannel <- textMessage
 		} else if messageType == "ConnectionDrainingMessage" {
 			drainSignal := NewConnectionDrainingSignal(client)
 			client.signalChannel <- drainSignal

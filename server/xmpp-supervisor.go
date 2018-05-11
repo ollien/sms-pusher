@@ -12,7 +12,7 @@ const clientErrorFormat = "Client %s: %s"
 type XMPPSupervisor struct {
 	clients       map[string]ClientContainer
 	logger        *logrus.Logger
-	recvChannel   chan firebasexmpp.SMSMessage
+	recvChannel   chan firebasexmpp.TextMessage
 	sendChannel   chan firebasexmpp.OutboundMessage
 	signalChannel chan firebasexmpp.Signal
 	spawnChannel  chan ClientContainer
@@ -26,7 +26,7 @@ type ClientContainer struct {
 }
 
 //NewXMPPSupervisor creates a new XMPPSupervisor and starts the necessary handlers, given the channels to receive messages from firebase, and the channels to send messages to firebase.
-func NewXMPPSupervisor(recvChannel chan firebasexmpp.SMSMessage, sendChannel chan firebasexmpp.OutboundMessage, logger *logrus.Logger) XMPPSupervisor {
+func NewXMPPSupervisor(recvChannel chan firebasexmpp.TextMessage, sendChannel chan firebasexmpp.OutboundMessage, logger *logrus.Logger) XMPPSupervisor {
 	supervisor := XMPPSupervisor{
 		clients:       make(map[string]ClientContainer),
 		logger:        logger,

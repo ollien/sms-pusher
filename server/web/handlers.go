@@ -1,6 +1,7 @@
 package web
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	uuid "github.com/satori/go.uuid"
@@ -20,6 +22,7 @@ const (
 	xmppErrorLogFormat       = "XMPP error: %s"
 	badUUIDErrorLogMsg       = "Bad UUID for device"
 	notEnoughInfoErrorLogMsg = "Not enough info to continue."
+	badB64ErrorLogMsg        = "Invalid B64 for uploaded file."
 )
 
 //RouteHandler holds all routes and allows them to share common variables
@@ -176,7 +179,7 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 
 	recipient := req.FormValue("recipient")
 	message := req.FormValue("message")
-	deviceID := req.FormValue("device-id")
+	deviceID := req.FormValue("device_id")
 	if recipient == "" || message == "" || deviceID == "" {
 		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
 		//TODO: Return data explaining why a 400 was returned
@@ -209,4 +212,93 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	}
 
 	handler.sendChannel <- outMessage
+}
+
+func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+	user, err := GetSessionUser(handler.databaseConnection, req)
+	if err != nil {
+		writer.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	b64 := req.FormValue("data")
+	deviceID := req.FormValue("device_id")
+	submittedBlockID := req.FormValue("block_id")
+	if b64 == "" || deviceID == "" {
+		logWithRoute(handler.logger, req).Debug(notEnoughInfoErrorLogMsg)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	//Get the device's ID as a UUID and check if it matches the user in the database
+	deviceUUID, err := uuid.FromString(deviceID)
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	device, err := handler.databaseConnection.GetDevice(deviceUUID)
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if device.User.ID != user.ID {
+		logWithRoute(handler.logger, req).Debug(err)
+		writer.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	//If we don't have a block ID, make a new file block. Otherwuse, use the one we're given.
+	var blockID uuid.UUID
+	if submittedBlockID == "" {
+		blockID, err = handler.databaseConnection.MakeFileBlock(user)
+		if err != nil {
+			logWithRoute(handler.logger, req).Error(err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	} else {
+		blockID, err = uuid.FromString(submittedBlockID)
+		if err != nil {
+			logWithRoute(handler.logger, req).Error(err)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	fileBytes, err := base64.StdEncoding.DecodeString(b64)
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(badB64ErrorLogMsg)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	appConfig, err := config.GetConfig()
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//Save the file, and then return the block it belongs to
+	_, err = StoreFile(handler.databaseConnection, appConfig.MMS.UploadLocation, blockID, fileBytes)
+	if err != nil {
+		logWithRoute(handler.logger, req).Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//Return the block ID in JSON form
+	rawRes := struct {
+		BlockID string `json:"block_id"`
+	}{blockID.String()}
+	res, err := json.Marshal(rawRes)
+	if err != nil {
+		logWithRoute(handler.logger, req)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	writer.Write(res)
 }

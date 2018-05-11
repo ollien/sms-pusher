@@ -1,14 +1,24 @@
 package web
 
 import (
+	"crypto/sha256"
 	"errors"
+	"fmt"
 	"net/http"
+	"os"
+	"path"
 
 	"github.com/ollien/sms-pusher/server/db"
+	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
+	"gopkg.in/h2non/filetype.v1"
+	fttypes "gopkg.in/h2non/filetype.v1/types"
 )
 
-const routeKey = "_route"
+const (
+	uploadedFileMode = 0644
+	routeKey         = "_route"
+)
 
 //LoggableResponseWriter allows access to otherwise hidden information within ResponseWriter
 type LoggableResponseWriter struct {
@@ -70,6 +80,41 @@ func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWrite
 	return LoggableResponseWriter{
 		ResponseWriter: writer,
 	}
+}
+
+//StoreFile stores an incoming file to disk, with its SHA256 as its username
+func StoreFile(databaseConnection db.DatabaseConnection, uploadLocation string, blockID uuid.UUID, bytes []byte) (int, error) {
+	fileName, err := getFileName(bytes)
+	if err != nil {
+		return 0, err
+	}
+
+	databaseConnection.RecordFile(fileName, blockID)
+
+	filePath := path.Join(uploadLocation, fileName)
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, uploadedFileMode)
+	if err != nil {
+		return 0, err
+	}
+
+	return file.Write(bytes)
+}
+
+//Get the name for a file that we will be storing
+func getFileName(bytes []byte) (string, error) {
+	fileHash := sha256.Sum256(bytes)
+	theType, err := filetype.Match(bytes)
+	if err != nil {
+		return "", err
+	}
+
+	extension := theType.Extension
+	//If we can't figure out the type, assume it's a text entry
+	if theType.MIME == (fttypes.MIME{}) {
+		extension = "txt"
+	}
+
+	return fmt.Sprintf("%x.%s", fileHash, extension), nil
 }
 
 //Write is identical to http.ResponseWriter.Write, but stores the bytes sent and accounts for the 200 special case that Write normally handles by the interface's definition.

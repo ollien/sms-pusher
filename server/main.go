@@ -23,7 +23,7 @@ func main() {
 
 	defer databaseConnection.Close()
 
-	outChannel := make(chan firebasexmpp.SMSMessage)
+	outChannel := make(chan firebasexmpp.TextMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
 	supervisor := NewXMPPSupervisor(outChannel, sendChannel, logger)
 	go listenForSMS(outChannel)
@@ -34,10 +34,14 @@ func main() {
 	server.Start()
 }
 
-func listenForSMS(outChannel <-chan firebasexmpp.SMSMessage) {
+func listenForSMS(outChannel <-chan firebasexmpp.TextMessage) {
 	for {
 		//TODO: Find some way to ping the client of this event. Maybe websockets?
-		message := <-outChannel
-		fmt.Printf("MESSAGE DETAILS\nFrom: %s\nAt: %d\nBody:%s\n\n", message.PhoneNumber, message.Timestamp, message.Message)
+		switch message := (<-outChannel).(type) {
+		case firebasexmpp.SMSMessage:
+			fmt.Printf("MESSAGE DETAILS\nFrom: %s\nAt: %d\nBody:%s\n\n", message.PhoneNumber, message.Timestamp, message.Message)
+		case firebasexmpp.MMSMessage:
+			fmt.Printf("MESSAGE DETAILS\nFrom: %s\nTo:%v\nAt: %d\nBody:%s\nPartsBlockID:%s\n\n", message.PhoneNumber, message.Recipients, message.Timestamp, message.Message, message.PartBlockID)
+		}
 	}
 }

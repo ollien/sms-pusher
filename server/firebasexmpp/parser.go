@@ -5,6 +5,28 @@ import (
 	"errors"
 )
 
+//StringEncodedStringSlice represents an array of strings that is encoded as JSON
+type StringEncodedStringSlice []string
+
+//TextMessage represents either a SMS or an MMS.
+type TextMessage interface {
+	isMMS() bool
+}
+
+//SMSMessage stores the data sent by the app upstream about incoming SMS messages.
+type SMSMessage struct {
+	PhoneNumber string `json:"phone_number"`
+	Message     string `json:"message,omitempty"`
+	Timestamp   int64  `json:"timestamp,string"`
+}
+
+//MMSMessage represents an MMS message that comes in
+type MMSMessage struct {
+	SMSMessage
+	Recipients  StringEncodedStringSlice `json:"recipients"`
+	PartBlockID string                   `json:"block_id"`
+}
+
 //UnknownMessage represents a message a message of undetermined type
 type UnknownMessage struct {
 	MessageType *string `json:"message_type"`
@@ -12,13 +34,13 @@ type UnknownMessage struct {
 }
 
 //UpstreamMessage stores the basic data from any upstream Firebase Cloud Messaging XML Message.
-//This isn't as general as it could be. Because the app only sends SMS messages upstream, I've included an SMSMessage in UpstreaMessage.
+//This isn't as general as it could be. Because the app only sends SMS/MMSes upstream, TextMessage is included in UpstreamMessage.
 type UpstreamMessage struct {
 	From      string `json:"from"`
 	TTL       int    `json:"time_to_live"`
 	MessageID string `json:"message_id"`
 	Category  string `json:"category"`
-	Data      SMSMessage
+	Data      json.RawMessage
 }
 
 //InboundACKMessage stores the basic data from an ACK message that Firebase CLoud Messaging when we send a message downstream.
@@ -33,13 +55,6 @@ type NACKMessage struct {
 	MessageID        string `json:"message_id"`
 	Error            string `json:"error"`
 	ErrorDescription string `json:"error_description"`
-}
-
-//SMSMessage stores the data sent by the app upstream about incoming SMS messages.
-type SMSMessage struct {
-	PhoneNumber string `json:"phone_number"`
-	Message     string `json:"message"`
-	Timestamp   int64  `json:"timestamp,string"`
 }
 
 //ConnectionDrainingMessage indicates a CONNECTION_DRAINING message.
@@ -69,4 +84,47 @@ func GetMessageType(rawData []byte) (string, error) {
 	default:
 		return *message.MessageType, errors.New("Unknown message type")
 	}
+}
+
+func (message UpstreamMessage) extractTextMessage() (TextMessage, error) {
+	mms := MMSMessage{}
+	err := json.Unmarshal(message.Data, &mms)
+	if err != nil {
+		return nil, err
+	}
+
+	if mms.isMMS() {
+		return mms, nil
+	}
+
+	sms := SMSMessage{}
+	sms.convertFromMMS(mms)
+
+	return sms, nil
+}
+
+func (message SMSMessage) isMMS() bool {
+	return false
+}
+
+func (message *SMSMessage) convertFromMMS(mms MMSMessage) {
+	message.PhoneNumber = mms.PhoneNumber
+	message.Timestamp = mms.Timestamp
+	message.Message = mms.Message
+}
+
+func (message MMSMessage) isMMS() bool {
+	return len(message.Recipients) > 1 || message.PartBlockID != ""
+}
+
+//UnmarshalJSON allows StringEncodedString slice to implement the Unmarshaler interface
+func (encodedSlice *StringEncodedStringSlice) UnmarshalJSON(data []byte) error {
+	var decodedString string
+	err := json.Unmarshal(data, &decodedString)
+	if err != nil {
+		return err
+	}
+	stringSlice := (*[]string)(encodedSlice)
+
+	return json.Unmarshal([]byte(decodedString), stringSlice)
 }

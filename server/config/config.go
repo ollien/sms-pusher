@@ -13,6 +13,7 @@ var config Config
 type Config struct {
 	Database DatabaseConfig `json:"db"`
 	XMPP     XMPPConfig     `json:"xmpp"`
+	MMS      MMSConfig      `json:"mms"`
 }
 
 //DatabaseConfig represents the config for the database
@@ -24,6 +25,11 @@ type DatabaseConfig struct {
 type XMPPConfig struct {
 	ServerKey string `json:"server_key"`
 	SenderID  string `json:"sender_id"`
+}
+
+//MMSConfig represents the config for the MMS portion of the FCM XMPP server
+type MMSConfig struct {
+	UploadLocation string `json:"upload_location"`
 }
 
 //ParseConfig parses the default configPath into a Config
