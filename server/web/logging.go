@@ -49,6 +49,14 @@ func (writer *LoggableResponseWriter) WriteHeader(statusCode int) {
 	}
 }
 
+func (logger *routeLogger) setResponseReason(req *http.Request, reason string) {
+	logger.reasons[req] = reason
+}
+
+func (logger *routeLogger) setResponseErrorReason(req *http.Request, err error) {
+	logger.setResponseReason(req, err.Error())
+}
+
 //logWithRoute returns a logrus.Entry that contains a field of the route that is being logged
 func (logger *routeLogger) log(req *http.Request) *logrus.Entry {
 	return logger.WithField(routeKey, req.RequestURI)
