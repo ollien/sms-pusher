@@ -27,6 +27,14 @@ func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWrite
 	}
 }
 
+//NewRouteLogger returns a new routeLogger
+func newRouteLogger(logger *logrus.Logger) routeLogger {
+	return routeLogger{
+		logger,
+		make(map[*http.Request]string),
+	}
+}
+
 //Write is identical to http.ResponseWriter.Write, but stores the bytes sent and accounts for the 200 special case that Write normally handles by the interface's definition.
 func (writer *LoggableResponseWriter) Write(bytes []byte) (int, error) {
 	//Normally, this would be done by ResponseWriter.Write, but the wrapped response writer will not call this method, thus we have to force this same behavior.
