@@ -74,3 +74,23 @@ func (logger *routeLogger) logWithFields(req *http.Request, fields logrus.Fields
 	fields[routeKey] = req.RequestURI
 	return logger.WithFields(fields)
 }
+
+func (logger *routeLogger) logLastRequest(req *http.Request, statusCode int, bytesWritten int) {
+	reason := logger.reasons[req]
+	fields := logrus.Fields{
+		"remote":      req.RemoteAddr,
+		"proto":       req.Proto,
+		"method":      req.Method,
+		"user_agent":  req.UserAgent,
+		"status_code": statusCode,
+		"bytes":       bytesWritten,
+	}
+	logEntry := logger.WithFields(fields)
+	if statusCode >= 400 && statusCode < 500 {
+		logEntry.Warn(reason)
+	} else if statusCode >= 500 {
+		logEntry.Error(reason)
+	} else {
+		logEntry.Info(reason)
+	}
+}
