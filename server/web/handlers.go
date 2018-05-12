@@ -13,7 +13,6 @@ import (
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	uuid "github.com/satori/go.uuid"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -29,7 +28,7 @@ const (
 type RouteHandler struct {
 	databaseConnection db.DatabaseConnection
 	sendChannel        chan<- firebasexmpp.OutboundMessage
-	logger             *logrus.Logger
+	logger             routeLogger
 	//TODO: add sendErrorChannel once websockets are implemented
 }
 
