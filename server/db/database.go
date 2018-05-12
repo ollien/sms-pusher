@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"net"
 
 	_ "github.com/lib/pq"
 	"github.com/ollien/sms-pusher/server/config"
@@ -101,4 +102,13 @@ func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
 	}
 
 	return connection, nil
+}
+
+//logIfNetError will produce a fatal logging error if the error is a net error. Otherwise, it will simply pass the error through.
+func (connection DatabaseConnection) logIfNetError(err error) error {
+	if _, ok := err.(*net.OpError); ok {
+		connection.logger.WithField("err", err).Error("Could not connect to database.")
+	}
+
+	return err
 }
