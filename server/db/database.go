@@ -113,13 +113,14 @@ func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
 	return connection, nil
 }
 
-//logIfNetError will produce a fatal logging error if the error is a net error. Otherwise, it will simply pass the error through.
-func (connection DatabaseConnection) logIfNetError(err error) error {
+//logIfNetError will log the error with error severity if the error spawned from a network problem, such as the database being down. Returns true if an error was logged.
+func (connection DatabaseConnection) logIfNetError(err error) bool {
 	if _, ok := err.(*net.OpError); ok {
 		connection.logger.WithField("err", err).Error("Could not connect to database.")
+		return true
 	}
 
-	return err
+	return false
 }
 
 //Error returns the error message associated with a database error.
