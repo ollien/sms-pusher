@@ -20,7 +20,7 @@ func (db DatabaseConnection) CreateUser(username string, password []byte) error 
 
 	_, err = db.Exec("INSERT INTO users VALUES(DEFAULT, $1, $2)", username, hash)
 
-	return err
+	return db.logIfNetError(err)
 }
 
 //GetUser gets a user from the database and returns a User.
@@ -31,7 +31,7 @@ func (db DatabaseConnection) GetUser(username string) (User, error) {
 	var passwordHash []byte
 	err := userRow.Scan(&id, &internalUsername, &passwordHash)
 	if err != nil {
-		return User{}, err
+		return User{}, db.logIfNetError(err)
 	}
 
 	user := User{
@@ -51,7 +51,7 @@ func (db DatabaseConnection) GetUserByID(id int) (User, error) {
 	var passwordHash []byte
 	err := userRow.Scan(&internalID, &username, &passwordHash)
 	if err != nil {
-		return User{}, err
+		return User{}, db.logIfNetError(err)
 	}
 
 	user := User{
@@ -67,6 +67,7 @@ func (db DatabaseConnection) GetUserByID(id int) (User, error) {
 func (db DatabaseConnection) VerifyUser(username string, password []byte) (User, error) {
 	user, err := db.GetUser(username)
 	if err != nil {
+		//GetUser will already handle fatalIfNetError
 		return User{}, err
 	}
 
@@ -83,7 +84,7 @@ func (db DatabaseConnection) CreateSession(user User) (Session, error) {
 	sessionID := uuid.NewV4().String()
 	_, err := db.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
 	if err != nil {
-		return Session{}, nil
+		return Session{}, db.logIfNetError(err)
 	}
 
 	return Session{
@@ -103,6 +104,7 @@ func (db DatabaseConnection) GetSession(sessionID string) (Session, error) {
 
 	user, err := db.GetUserByID(userID)
 	if err != nil {
+		//GetUserByID will already handle fatalIfNetError
 		return Session{}, err
 	}
 
@@ -121,7 +123,7 @@ func (db DatabaseConnection) GetDevice(deviceID uuid.UUID) (Device, error) {
 	var userID int
 	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
 	if err != nil {
-		return Device{}, err
+		return Device{}, db.logIfNetError(err)
 	}
 
 	user, err := db.GetUserByID(userID)
@@ -144,7 +146,7 @@ func (db DatabaseConnection) MakeFileBlock(user User) (uuid.UUID, error) {
 	blockID := uuid.NewV4()
 	_, err := db.Exec("INSERT INTO mms_file_blocks VALUES($1, $2)", blockID, user.ID)
 	if err != nil {
-		return uuid.UUID{}, err
+		return uuid.UUID{}, db.logIfNetError(err)
 	}
 
 	return blockID, nil
@@ -154,7 +156,7 @@ func (db DatabaseConnection) MakeFileBlock(user User) (uuid.UUID, error) {
 func (db DatabaseConnection) RecordFile(fileName string, blockID uuid.UUID) error {
 	_, err := db.Exec("INSERT INTO mms_files VALUES(DEFAULT, $1, $2);", fileName, blockID)
 
-	return err
+	return db.logIfNetError(err)
 }
 
 //RegisterDeviceToUser registers a device for a user
@@ -167,7 +169,7 @@ func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
 	var userID int
 	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
 	if err != nil {
-		return Device{}, err
+		return Device{}, db.logIfNetError(err)
 	}
 
 	return Device{
@@ -181,5 +183,5 @@ func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
 //RegisterFCMID sets the FCM id (firebase_id) for a user's device, given a device id
 func (db DatabaseConnection) RegisterFCMID(deviceID uuid.UUID, fcmID []byte) error {
 	_, err := db.Exec("UPDATE devices SET firebase_id = $1 WHERE device_id = $2;", fcmID, deviceID)
-	return err
+	return db.logIfNetError(err)
 }
