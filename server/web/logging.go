@@ -14,6 +14,12 @@ type LoggableResponseWriter struct {
 	headersWritten bool
 }
 
+//routeLogger is a logger that automatically includes route information.
+type routeLogger struct {
+	*logrus.Logger
+	reasons map[*http.Request]string
+}
+
 //NewLoggableResponseWriter creats a LoggableResponseWriter with the given http.ResponseWriter
 func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWriter {
 	return LoggableResponseWriter{
@@ -44,19 +50,19 @@ func (writer *LoggableResponseWriter) WriteHeader(statusCode int) {
 }
 
 //logWithRoute returns a logrus.Entry that contains a field of the route that is being logged
-func logWithRoute(logger *logrus.Logger, req *http.Request) *logrus.Entry {
+func (logger *routeLogger) log(req *http.Request) *logrus.Entry {
 	return logger.WithField(routeKey, req.RequestURI)
 }
 
 //logWithRouteField is equivalent to logrus.WithField, but inserts information about the route that is being logged.
-func logWithRouteField(logger *logrus.Logger, req *http.Request, key string, value interface{}) *logrus.Entry {
+func (logger *routeLogger) logWithField(req *http.Request, key string, value interface{}) *logrus.Entry {
 	fields := make(logrus.Fields)
 	fields[key] = value
-	return logWithRouteFields(logger, req, fields)
+	return logger.logWithFields(req, fields)
 }
 
-//logWithRouteFields is equivalent to logrus.WithFields, but inserts information about the route that is being logged.
-func logWithRouteFields(logger *logrus.Logger, req *http.Request, fields logrus.Fields) *logrus.Entry {
+//logWithFields is equivalent to logrus.WithFields, but inserts information about the route that is being logged.
+func (logger *routeLogger) logWithFields(req *http.Request, fields logrus.Fields) *logrus.Entry {
 	fields[routeKey] = req.RequestURI
 	return logger.WithFields(fields)
 }
