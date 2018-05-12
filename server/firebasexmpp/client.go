@@ -35,12 +35,6 @@ type ClientError struct {
 	Fatal bool
 }
 
-//Config stores the details necessary for authenticating to Firebase Cloud Messaging's XMPP server, which cannot be hardcoded or put into version control.
-type Config struct {
-	SenderID  string
-	ServerKey string
-}
-
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
 func NewFirebaseClient(clientID string, recvChannel chan<- TextMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
 	appConfig, err := config.GetConfig()
