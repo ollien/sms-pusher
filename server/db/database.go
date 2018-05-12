@@ -18,6 +18,15 @@ type DatabaseConnection struct {
 	logger *logrus.Logger
 }
 
+//DatabaseError represents an error that was produced during the running of a databse action
+//Can either contain an error or a string. If both are present in the struct, the string will take precedence.
+type DatabaseError struct {
+	err     error
+	message string
+	//DatabaseFault signals whether or not this is something that should be thought of as an error with the database itself, and not a problem with the query.
+	DatabaseFault bool
+}
+
 //User represents a user within the database
 type User struct {
 	ID           int
@@ -111,4 +120,15 @@ func (connection DatabaseConnection) logIfNetError(err error) error {
 	}
 
 	return err
+}
+
+//Error returns the error message associated with a database error.
+//If a string and error are present in the DatabaseError, the string is returned.
+//Allows it to implement the error interface.
+func (err DatabaseError) Error() string {
+	if err.message == "" {
+		return err.Error()
+	}
+
+	return err.message
 }
