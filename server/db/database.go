@@ -6,6 +6,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/ollien/sms-pusher/server/config"
 	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 )
 
 const driver = "postgres"
@@ -13,6 +14,7 @@ const driver = "postgres"
 //DatabaseConnection represents a single connection to the database
 type DatabaseConnection struct {
 	*sql.DB
+	logger *logrus.Logger
 }
 
 //User represents a user within the database
@@ -37,7 +39,7 @@ type Session struct {
 }
 
 //InitDB intiializes the database connection and returns a DB
-func InitDB() (DatabaseConnection, error) {
+func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
 	appConfig, err := config.GetConfig()
 	if err != nil {
 		return DatabaseConnection{}, err
@@ -48,7 +50,10 @@ func InitDB() (DatabaseConnection, error) {
 		return DatabaseConnection{}, err
 	}
 
-	connection := DatabaseConnection{rawConnection}
+	connection := DatabaseConnection{
+		DB:     rawConnection,
+		logger: logger,
+	}
 
 	//Create users table.
 	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS users (" +
