@@ -82,3 +82,13 @@ func getFileName(bytes []byte) (string, error) {
 
 	return fmt.Sprintf("%x.%s", fileHash, extension), nil
 }
+
+//setStatusTo500IfDatabaseFault writes a 500 status code if the error is a database fault. Otherwise, it writes the given status code.
+func setStatusTo500IfDatabaseFault(writer http.ResponseWriter, err error, alternateStatusCode int) {
+	if dbErr, ok := err.(db.DatabaseError); ok && dbErr.DatabaseFault {
+		writer.WriteHeader(http.StatusInternalServerError)
+	} else {
+		writer.WriteHeader(alternateStatusCode)
+	}
+
+}
