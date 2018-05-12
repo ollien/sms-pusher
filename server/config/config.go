@@ -43,7 +43,10 @@ func ParseConfig() error {
 
 	decoder := json.NewDecoder(configFile)
 	var parsedConfig Config
-	decoder.Decode(&parsedConfig)
+	err = decoder.Decode(&parsedConfig)
+	if err != nil {
+		return err
+	}
 
 	config = parsedConfig
 
