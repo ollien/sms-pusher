@@ -111,9 +111,10 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 		return
 	}
 
-	resultMap := make(map[string]string)
-	resultMap["device_id"] = deviceID.DeviceID.String()
-	resultJSON, err := json.Marshal(resultMap)
+	rawRes := struct {
+		DeviceID string `json:"device_id"`
+	}{deviceID.DeviceID.String()}
+	resultJSON, err := json.Marshal(rawRes)
 	if err != nil {
 		handler.logger.setResponseErrorReason(req, err)
 		writer.WriteHeader(http.StatusInternalServerError)
