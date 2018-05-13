@@ -137,7 +137,7 @@ func (connection DatabaseConnection) logIfNetError(err error) bool {
 //Allows it to implement the error interface.
 func (err DatabaseError) Error() string {
 	if err.message == "" {
-		return err.Error()
+		return err.err.Error()
 	}
 
 	return err.message
