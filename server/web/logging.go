@@ -89,7 +89,7 @@ func (logger *routeLogger) logLastRequest(req *http.Request, statusCode int, byt
 		"remote":      req.RemoteAddr,
 		"proto":       req.Proto,
 		"method":      req.Method,
-		"user_agent":  req.UserAgent,
+		"user_agent":  req.UserAgent(),
 		"status_code": statusCode,
 		"bytes":       bytesWritten,
 	}
