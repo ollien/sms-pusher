@@ -196,6 +196,12 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	}
 
 	device, err := handler.databaseConnection.GetDevice(deviceUUID)
+	if err != nil {
+		//We don't to handle DatabaseFault since we 500 anyway
+		handler.logger.setResponseReason(req, notEnoughInfoErrorLogMsg)
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	if device.User.ID != user.ID {
 		writer.WriteHeader(http.StatusForbidden)
 		return
