@@ -20,7 +20,6 @@ const (
 //Webserver hosts a webserver for sms-pusher
 type Webserver struct {
 	listenAddr   string
-	logger       *logrus.Logger
 	router       *httprouter.Router
 	routeHandler RouteHandler
 }
@@ -32,11 +31,10 @@ func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, s
 	routeHandler := RouteHandler{
 		databaseConnection: databaseConnection,
 		sendChannel:        sendChannel,
-		logger:             logger,
+		logger:             newRouteLogger(logger),
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,
-		logger:       logger,
 		router:       httprouter.New(),
 		routeHandler: routeHandler,
 	}
@@ -74,7 +72,7 @@ func (serv *Webserver) wrapHandlerFunctionWithLimit(handler handlerFunction, siz
 }
 
 func (serv *Webserver) afterRequest(loggableWriter *LoggableResponseWriter, req *http.Request) {
-	serv.logger.Infof("%s %s %s %s (%s); %d; %d bytes", req.RemoteAddr, req.Proto, req.Method, req.RequestURI, req.UserAgent(), loggableWriter.statusCode, loggableWriter.bytesWritten)
+	serv.routeHandler.logger.logLastRequest(req, loggableWriter.statusCode, loggableWriter.bytesWritten)
 }
 
 //Start starts the webserver

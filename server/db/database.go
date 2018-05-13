@@ -2,10 +2,12 @@ package db
 
 import (
 	"database/sql"
+	"net"
 
 	_ "github.com/lib/pq"
 	"github.com/ollien/sms-pusher/server/config"
 	uuid "github.com/satori/go.uuid"
+	"github.com/sirupsen/logrus"
 )
 
 const driver = "postgres"
@@ -13,6 +15,16 @@ const driver = "postgres"
 //DatabaseConnection represents a single connection to the database
 type DatabaseConnection struct {
 	*sql.DB
+	logger *logrus.Logger
+}
+
+//DatabaseError represents an error that was produced during the running of a databse action
+//Can either contain an error or a string. If both are present in the struct, the string will take precedence.
+type DatabaseError struct {
+	err     error
+	message string
+	//DatabaseFault signals whether or not this is something that should be thought of as an error with the database itself, and not a problem with the query.
+	DatabaseFault bool
 }
 
 //User represents a user within the database
@@ -37,7 +49,7 @@ type Session struct {
 }
 
 //InitDB intiializes the database connection and returns a DB
-func InitDB() (DatabaseConnection, error) {
+func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
 	appConfig, err := config.GetConfig()
 	if err != nil {
 		return DatabaseConnection{}, err
@@ -48,7 +60,10 @@ func InitDB() (DatabaseConnection, error) {
 		return DatabaseConnection{}, err
 	}
 
-	connection := DatabaseConnection{rawConnection}
+	connection := DatabaseConnection{
+		DB:     rawConnection,
+		logger: logger,
+	}
 
 	//Create users table.
 	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS users (" +
@@ -96,4 +111,34 @@ func InitDB() (DatabaseConnection, error) {
 	}
 
 	return connection, nil
+}
+
+//handleError will take an error, package it as a DatabaseError, and perform any logging needed.
+func (connection DatabaseConnection) handleError(err error, databaseFault bool) DatabaseError {
+	logged := connection.logIfNetError(err)
+	return DatabaseError{
+		err:           err,
+		DatabaseFault: databaseFault || logged,
+	}
+}
+
+//logIfNetError will log the error with error severity if the error spawned from a network problem, such as the database being down. Returns true if an error was logged.
+func (connection DatabaseConnection) logIfNetError(err error) bool {
+	if _, ok := err.(*net.OpError); ok {
+		connection.logger.WithField("err", err).Error("Could not connect to database.")
+		return true
+	}
+
+	return false
+}
+
+//Error returns the error message associated with a database error.
+//If a string and error are present in the DatabaseError, the string is returned.
+//Allows it to implement the error interface.
+func (err DatabaseError) Error() string {
+	if err.message == "" {
+		return err.err.Error()
+	}
+
+	return err.message
 }

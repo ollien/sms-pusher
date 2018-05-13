@@ -16,7 +16,7 @@ func main() {
 	}
 	logger := logrus.New()
 	logger.Formatter = logFormatter
-	databaseConnection, err := db.InitDB()
+	databaseConnection, err := db.InitDB(logger)
 	if err != nil {
 		logger.Fatalf("Database error: %s", err)
 	}
