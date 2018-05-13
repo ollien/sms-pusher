@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	//1 MB
+	//4 KB
 	maxRequestSize = 4096
 	//16 MB
 	maxFileSize = 16777216
