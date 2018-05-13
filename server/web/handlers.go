@@ -108,6 +108,7 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 		//We don't need to handle DatabaseFault since we 500 anyway
 		handler.logger.setResponseErrorReason(req, err)
 		writer.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	resultMap := make(map[string]string)
