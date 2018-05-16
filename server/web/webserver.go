@@ -88,7 +88,7 @@ func (serv *Webserver) checkFormValidity(writer *LoggableResponseWriter, req *ht
 }
 
 func (serv *Webserver) afterRequest(loggableWriter *LoggableResponseWriter, req *http.Request) {
-	serv.routeHandler.logger.logLastRequest(req, loggableWriter.statusCode, loggableWriter.bytesWritten)
+	serv.routeHandler.logger.logLastRequest(req, loggableWriter.statusCode, loggableWriter.responseReason, loggableWriter.bytesWritten)
 }
 
 //Start starts the webserver
