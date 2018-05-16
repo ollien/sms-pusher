@@ -12,6 +12,7 @@ type LoggableResponseWriter struct {
 	statusCode     int
 	bytesWritten   int
 	headersWritten bool
+	responseReason string
 }
 
 //routeLogger is a logger that automatically includes route information.
@@ -55,12 +56,12 @@ func (writer *LoggableResponseWriter) WriteHeader(statusCode int) {
 	}
 }
 
-func (logger *routeLogger) setResponseReason(req *http.Request, reason string) {
-	logger.reasons[req] = reason
+func (writer *LoggableResponseWriter) setResponseReason(reason string) {
+	writer.responseReason = reason
 }
 
-func (logger *routeLogger) setResponseErrorReason(req *http.Request, err error) {
-	logger.setResponseReason(req, err.Error())
+func (writer *LoggableResponseWriter) setResponseErrorReason(err error) {
+	writer.setResponseReason(err.Error())
 }
 
 //logWithRoute returns a logrus.Entry that contains a field of the route that is being logged
