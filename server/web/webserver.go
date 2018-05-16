@@ -24,6 +24,9 @@ type Webserver struct {
 	routeHandler RouteHandler
 }
 
+type loggableHandlerFunction = func(*LoggableResponseWriter, *http.Request, httprouter.Params)
+
+//handlerFunction is what httprouter is expecting as a handler function. Before being used, all loggableHandlerFunctions will be wrapped as a handlerFunction such that they are compatiable with httprouter.
 type handlerFunction = func(http.ResponseWriter, *http.Request, httprouter.Params)
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
@@ -54,12 +57,12 @@ func (serv *Webserver) initHandlers() {
 
 //wrapHandlerFunction allows us to enforce a file size limit
 //Though we could theoretically put this in ServeHTTP, this allows us to set different sizes for different routes after httprouter has taken care of the route handling for us.
-func (serv *Webserver) wrapHandlerFunction(handler handlerFunction) handlerFunction {
+func (serv *Webserver) wrapHandlerFunction(handler loggableHandlerFunction) handlerFunction {
 	return serv.wrapHandlerFunctionWithLimit(handler, maxRequestSize)
 }
 
 //wrapHandlerFunctionWithLimit is the same as wrapHandlerFunction but allows us to set a size limit on the request
-func (serv *Webserver) wrapHandlerFunctionWithLimit(handler handlerFunction, sizeLimit int64) handlerFunction {
+func (serv *Webserver) wrapHandlerFunctionWithLimit(handler loggableHandlerFunction, sizeLimit int64) handlerFunction {
 	return func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		loggableWriter := NewLoggableResponseWriter(writer)
 		//Enforce a max file size

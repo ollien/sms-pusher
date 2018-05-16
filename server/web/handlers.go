@@ -26,11 +26,11 @@ type RouteHandler struct {
 	//TODO: add sendErrorChannel once websockets are implemented
 }
 
-func (handler RouteHandler) index(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (handler RouteHandler) index(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	io.WriteString(writer, "<h1>Hello world!</h1>")
 }
 
-func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (handler RouteHandler) register(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 	if username == "" || password == "" || len(password) < 8 {
@@ -55,7 +55,7 @@ func (handler RouteHandler) register(writer http.ResponseWriter, req *http.Reque
 	}
 }
 
-func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (handler RouteHandler) authenticate(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	//If there is no error, we found a user, and can return a 200
 	if err == nil {
@@ -95,7 +95,7 @@ func (handler RouteHandler) authenticate(writer http.ResponseWriter, req *http.R
 	http.SetCookie(writer, cookie)
 }
 
-func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (handler RouteHandler) registerDevice(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	if err != nil {
 		handler.logger.setResponseErrorReason(req, err)
@@ -128,7 +128,7 @@ func (handler RouteHandler) registerDevice(writer http.ResponseWriter, req *http
 	}
 }
 
-func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (handler RouteHandler) setFCMID(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	if err != nil {
 		handler.logger.setResponseErrorReason(req, err)
@@ -173,7 +173,7 @@ func (handler RouteHandler) setFCMID(writer http.ResponseWriter, req *http.Reque
 	}
 }
 
-func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (handler RouteHandler) sendMessage(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	if err != nil {
 		handler.logger.setResponseErrorReason(req, err)
@@ -224,7 +224,7 @@ func (handler RouteHandler) sendMessage(writer http.ResponseWriter, req *http.Re
 	handler.sendChannel <- outMessage
 }
 
-func (handler RouteHandler) uploadMMSFile(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
+func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	if err != nil {
 		handler.logger.setResponseErrorReason(req, err)
