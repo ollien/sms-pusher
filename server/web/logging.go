@@ -12,12 +12,12 @@ type LoggableResponseWriter struct {
 	statusCode     int
 	bytesWritten   int
 	headersWritten bool
+	responseReason string
 }
 
 //routeLogger is a logger that automatically includes route information.
 type routeLogger struct {
 	*logrus.Logger
-	reasons map[*http.Request]string
 }
 
 //NewLoggableResponseWriter creats a LoggableResponseWriter with the given http.ResponseWriter
@@ -31,7 +31,6 @@ func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWrite
 func newRouteLogger(logger *logrus.Logger) routeLogger {
 	return routeLogger{
 		logger,
-		make(map[*http.Request]string),
 	}
 }
 
@@ -57,12 +56,12 @@ func (writer *LoggableResponseWriter) WriteHeader(statusCode int) {
 	}
 }
 
-func (logger *routeLogger) setResponseReason(req *http.Request, reason string) {
-	logger.reasons[req] = reason
+func (writer *LoggableResponseWriter) setResponseReason(reason string) {
+	writer.responseReason = reason
 }
 
-func (logger *routeLogger) setResponseErrorReason(req *http.Request, err error) {
-	logger.setResponseReason(req, err.Error())
+func (writer *LoggableResponseWriter) setResponseErrorReason(err error) {
+	writer.setResponseReason(err.Error())
 }
 
 //logWithRoute returns a logrus.Entry that contains a field of the route that is being logged
@@ -83,9 +82,7 @@ func (logger *routeLogger) logWithFields(req *http.Request, fields logrus.Fields
 	return logger.WithFields(fields)
 }
 
-func (logger *routeLogger) logLastRequest(req *http.Request, statusCode int, bytesWritten int) {
-	reason := logger.reasons[req]
-	delete(logger.reasons, req)
+func (logger *routeLogger) logLastRequest(req *http.Request, statusCode int, reason string, bytesWritten int) {
 	fields := logrus.Fields{
 		"remote":      req.RemoteAddr,
 		"proto":       req.Proto,

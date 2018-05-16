@@ -24,6 +24,9 @@ type Webserver struct {
 	routeHandler RouteHandler
 }
 
+type loggableHandlerFunction = func(*LoggableResponseWriter, *http.Request, httprouter.Params)
+
+//handlerFunction is what httprouter is expecting as a handler function. Before being used, all loggableHandlerFunctions will be wrapped as a handlerFunction such that they are compatiable with httprouter.
 type handlerFunction = func(http.ResponseWriter, *http.Request, httprouter.Params)
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
@@ -54,18 +57,18 @@ func (serv *Webserver) initHandlers() {
 
 //wrapHandlerFunction allows us to enforce a file size limit
 //Though we could theoretically put this in ServeHTTP, this allows us to set different sizes for different routes after httprouter has taken care of the route handling for us.
-func (serv *Webserver) wrapHandlerFunction(handler handlerFunction) handlerFunction {
+func (serv *Webserver) wrapHandlerFunction(handler loggableHandlerFunction) handlerFunction {
 	return serv.wrapHandlerFunctionWithLimit(handler, maxRequestSize)
 }
 
 //wrapHandlerFunctionWithLimit is the same as wrapHandlerFunction but allows us to set a size limit on the request
-func (serv *Webserver) wrapHandlerFunctionWithLimit(handler handlerFunction, sizeLimit int64) handlerFunction {
+func (serv *Webserver) wrapHandlerFunctionWithLimit(handler loggableHandlerFunction, sizeLimit int64) handlerFunction {
 	return func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
 		loggableWriter := NewLoggableResponseWriter(writer)
 		//Enforce a max file size
 		req.Body = http.MaxBytesReader(&loggableWriter, req.Body, sizeLimit)
 		//Pass our request to the handler only if we have a valid form.
-		if serv.checkFormValidity(writer, req) {
+		if serv.checkFormValidity(&loggableWriter, req) {
 			handler(&loggableWriter, req, params)
 		}
 		//Perform after-request hook
@@ -74,10 +77,10 @@ func (serv *Webserver) wrapHandlerFunctionWithLimit(handler handlerFunction, siz
 }
 
 //checkFormValidity checks if a given form is valid. If it's not, 403 is written and false is returned. If it is, true is retruned and the header remains unchanged.
-func (serv *Webserver) checkFormValidity(writer http.ResponseWriter, req *http.Request) bool {
+func (serv *Webserver) checkFormValidity(writer *LoggableResponseWriter, req *http.Request) bool {
 	err := req.ParseForm()
 	if err != nil {
-		serv.routeHandler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusBadRequest)
 		return false
 	}
@@ -85,7 +88,7 @@ func (serv *Webserver) checkFormValidity(writer http.ResponseWriter, req *http.R
 }
 
 func (serv *Webserver) afterRequest(loggableWriter *LoggableResponseWriter, req *http.Request) {
-	serv.routeHandler.logger.logLastRequest(req, loggableWriter.statusCode, loggableWriter.bytesWritten)
+	serv.routeHandler.logger.logLastRequest(req, loggableWriter.statusCode, loggableWriter.responseReason, loggableWriter.bytesWritten)
 }
 
 //Start starts the webserver
