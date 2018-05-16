@@ -3,11 +3,13 @@ package config
 import (
 	"encoding/json"
 	"os"
+	"sync"
 )
 
 const configPath = "config.json"
 
 var config Config
+var configMux sync.Mutex
 
 //Config represents the config for the application
 type Config struct {
@@ -48,7 +50,11 @@ func ParseConfig() error {
 		return err
 	}
 
+	//Prevent undefined behavior by locking the config
+	//We could lock all of GetConfig, but locking this won't create as much of a bottleneck; we don't need to /keep/ locking once a config has been set, even if it does mean in some rare cases that subsequent calls to GetConfig will read from disk more than once.
+	configMux.Lock()
 	config = parsedConfig
+	configMux.Unlock()
 
 	return nil
 }
