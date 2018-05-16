@@ -34,7 +34,7 @@ func (handler RouteHandler) register(writer *LoggableResponseWriter, req *http.R
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 	if username == "" || password == "" || len(password) < 8 {
-		handler.logger.setResponseReason(req, notEnoughInfoErrorLogMsg)
+		writer.setResponseReason(notEnoughInfoErrorLogMsg)
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -45,11 +45,11 @@ func (handler RouteHandler) register(writer *LoggableResponseWriter, req *http.R
 	if err != nil {
 		//Postgres specific check
 		if err.Error() == db.DuplicateUserError {
-			handler.logger.setResponseReason(req, "Duplicate user")
+			writer.setResponseReason("Duplicate user")
 			writer.WriteHeader(http.StatusBadRequest)
 		} else {
 			//We don't need to handle DatabaseFault since we 500 anyway.
-			handler.logger.setResponseErrorReason(req, err)
+			writer.setResponseErrorReason(err)
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -66,7 +66,7 @@ func (handler RouteHandler) authenticate(writer *LoggableResponseWriter, req *ht
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 	if username == "" || password == "" {
-		handler.logger.setResponseReason(req, notEnoughInfoErrorLogMsg)
+		writer.setResponseReason(notEnoughInfoErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -74,7 +74,7 @@ func (handler RouteHandler) authenticate(writer *LoggableResponseWriter, req *ht
 	encodedPassword := []byte(password)
 	user, err = handler.databaseConnection.VerifyUser(username, encodedPassword)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		setStatusTo500IfDatabaseFault(writer, err, http.StatusUnauthorized)
 		return
 	}
@@ -82,7 +82,7 @@ func (handler RouteHandler) authenticate(writer *LoggableResponseWriter, req *ht
 	session, err := handler.databaseConnection.CreateSession(user)
 	if err != nil {
 		//We don't need to handle DatabaseFault since we 500 anyway.
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -98,7 +98,7 @@ func (handler RouteHandler) authenticate(writer *LoggableResponseWriter, req *ht
 func (handler RouteHandler) registerDevice(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		setStatusTo500IfDatabaseFault(writer, err, http.StatusUnauthorized)
 		return
 	}
@@ -106,7 +106,7 @@ func (handler RouteHandler) registerDevice(writer *LoggableResponseWriter, req *
 	deviceID, err := handler.databaseConnection.RegisterDeviceToUser(user)
 	if err != nil {
 		//We don't need to handle DatabaseFault since we 500 anyway
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -116,13 +116,13 @@ func (handler RouteHandler) registerDevice(writer *LoggableResponseWriter, req *
 	}{deviceID.DeviceID.String()}
 	resultJSON, err := json.Marshal(rawRes)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	} else {
 		_, err := writer.Write(resultJSON)
 		if err != nil {
 			handler.logger.logWithField(req, "json", string(resultJSON)).Debug(err)
-			handler.logger.setResponseErrorReason(req, err)
+			writer.setResponseErrorReason(err)
 			writer.WriteHeader(http.StatusInternalServerError)
 		}
 	}
@@ -131,7 +131,7 @@ func (handler RouteHandler) registerDevice(writer *LoggableResponseWriter, req *
 func (handler RouteHandler) setFCMID(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		setStatusTo500IfDatabaseFault(writer, err, http.StatusUnauthorized)
 		return
 	}
@@ -139,14 +139,14 @@ func (handler RouteHandler) setFCMID(writer *LoggableResponseWriter, req *http.R
 	deviceID := req.FormValue("device_id")
 	fcmID := req.FormValue("fcm_id")
 	if deviceID == "" || fcmID == "" {
-		handler.logger.setResponseReason(req, notEnoughInfoErrorLogMsg)
+		writer.setResponseReason(notEnoughInfoErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	deviceUUID, err := uuid.FromString(deviceID)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -155,7 +155,7 @@ func (handler RouteHandler) setFCMID(writer *LoggableResponseWriter, req *http.R
 	device, err := handler.databaseConnection.GetDevice(deviceUUID)
 	if err != nil {
 		//We don't need to handle DatabaseFault since we 500 anyway
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -168,7 +168,7 @@ func (handler RouteHandler) setFCMID(writer *LoggableResponseWriter, req *http.R
 	err = handler.databaseConnection.RegisterFCMID(deviceUUID, []byte(fcmID))
 	if err != nil {
 		//We don't need to handle DatabaseFault since we 500 anyway
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 	}
 }
@@ -176,7 +176,7 @@ func (handler RouteHandler) setFCMID(writer *LoggableResponseWriter, req *http.R
 func (handler RouteHandler) sendMessage(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		setStatusTo500IfDatabaseFault(writer, err, http.StatusUnauthorized)
 		return
 	}
@@ -185,7 +185,7 @@ func (handler RouteHandler) sendMessage(writer *LoggableResponseWriter, req *htt
 	message := req.FormValue("message")
 	deviceID := req.FormValue("device_id")
 	if recipient == "" || message == "" || deviceID == "" {
-		handler.logger.setResponseReason(req, notEnoughInfoErrorLogMsg)
+		writer.setResponseReason(notEnoughInfoErrorLogMsg)
 		//TODO: Return data explaining why a 400 was returned
 		writer.WriteHeader(http.StatusBadRequest)
 		return
@@ -200,7 +200,7 @@ func (handler RouteHandler) sendMessage(writer *LoggableResponseWriter, req *htt
 	device, err := handler.databaseConnection.GetDevice(deviceUUID)
 	if err != nil {
 		//We don't to handle DatabaseFault since we 500 anyway
-		handler.logger.setResponseReason(req, notEnoughInfoErrorLogMsg)
+		writer.setResponseReason(notEnoughInfoErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -216,7 +216,7 @@ func (handler RouteHandler) sendMessage(writer *LoggableResponseWriter, req *htt
 	}
 	outMessage, err := firebasexmpp.ConstructDownstreamSMS(device.FCMID, smsMessage)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -227,7 +227,7 @@ func (handler RouteHandler) sendMessage(writer *LoggableResponseWriter, req *htt
 func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
 	user, err := GetSessionUser(handler.databaseConnection, req)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		setStatusTo500IfDatabaseFault(writer, err, http.StatusUnauthorized)
 		return
 	}
@@ -236,7 +236,7 @@ func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *h
 	deviceID := req.FormValue("device_id")
 	submittedBlockID := req.FormValue("block_id")
 	if b64 == "" || deviceID == "" {
-		handler.logger.setResponseReason(req, notEnoughInfoErrorLogMsg)
+		writer.setResponseReason(notEnoughInfoErrorLogMsg)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -245,19 +245,19 @@ func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *h
 	deviceUUID, err := uuid.FromString(deviceID)
 	if err != nil {
 		//We don't need to handle DatabaseFault since we 500 anyway
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	device, err := handler.databaseConnection.GetDevice(deviceUUID)
 	if err != nil {
 		//We don't need to handle DatabaseFault since we 500 anyway
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	if device.User.ID != user.ID {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusForbidden)
 		return
 	}
@@ -268,14 +268,14 @@ func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *h
 		blockID, err = handler.databaseConnection.MakeFileBlock(user)
 		if err != nil {
 			//We don't need to handle DatabaseFault since we 500 anyway
-			handler.logger.setResponseErrorReason(req, err)
+			writer.setResponseErrorReason(err)
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 	} else {
 		blockID, err = uuid.FromString(submittedBlockID)
 		if err != nil {
-			handler.logger.setResponseErrorReason(req, err)
+			writer.setResponseErrorReason(err)
 			writer.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -283,14 +283,14 @@ func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *h
 
 	fileBytes, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	appConfig, err := config.GetConfig()
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -298,7 +298,7 @@ func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *h
 	//Save the file, and then return the block it belongs to
 	_, err = StoreFile(handler.databaseConnection, appConfig.MMS.UploadLocation, blockID, fileBytes)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -309,7 +309,7 @@ func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *h
 	}{blockID.String()}
 	res, err := json.Marshal(rawRes)
 	if err != nil {
-		handler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
 	}
