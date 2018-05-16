@@ -68,7 +68,7 @@ func (serv *Webserver) wrapHandlerFunctionWithLimit(handler loggableHandlerFunct
 		//Enforce a max file size
 		req.Body = http.MaxBytesReader(&loggableWriter, req.Body, sizeLimit)
 		//Pass our request to the handler only if we have a valid form.
-		if serv.checkFormValidity(writer, req) {
+		if serv.checkFormValidity(&loggableWriter, req) {
 			handler(&loggableWriter, req, params)
 		}
 		//Perform after-request hook
@@ -77,10 +77,10 @@ func (serv *Webserver) wrapHandlerFunctionWithLimit(handler loggableHandlerFunct
 }
 
 //checkFormValidity checks if a given form is valid. If it's not, 403 is written and false is returned. If it is, true is retruned and the header remains unchanged.
-func (serv *Webserver) checkFormValidity(writer http.ResponseWriter, req *http.Request) bool {
+func (serv *Webserver) checkFormValidity(writer *LoggableResponseWriter, req *http.Request) bool {
 	err := req.ParseForm()
 	if err != nil {
-		serv.routeHandler.logger.setResponseErrorReason(req, err)
+		writer.setResponseErrorReason(err)
 		writer.WriteHeader(http.StatusBadRequest)
 		return false
 	}
