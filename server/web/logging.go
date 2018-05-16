@@ -17,7 +17,6 @@ type LoggableResponseWriter struct {
 //routeLogger is a logger that automatically includes route information.
 type routeLogger struct {
 	*logrus.Logger
-	reasons map[*http.Request]string
 }
 
 //NewLoggableResponseWriter creats a LoggableResponseWriter with the given http.ResponseWriter
@@ -31,7 +30,6 @@ func NewLoggableResponseWriter(writer http.ResponseWriter) LoggableResponseWrite
 func newRouteLogger(logger *logrus.Logger) routeLogger {
 	return routeLogger{
 		logger,
-		make(map[*http.Request]string),
 	}
 }
 
@@ -83,9 +81,7 @@ func (logger *routeLogger) logWithFields(req *http.Request, fields logrus.Fields
 	return logger.WithFields(fields)
 }
 
-func (logger *routeLogger) logLastRequest(req *http.Request, statusCode int, bytesWritten int) {
-	reason := logger.reasons[req]
-	delete(logger.reasons, req)
+func (logger *routeLogger) logLastRequest(req *http.Request, statusCode int, reason string, bytesWritten int) {
 	fields := logrus.Fields{
 		"remote":      req.RemoteAddr,
 		"proto":       req.Proto,
