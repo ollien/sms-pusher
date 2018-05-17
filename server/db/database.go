@@ -6,6 +6,9 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/ollien/sms-pusher/server/config"
+	//Adds migrations to goose
+	_ "github.com/ollien/sms-pusher/server/db/migrations"
+	"github.com/pressly/goose"
 	uuid "github.com/satori/go.uuid"
 	"github.com/sirupsen/logrus"
 )
@@ -50,6 +53,7 @@ type Session struct {
 
 //InitDB intiializes the database connection and returns a DB
 func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
+	goose.SetLogger(logger)
 	appConfig, err := config.GetConfig()
 	if err != nil {
 		return DatabaseConnection{}, err
@@ -65,47 +69,7 @@ func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
 		logger: logger,
 	}
 
-	//Create users table.
-	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS users (" +
-		"id SERIAL PRIMARY KEY," +
-		"username VARCHAR(32) UNIQUE," +
-		"password_hash bytea);")
-	if err != nil {
-		return DatabaseConnection{}, err
-	}
-
-	//Create devices table
-	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS devices (" +
-		"id SERIAL PRIMARY KEY," +
-		"device_id uuid UNIQUE," +
-		"firebase_id bytea," +
-		"for_user INTEGER REFERENCES users(id));")
-	if err != nil {
-		return DatabaseConnection{}, err
-	}
-
-	//Create sessions table
-	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS sessions (" +
-		"id uuid PRIMARY KEY," +
-		"for_user INTEGER REFERENCES users(id));")
-	if err != nil {
-		return DatabaseConnection{}, err
-	}
-
-	//Create mms_file_blocks table
-	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS mms_file_blocks(" +
-		"id uuid PRIMARY KEY," +
-		"for_user INTEGER REFERENCES users(id));")
-	if err != nil {
-		return DatabaseConnection{}, err
-	}
-
-	//Create mms_files table
-	//name is 128 bytes, as the file hash will be 64 bytes, plus we need room for the extension. Rounded up to the nearest power of two, 128.
-	_, err = connection.Exec("CREATE TABLE IF NOT EXISTS mms_files(" +
-		"id SERIAL PRIMARY KEY," +
-		"name VARCHAR(128)," +
-		"block uuid REFERENCES mms_file_blocks(id));")
+	err = goose.Up(rawConnection, "/dev/null")
 	if err != nil {
 		return DatabaseConnection{}, err
 	}
