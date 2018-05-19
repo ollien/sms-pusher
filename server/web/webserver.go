@@ -18,6 +18,7 @@ const (
 )
 
 //Router allows for us to direct http requests to the correct handlers with the addition of pre/post request hooks
+//Performing these hooks within the router rather than when wrapping the handler functions allows us to properly handle all status codes including 404.
 type Router struct {
 	BeforeRequest func(http.ResponseWriter, *http.Request)
 	AfterRequest  func(http.ResponseWriter, *http.Request)
