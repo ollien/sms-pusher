@@ -17,9 +17,9 @@ const (
 	maxFileSize = 16777216
 )
 
-//Router allows for us to direct http requests to the correct handlers with the addition of pre/post request hooks
-//Performing these hooks within the router rather than when wrapping the handler functions allows us to properly handle all status codes including 404.
-type Router struct {
+//hookedRouter allows for us to direct http requests to the correct handlers with the addition of pre/post request hooks
+//Performing these hooks within the hookedRouter rather than when wrapping the handler functions allows us to properly handle all status codes including 404.
+type hookedRouter struct {
 	BeforeRequest func(http.ResponseWriter, *http.Request)
 	AfterRequest  func(http.ResponseWriter, *http.Request)
 	httprouter.Router
@@ -28,7 +28,7 @@ type Router struct {
 //Webserver hosts a webserver for sms-pusher
 type Webserver struct {
 	listenAddr   string
-	router       *Router
+	router       *hookedRouter
 	logger       *logrus.Logger
 	routeHandler RouteHandler
 }
@@ -111,13 +111,13 @@ func (serv *Webserver) Start() {
 }
 
 //NewRouter creates a new Router[:w
-func NewRouter() *Router {
-	return &Router{
+func NewRouter() *hookedRouter {
+	return &hookedRouter{
 		Router: *httprouter.New(),
 	}
 }
 
-func (router *Router) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
+func (router *hookedRouter) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 	loggableWriter := NewLoggableResponseWriter(writer)
 	if router.BeforeRequest != nil {
 		router.BeforeRequest(&loggableWriter, req)
