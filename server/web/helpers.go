@@ -42,7 +42,12 @@ func GetSessionUser(databaseConnection db.DatabaseConnection, req *http.Request)
 		}
 	}
 
-	session, err := databaseConnection.GetSession(sessionID)
+	sessionUUID, err := uuid.FromString(sessionID)
+	if err != nil {
+		return db.User{}, err
+	}
+
+	session, err := databaseConnection.GetSession(sessionUUID)
 
 	//If err is not nil, there is no valid session.
 	return session.User, err

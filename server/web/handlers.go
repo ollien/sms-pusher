@@ -89,7 +89,7 @@ func (handler RouteHandler) authenticate(writer *LoggableResponseWriter, req *ht
 
 	cookie := &http.Cookie{
 		Name:  "session",
-		Value: session.ID,
+		Value: session.ID.String(),
 	}
 
 	http.SetCookie(writer, cookie)

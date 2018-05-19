@@ -46,7 +46,7 @@ type Device struct {
 
 //Session represents a session for a user
 type Session struct {
-	ID   string
+	ID   uuid.UUID
 	User User
 }
 

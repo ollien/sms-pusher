@@ -81,7 +81,7 @@ func (db DatabaseConnection) VerifyUser(username string, password []byte) (User,
 
 //CreateSession makes a session given a User
 func (db DatabaseConnection) CreateSession(user User) (Session, error) {
-	sessionID := uuid.NewV4().String()
+	sessionID := uuid.NewV4()
 	_, err := db.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
 	if err != nil {
 		return Session{}, db.handleError(err, true)
@@ -94,7 +94,7 @@ func (db DatabaseConnection) CreateSession(user User) (Session, error) {
 }
 
 //GetSession gets the user associated with a session
-func (db DatabaseConnection) GetSession(sessionID string) (Session, error) {
+func (db DatabaseConnection) GetSession(sessionID uuid.UUID) (Session, error) {
 	sessionRow := db.QueryRow("SELECT for_user FROM sessions WHERE id = $1", sessionID)
 	var userID int
 	err := sessionRow.Scan(&userID)
