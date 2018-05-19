@@ -113,7 +113,7 @@ func (handler RouteHandler) registerDevice(writer *LoggableResponseWriter, req *
 
 	rawRes := struct {
 		DeviceID string `json:"device_id"`
-	}{deviceID.DeviceID.String()}
+	}{deviceID.ID.String()}
 	resultJSON, err := json.Marshal(rawRes)
 	if err != nil {
 		writer.setResponseErrorReason(err)
