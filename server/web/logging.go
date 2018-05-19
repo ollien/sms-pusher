@@ -93,7 +93,7 @@ func (logger *routeLogger) logLastRequest(req *http.Request, statusCode int, rea
 		"bytes":       bytesWritten,
 	}
 	logEntry := logger.WithFields(fields)
-	if statusCode >= 400 && statusCode < 500 {
+	if statusCode >= 400 && statusCode != 404 && statusCode < 500 {
 		logEntry.Warn(reason)
 	} else if statusCode >= 500 {
 		logEntry.Error(reason)
