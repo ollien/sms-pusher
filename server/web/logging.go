@@ -85,6 +85,7 @@ func (logger *routeLogger) logWithFields(req *http.Request, fields logrus.Fields
 func (logger *routeLogger) logLastRequest(req *http.Request, statusCode int, reason string, bytesWritten int) {
 	fields := logrus.Fields{
 		"remote":      req.RemoteAddr,
+		"route":       req.RequestURI,
 		"proto":       req.Proto,
 		"method":      req.Method,
 		"user_agent":  req.UserAgent(),
