@@ -78,9 +78,12 @@ func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
 }
 
 //handleError will take an error, package it as a DatabaseError, and perform any logging needed.
-func (connection DatabaseConnection) handleError(err error, databaseFault bool) DatabaseError {
+func (connection DatabaseConnection) handleError(err error, databaseFault bool) error {
+	if err == nil {
+		return nil
+	}
 	logged := connection.logIfNetError(err)
-	return DatabaseError{
+	return &DatabaseError{
 		err:           err,
 		DatabaseFault: databaseFault || logged,
 	}
