@@ -17,10 +17,18 @@ const (
 	maxFileSize = 16777216
 )
 
+//Router allows for us to direct http requests to the correct handlers with the addition of pre/post request hooks
+type Router struct {
+	BeforeRequest func(http.ResponseWriter, *http.Request)
+	AfterRequest  func(http.ResponseWriter, *http.Request)
+	httprouter.Router
+}
+
 //Webserver hosts a webserver for sms-pusher
 type Webserver struct {
 	listenAddr   string
-	router       *httprouter.Router
+	router       *Router
+	logger       *logrus.Logger
 	routeHandler RouteHandler
 }
 
@@ -38,9 +46,11 @@ func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, s
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,
-		router:       httprouter.New(),
+		router:       NewRouter(),
+		logger:       logger,
 		routeHandler: routeHandler,
 	}
+	serv.router.AfterRequest = serv.afterRequest
 	serv.initHandlers()
 	return serv
 }
@@ -71,8 +81,6 @@ func (serv *Webserver) wrapHandlerFunctionWithLimit(handler loggableHandlerFunct
 		if serv.checkFormValidity(&loggableWriter, req) {
 			handler(&loggableWriter, req, params)
 		}
-		//Perform after-request hook
-		serv.afterRequest(&loggableWriter, req)
 	}
 }
 
@@ -87,8 +95,10 @@ func (serv *Webserver) checkFormValidity(writer *LoggableResponseWriter, req *ht
 	return true
 }
 
-func (serv *Webserver) afterRequest(loggableWriter *LoggableResponseWriter, req *http.Request) {
-	serv.routeHandler.logger.logLastRequest(req, loggableWriter.statusCode, loggableWriter.responseReason, loggableWriter.bytesWritten)
+func (serv *Webserver) afterRequest(writer http.ResponseWriter, req *http.Request) {
+	if loggableWriter, ok := writer.(*LoggableResponseWriter); ok {
+		serv.routeHandler.logger.logLastRequest(req, loggableWriter.statusCode, loggableWriter.responseReason, loggableWriter.bytesWritten)
+	}
 }
 
 //Start starts the webserver
@@ -96,5 +106,23 @@ func (serv *Webserver) Start() {
 	err := http.ListenAndServe(serv.listenAddr, serv.router)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+//NewRouter creates a new Router[:w
+func NewRouter() *Router {
+	return &Router{
+		Router: *httprouter.New(),
+	}
+}
+
+func (router *Router) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
+	loggableWriter := NewLoggableResponseWriter(writer)
+	if router.BeforeRequest != nil {
+		router.BeforeRequest(&loggableWriter, req)
+	}
+	router.Router.ServeHTTP(&loggableWriter, req)
+	if router.AfterRequest != nil {
+		router.AfterRequest(&loggableWriter, req)
 	}
 }
