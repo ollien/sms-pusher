@@ -28,6 +28,13 @@ func main() {
 
 	defer databaseConnection.Close()
 
+	setupDone, err := setup(databaseConnection)
+	if err != nil {
+		logger.Fatal(err)
+	} else if setupDone {
+		logger.Info("Setup completed.")
+	}
+
 	outChannel := make(chan firebasexmpp.TextMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
 	supervisor := NewXMPPSupervisor(outChannel, sendChannel, logger)
