@@ -63,6 +63,19 @@ func (db DatabaseConnection) GetUserByID(id int) (User, error) {
 	return user, nil
 }
 
+//GetUserCount gets the number of registered users in the database.
+//The first return value will be -1 in error.
+func (db DatabaseConnection) GetUserCount() (int, error) {
+	countRow := db.QueryRow("SELECT COUNT(*) FROM users")
+	var count int
+	err := countRow.Scan(&count)
+	if err != nil {
+		return -1, db.handleError(err, true)
+	}
+
+	return count, nil
+}
+
 //VerifyUser verifies a user against its authentication details. Returns the user if authed.
 func (db DatabaseConnection) VerifyUser(username string, password []byte) (User, error) {
 	user, err := db.GetUser(username)
