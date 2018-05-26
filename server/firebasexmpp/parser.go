@@ -29,7 +29,7 @@ type MMSMessage struct {
 
 //UnknownMessage represents a message a message of undetermined type
 type UnknownMessage struct {
-	MessageType *string `json:"message_type"`
+	MessageType string `json:"message_type"`
 	Other       json.RawMessage
 }
 
@@ -69,11 +69,11 @@ func GetMessageType(rawData []byte) (string, error) {
 	}
 
 	//Upstream Messages have no message type. thus, if MessageType is nil, the message therefore has no message type, and we can assume it's an upstream mesage.
-	if message.MessageType == nil {
+	if message.MessageType == "" {
 		return "UpstreamMessage", nil
 	}
 
-	switch *message.MessageType {
+	switch message.MessageType {
 	case "ack":
 		return "InboundACKMessage", nil
 	case "nack":
@@ -82,7 +82,7 @@ func GetMessageType(rawData []byte) (string, error) {
 		//Per the spec, CONNECTION_DRAINING is the only control_type supported. We can save CPU time by not checking the control_type.
 		return "ConnectionDrainingMessage", nil
 	default:
-		return *message.MessageType, errors.New("Unknown message type")
+		return message.MessageType, errors.New("Unknown message type")
 	}
 }
 
