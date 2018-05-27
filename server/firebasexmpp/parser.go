@@ -3,6 +3,7 @@ package firebasexmpp
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 //StringEncodedStringSlice represents an array of strings that is encoded as JSON
@@ -91,6 +92,23 @@ func GetMessageType(rawData []byte) (string, error) {
 	}
 }
 
+//PerformAction sends the SMS message upstream to the main program
+func (message UpstreamMessage) PerformAction(client *FirebaseClient) error {
+	textMessage, err := message.extractTextMessage()
+	if err != nil {
+		return err
+	}
+
+	_, err = client.sendACK(message)
+	if err != nil {
+		return err
+	}
+
+	client.recvChannel <- textMessage
+
+	return nil
+}
+
 func (message UpstreamMessage) extractTextMessage() (TextMessage, error) {
 	mms := MMSMessage{}
 	err := json.Unmarshal(message.Data, &mms)
@@ -106,6 +124,24 @@ func (message UpstreamMessage) extractTextMessage() (TextMessage, error) {
 	sms.convertFromMMS(mms)
 
 	return sms, nil
+}
+
+//PerformAction is a stub to satisfy the FCMMessage interface.
+//Presently, there is no mechanism in place to wait for an ACK, so we're just stubbing this.
+func (message InboundACKMessage) PerformAction(client *FirebaseClient) error {
+	return nil
+}
+
+//PerformAction will return a properly formatted error object for the error given by FCM.
+func (message NACKMessage) PerformAction(client *FirebaseClient) error {
+	return fmt.Errorf("firebasexmpp: %s - %s", message.Error, message.ErrorDescription)
+}
+
+//PerformAction informs the signal channel that this connection needs to be drained.
+func (message ConnectionDrainingMessage) PerformAction(client *FirebaseClient) error {
+	drainSignal := NewConnectionDrainingSignal(client)
+	client.signalChannel <- drainSignal
+	return nil
 }
 
 func (message SMSMessage) isMMS() bool {
