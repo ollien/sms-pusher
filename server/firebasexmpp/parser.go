@@ -8,6 +8,11 @@ import (
 //StringEncodedStringSlice represents an array of strings that is encoded as JSON
 type StringEncodedStringSlice []string
 
+//FCMMessage represents a single message from FCM
+type FCMMessage interface {
+	PerformAction(client *FirebaseClient) error
+}
+
 //TextMessage represents either a SMS or an MMS.
 type TextMessage interface {
 	isMMS() bool
