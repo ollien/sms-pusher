@@ -3,10 +3,16 @@ package firebasexmpp
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 )
 
 //StringEncodedStringSlice represents an array of strings that is encoded as JSON
 type StringEncodedStringSlice []string
+
+//FCMMessage represents a single message from FCM
+type FCMMessage interface {
+	PerformAction(client *FirebaseClient) error
+}
 
 //TextMessage represents either a SMS or an MMS.
 type TextMessage interface {
@@ -25,12 +31,6 @@ type MMSMessage struct {
 	SMSMessage
 	Recipients  StringEncodedStringSlice `json:"recipients"`
 	PartBlockID string                   `json:"block_id"`
-}
-
-//UnknownMessage represents a message a message of undetermined type
-type UnknownMessage struct {
-	MessageType *string `json:"message_type"`
-	Other       json.RawMessage
 }
 
 //UpstreamMessage stores the basic data from any upstream Firebase Cloud Messaging XML Message.
@@ -60,30 +60,55 @@ type NACKMessage struct {
 //ConnectionDrainingMessage indicates a CONNECTION_DRAINING message.
 type ConnectionDrainingMessage struct{}
 
-//GetMessageType determines the type of message that Firebase Cloud Messaging has sent upstream.
-func GetMessageType(rawData []byte) (string, error) {
-	message := UnknownMessage{}
-	err := json.Unmarshal(rawData, &message)
+//parseFCMMessage determines the type of message that Firebase Cloud Messaging has sent upstream.
+func parseFCMMessage(data []byte) (FCMMessage, error) {
+	message := struct {
+		MessageType string `json:"message_type"`
+		Other       json.RawMessage
+	}{}
+	err := json.Unmarshal(data, &message)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	//Upstream Messages have no message type. thus, if MessageType is nil, the message therefore has no message type, and we can assume it's an upstream mesage.
-	if message.MessageType == nil {
-		return "UpstreamMessage", nil
-	}
-
-	switch *message.MessageType {
+	var parsedMessage FCMMessage
+	switch message.MessageType {
+	case "":
+		//Upstream Messages have no message type. thus, if MessageType is nil, the message therefore has no message type, and we can assume it's an upstream mesage.
+		parsedMessage = &UpstreamMessage{}
 	case "ack":
-		return "InboundACKMessage", nil
+		parsedMessage = &InboundACKMessage{}
 	case "nack":
-		return "NACKMessage", nil
+		parsedMessage = &NACKMessage{}
 	case "control":
 		//Per the spec, CONNECTION_DRAINING is the only control_type supported. We can save CPU time by not checking the control_type.
-		return "ConnectionDrainingMessage", nil
+		parsedMessage = &ConnectionDrainingMessage{}
 	default:
-		return *message.MessageType, errors.New("Unknown message type")
+		return nil, errors.New("Unknown message type")
 	}
+	err = json.Unmarshal(data, &parsedMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	return parsedMessage, nil
+}
+
+//PerformAction sends the SMS message upstream to the main program
+func (message UpstreamMessage) PerformAction(client *FirebaseClient) error {
+	textMessage, err := message.extractTextMessage()
+	if err != nil {
+		return err
+	}
+
+	_, err = client.sendACK(message)
+	if err != nil {
+		return err
+	}
+
+	client.recvChannel <- textMessage
+
+	return nil
 }
 
 func (message UpstreamMessage) extractTextMessage() (TextMessage, error) {
@@ -101,6 +126,24 @@ func (message UpstreamMessage) extractTextMessage() (TextMessage, error) {
 	sms.convertFromMMS(mms)
 
 	return sms, nil
+}
+
+//PerformAction is a stub to satisfy the FCMMessage interface.
+//Presently, there is no mechanism in place to wait for an ACK, so we're just stubbing this.
+func (message InboundACKMessage) PerformAction(client *FirebaseClient) error {
+	return nil
+}
+
+//PerformAction will return a properly formatted error object for the error given by FCM.
+func (message NACKMessage) PerformAction(client *FirebaseClient) error {
+	return fmt.Errorf("firebasexmpp: %s - %s", message.Error, message.ErrorDescription)
+}
+
+//PerformAction informs the signal channel that this connection needs to be drained.
+func (message ConnectionDrainingMessage) PerformAction(client *FirebaseClient) error {
+	drainSignal := NewConnectionDrainingSignal(client)
+	client.signalChannel <- drainSignal
+	return nil
 }
 
 func (message SMSMessage) isMMS() bool {
