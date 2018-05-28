@@ -31,6 +31,13 @@ func (handler RouteHandler) index(writer *LoggableResponseWriter, req *http.Requ
 }
 
 func (handler RouteHandler) register(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {
+	_, err := GetSessionUser(handler.databaseConnection, req)
+	if err != nil {
+		writer.setResponseErrorReason(err)
+		setStatusTo500IfDatabaseFault(writer, err, http.StatusUnauthorized)
+		return
+	}
+
 	username := req.FormValue("username")
 	password := req.FormValue("password")
 	if username == "" || password == "" || len(password) < 8 {
@@ -41,7 +48,7 @@ func (handler RouteHandler) register(writer *LoggableResponseWriter, req *http.R
 	}
 
 	encodedPassword := []byte(password)
-	err := handler.databaseConnection.CreateUser(username, encodedPassword)
+	err = handler.databaseConnection.CreateUser(username, encodedPassword)
 	if err != nil {
 		//Postgres specific check
 		if err.Error() == db.DuplicateUserError {
