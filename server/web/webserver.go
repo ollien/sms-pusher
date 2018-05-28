@@ -75,12 +75,13 @@ func (serv *Webserver) wrapHandlerFunction(handler loggableHandlerFunction) hand
 //wrapHandlerFunctionWithLimit is the same as wrapHandlerFunction but allows us to set a size limit on the request
 func (serv *Webserver) wrapHandlerFunctionWithLimit(handler loggableHandlerFunction, sizeLimit int64) handlerFunction {
 	return func(writer http.ResponseWriter, req *http.Request, params httprouter.Params) {
-		loggableWriter := NewLoggableResponseWriter(writer)
+		//Due to our wrapping within hookedRouter.ServeHTTP, we can always expect a LoggableResponseWriter
+		loggableWriter := writer.(*LoggableResponseWriter)
 		//Enforce a max file size
-		req.Body = http.MaxBytesReader(&loggableWriter, req.Body, sizeLimit)
+		req.Body = http.MaxBytesReader(loggableWriter, req.Body, sizeLimit)
 		//Pass our request to the handler only if we have a valid form.
-		if serv.checkFormValidity(&loggableWriter, req) {
-			handler(&loggableWriter, req, params)
+		if serv.checkFormValidity(loggableWriter, req) {
+			handler(loggableWriter, req, params)
 		}
 	}
 }
