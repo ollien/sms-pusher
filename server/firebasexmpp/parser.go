@@ -33,12 +33,6 @@ type MMSMessage struct {
 	PartBlockID string                   `json:"block_id"`
 }
 
-//UnknownMessage represents a message a message of undetermined type
-type UnknownMessage struct {
-	MessageType string `json:"message_type"`
-	Other       json.RawMessage
-}
-
 //UpstreamMessage stores the basic data from any upstream Firebase Cloud Messaging XML Message.
 //This isn't as general as it could be. Because the app only sends SMS/MMSes upstream, TextMessage is included in UpstreamMessage.
 type UpstreamMessage struct {
@@ -66,30 +60,38 @@ type NACKMessage struct {
 //ConnectionDrainingMessage indicates a CONNECTION_DRAINING message.
 type ConnectionDrainingMessage struct{}
 
-//GetMessageType determines the type of message that Firebase Cloud Messaging has sent upstream.
-func GetMessageType(rawData []byte) (string, error) {
-	message := UnknownMessage{}
-	err := json.Unmarshal(rawData, &message)
+//parseFCMMessage determines the type of message that Firebase Cloud Messaging has sent upstream.
+func parseFCMMessage(data []byte) (FCMMessage, error) {
+	message := struct {
+		MessageType string `json:"message_type"`
+		Other       json.RawMessage
+	}{}
+	err := json.Unmarshal(data, &message)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	//Upstream Messages have no message type. thus, if MessageType is nil, the message therefore has no message type, and we can assume it's an upstream mesage.
-	if message.MessageType == "" {
-		return "UpstreamMessage", nil
-	}
-
+	var parsedMessage FCMMessage
 	switch message.MessageType {
+	case "":
+		//Upstream Messages have no message type. thus, if MessageType is nil, the message therefore has no message type, and we can assume it's an upstream mesage.
+		parsedMessage = &UpstreamMessage{}
 	case "ack":
-		return "InboundACKMessage", nil
+		parsedMessage = &InboundACKMessage{}
 	case "nack":
-		return "NACKMessage", nil
+		parsedMessage = &NACKMessage{}
 	case "control":
 		//Per the spec, CONNECTION_DRAINING is the only control_type supported. We can save CPU time by not checking the control_type.
-		return "ConnectionDrainingMessage", nil
+		parsedMessage = &ConnectionDrainingMessage{}
 	default:
-		return message.MessageType, errors.New("Unknown message type")
+		return nil, errors.New("Unknown message type")
 	}
+	err = json.Unmarshal(data, &parsedMessage)
+	if err != nil {
+		return nil, err
+	}
+
+	return parsedMessage, nil
 }
 
 //PerformAction sends the SMS message upstream to the main program
