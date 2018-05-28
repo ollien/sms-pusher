@@ -1,7 +1,6 @@
 package firebasexmpp
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -98,32 +97,15 @@ func (client *FirebaseClient) StartRecv() {
 		}
 
 		messageBody := []byte(chat.Other[0])
-		messageType, err := GetMessageType(messageBody)
+		message, err := parseFCMMessage(messageBody)
 		if err != nil {
 			client.logError(err, false)
-		} else if messageType == "UpstreamMessage" {
-			var message UpstreamMessage
-			err := json.Unmarshal(messageBody, &message)
-			if err != nil {
-				client.logError(err, false)
-			}
-
-			textMessage, err := message.extractTextMessage()
-			if err != nil {
-				client.logError(err, false)
-			}
-
-			_, err = client.sendACK(message)
-			if err != nil {
-				client.logError(err, false)
-			}
-
-			client.recvChannel <- textMessage
-		} else if messageType == "ConnectionDrainingMessage" {
-			drainSignal := NewConnectionDrainingSignal(client)
-			client.signalChannel <- drainSignal
+			continue
 		}
-		//TODO: Handle InboundACKMessage and NACKMessage
+		err = message.PerformAction(client)
+		if err != nil {
+			client.logError(err, false)
+		}
 	}
 }
 
