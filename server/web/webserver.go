@@ -47,7 +47,7 @@ func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, s
 	}
 	serv := Webserver{
 		listenAddr:   listenAddr,
-		router:       NewRouter(),
+		router:       newRouter(),
 		logger:       logger,
 		routeHandler: routeHandler,
 	}
@@ -111,7 +111,7 @@ func (serv *Webserver) Start() {
 }
 
 //NewRouter creates a new Router[:w
-func NewRouter() *hookedRouter {
+func newRouter() *hookedRouter {
 	return &hookedRouter{
 		Router: *httprouter.New(),
 	}
