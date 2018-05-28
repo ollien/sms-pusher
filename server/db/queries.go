@@ -129,12 +129,11 @@ func (db DatabaseConnection) GetSession(sessionID uuid.UUID) (Session, error) {
 
 //GetDevice gets a Device from the database, given a deviceID
 func (db DatabaseConnection) GetDevice(deviceID uuid.UUID) (Device, error) {
-	deviceRow := db.QueryRow("SELECT * FROM devices WHERE device_id = $1", deviceID)
-	var id int
+	deviceRow := db.QueryRow("SELECT * FROM devices WHERE id = $1", deviceID)
 	var internalDeviceID uuid.UUID
 	var fcmID []byte
 	var userID int
-	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
+	err := deviceRow.Scan(&internalDeviceID, &fcmID, &userID)
 	if err != nil {
 		return Device{}, db.handleError(err, false)
 	}
@@ -175,12 +174,11 @@ func (db DatabaseConnection) RecordFile(fileName string, blockID uuid.UUID) erro
 //RegisterDeviceToUser registers a device for a user
 func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
 	deviceID := uuid.NewV4()
-	deviceRow := db.QueryRow("INSERT INTO devices VALUES(DEFAULT, $1, NULL, $2) RETURNING *;", deviceID, user.ID)
-	var id int
+	deviceRow := db.QueryRow("INSERT INTO devices VALUES($1, NULL, $2) RETURNING *;", deviceID, user.ID)
 	var internalDeviceID uuid.UUID
 	var fcmID []byte
 	var userID int
-	err := deviceRow.Scan(&id, &internalDeviceID, &fcmID, &userID)
+	err := deviceRow.Scan(&internalDeviceID, &fcmID, &userID)
 	if err != nil {
 		return Device{}, db.handleError(err, true)
 	}
@@ -194,6 +192,6 @@ func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
 
 //RegisterFCMID sets the FCM id (firebase_id) for a user's device, given a device id
 func (db DatabaseConnection) RegisterFCMID(deviceID uuid.UUID, fcmID []byte) error {
-	_, err := db.Exec("UPDATE devices SET firebase_id = $1 WHERE device_id = $2;", fcmID, deviceID)
+	_, err := db.Exec("UPDATE devices SET firebase_id = $1 WHERE id = $2;", fcmID, deviceID)
 	return db.handleError(err, true)
 }
