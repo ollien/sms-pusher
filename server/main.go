@@ -48,9 +48,12 @@ func main() {
 		logger.Fatalf("Could not parse config: %s", err)
 	}
 	listenAddress := config.Web.GetListenAddress()
-	server := web.NewWebserver(listenAddress, databaseConnection, sendChannel, logger)
+	server, err := web.NewWebserver(listenAddress, databaseConnection, sendChannel, logger)
+	if err != nil {
+		logger.Fatalf("Could not start webserver: %s", err)
+	}
 	logger.Infof("Webserver running on %s", listenAddress)
-	server.Start()
+	server.Server.ListenAndServe()
 }
 
 //setup sets up datbase rows such that the server can function.

@@ -1,10 +1,10 @@
 package web
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/sirupsen/logrus"
@@ -27,10 +27,9 @@ type hookedRouter struct {
 
 //Webserver hosts a webserver for sms-pusher
 type Webserver struct {
-	listenAddr   string
-	router       *hookedRouter
 	logger       *logrus.Logger
 	routeHandler RouteHandler
+	Server       http.Server
 }
 
 type loggableHandlerFunction = func(*LoggableResponseWriter, *http.Request, httprouter.Params)
@@ -39,31 +38,42 @@ type loggableHandlerFunction = func(*LoggableResponseWriter, *http.Request, http
 type handlerFunction = func(http.ResponseWriter, *http.Request, httprouter.Params)
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
-func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, sendChannel chan<- firebasexmpp.DownstreamPayload, logger *logrus.Logger) Webserver {
+func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, sendChannel chan<- firebasexmpp.DownstreamPayload, logger *logrus.Logger) (Webserver, error) {
+	config, err := config.GetConfig()
+	if err != nil {
+		return Webserver{}, err
+	}
+
 	routeHandler := RouteHandler{
 		databaseConnection: databaseConnection,
 		sendChannel:        sendChannel,
 		logger:             newRouteLogger(logger),
 	}
-	serv := Webserver{
-		listenAddr:   listenAddr,
-		router:       newRouter(),
+	router := newRouter()
+	httpServer := http.Server{
+		Addr:    config.Web.GetListenAddress(),
+		Handler: router,
+	}
+	webserver := Webserver{
 		logger:       logger,
 		routeHandler: routeHandler,
+		Server:       httpServer,
 	}
-	serv.router.AfterRequest = serv.afterRequest
-	serv.initHandlers()
-	return serv
+	router.AfterRequest = webserver.afterRequest
+	webserver.initHandlers()
+
+	return webserver, nil
 }
 
 func (serv *Webserver) initHandlers() {
-	serv.router.GET("/", serv.wrapHandlerFunction(serv.routeHandler.index))
-	serv.router.POST("/register", serv.wrapHandlerFunction(serv.routeHandler.register))
-	serv.router.POST("/authenticate", serv.wrapHandlerFunction(serv.routeHandler.authenticate))
-	serv.router.POST("/register_device", serv.wrapHandlerFunction(serv.routeHandler.registerDevice))
-	serv.router.POST("/set_fcm_id", serv.wrapHandlerFunction(serv.routeHandler.setFCMID))
-	serv.router.POST("/send_message", serv.wrapHandlerFunction(serv.routeHandler.sendMessage))
-	serv.router.POST("/upload_mms_file", serv.wrapHandlerFunctionWithLimit(serv.routeHandler.uploadMMSFile, maxFileSize))
+	router := serv.Server.Handler.(*hookedRouter)
+	router.GET("/", serv.wrapHandlerFunction(serv.routeHandler.index))
+	router.POST("/register", serv.wrapHandlerFunction(serv.routeHandler.register))
+	router.POST("/authenticate", serv.wrapHandlerFunction(serv.routeHandler.authenticate))
+	router.POST("/register_device", serv.wrapHandlerFunction(serv.routeHandler.registerDevice))
+	router.POST("/set_fcm_id", serv.wrapHandlerFunction(serv.routeHandler.setFCMID))
+	router.POST("/send_message", serv.wrapHandlerFunction(serv.routeHandler.sendMessage))
+	router.POST("/upload_mms_file", serv.wrapHandlerFunctionWithLimit(serv.routeHandler.uploadMMSFile, maxFileSize))
 }
 
 //wrapHandlerFunction allows us to enforce a file size limit
@@ -100,14 +110,6 @@ func (serv *Webserver) checkFormValidity(writer *LoggableResponseWriter, req *ht
 func (serv *Webserver) afterRequest(writer http.ResponseWriter, req *http.Request) {
 	if loggableWriter, ok := writer.(*LoggableResponseWriter); ok {
 		serv.routeHandler.logger.logLastRequest(req, loggableWriter.statusCode, loggableWriter.responseReason, loggableWriter.bytesWritten)
-	}
-}
-
-//Start starts the webserver
-func (serv *Webserver) Start() {
-	err := http.ListenAndServe(serv.listenAddr, serv.router)
-	if err != nil {
-		log.Fatal(err)
 	}
 }
 
