@@ -89,23 +89,6 @@ func (message UpstreamMessage) PerformAction(client *FirebaseClient) error {
 	return nil
 }
 
-func (message UpstreamMessage) extractTextMessage() (TextMessage, error) {
-	mms := MMSMessage{}
-	err := json.Unmarshal(message.Data, &mms)
-	if err != nil {
-		return nil, err
-	}
-
-	if mms.isMMS() {
-		return mms, nil
-	}
-
-	sms := SMSMessage{}
-	sms.convertFromMMS(mms)
-
-	return sms, nil
-}
-
 //PerformAction is a stub to satisfy the FCMMessage interface.
 //Presently, there is no mechanism in place to wait for an ACK, so we're just stubbing this.
 func (message InboundACKMessage) PerformAction(client *FirebaseClient) error {
