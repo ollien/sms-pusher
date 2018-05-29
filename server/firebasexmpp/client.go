@@ -1,7 +1,6 @@
 package firebasexmpp
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -123,17 +122,12 @@ func (client *FirebaseClient) ListenForSend() {
 
 //sendPayload sends a payload downstream to FCM
 func (client *FirebaseClient) sendPayload(payload DownstreamPayload) error {
-	marshaledPayload, err := json.Marshal(payload)
+	downstreamMessage, err := constructDownstreamMessage(payload)
 	if err != nil {
 		return err
 	}
 
-	wrappedPayload, err := wrapInStanzas(marshaledPayload)
-	if err != nil {
-		return err
-	}
-
-	_, err = client.xmppClient.SendOrg(string(wrappedPayload))
+	_, err = client.xmppClient.SendOrg(string(downstreamMessage))
 
 	return err
 }

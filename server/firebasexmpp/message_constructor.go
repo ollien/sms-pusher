@@ -77,6 +77,15 @@ func ConstructACK(registrationID, messageID string) ([]byte, error) {
 	return wrapInStanzas(marshaledPayload)
 }
 
+func constructDownstreamMessage(payload DownstreamPayload) ([]byte, error) {
+	marshaledPayload, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	return wrapInStanzas(marshaledPayload)
+}
+
 func wrapInStanzas(payload []byte) ([]byte, error) {
 	messageStanza := MessageStanza{
 		Body: NewGCMStanza(string(payload)),
