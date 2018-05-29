@@ -37,7 +37,7 @@ func main() {
 	}
 
 	outChannel := make(chan firebasexmpp.UpstreamMessage)
-	sendChannel := make(chan firebasexmpp.OutboundMessage)
+	sendChannel := make(chan firebasexmpp.DownstreamPayload)
 	supervisor := NewXMPPSupervisor(outChannel, sendChannel, logger)
 	go listenForSMS(outChannel, logger)
 	supervisor.SpawnClient()

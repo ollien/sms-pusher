@@ -74,7 +74,7 @@ func parseFCMMessage(data []byte) (FCMMessage, error) {
 
 //PerformAction sends the SMS message upstream to the main program
 func (message UpstreamMessage) PerformAction(client *FirebaseClient) error {
-	_, err := client.sendACK(message)
+	err := client.sendACK(message)
 	if err != nil {
 		return err
 	}

@@ -3,24 +3,7 @@ package firebasexmpp
 import (
 	"encoding/json"
 	"encoding/xml"
-
-	"github.com/mattn/go-xmpp"
 )
-
-//OutboundMessage represents a single message to be sent out to the XMPP server
-type OutboundMessage interface {
-	Send(xmpp.Client) (int, error)
-}
-
-//RawMessage represents a single message that will be sent as raw XML. It will ont be converted to an xmpp.Chat object
-type RawMessage struct {
-	data string
-}
-
-//ChatMessage represents a single message that will be sent as a xmpp.Chat objcet.
-type ChatMessage struct {
-	data xmpp.Chat
-}
 
 //MessageStanza stores the data from the message stanza in outgoing messages. Used for marshalling XML.
 type MessageStanza struct {
@@ -66,16 +49,6 @@ type DownstreamPayload struct {
 	Notification             bool        `json:"notification,omitempty"`
 }
 
-//Send sends the data contained in the message to the server. Returns the number of bytes sent or an error
-func (message RawMessage) Send(xmppClient xmpp.Client) (int, error) {
-	return xmppClient.SendOrg(message.data)
-}
-
-//Send sends the data contained in the message to the server. Returns the number of bytes sent or an error
-func (message ChatMessage) Send(xmppClient xmpp.Client) (int, error) {
-	return xmppClient.Send(message.data)
-}
-
 //NewGCMStanza makes a new GCMStanza. the XMLNS should always be google:mobile:data.
 func NewGCMStanza(payload string) GCMStanza {
 	return GCMStanza{
@@ -94,26 +67,24 @@ func NewACKPayload(registrationID, messageID string) ACKPayload {
 }
 
 //ConstructACK constructs a full ACK message to be send to the server.
-func ConstructACK(registrationID, messageID string) (RawMessage, error) {
+func ConstructACK(registrationID, messageID string) ([]byte, error) {
 	payload := NewACKPayload(registrationID, messageID)
 	marshaledPayload, err := json.Marshal(payload)
 	if err != nil {
-		return RawMessage{}, err
+		return nil, err
 	}
 
 	return wrapInStanzas(marshaledPayload)
 }
 
-func wrapInStanzas(payload []byte) (RawMessage, error) {
+func wrapInStanzas(payload []byte) ([]byte, error) {
 	messageStanza := MessageStanza{
 		Body: NewGCMStanza(string(payload)),
 	}
 	marshaledStanza, err := xml.Marshal(messageStanza)
 	if err != nil {
-		return RawMessage{}, err
+		return nil, err
 	}
 
-	return RawMessage{
-		data: string(marshaledStanza),
-	}, nil
+	return marshaledStanza, nil
 }
