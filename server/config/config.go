@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"sync"
 )
@@ -76,4 +77,9 @@ func GetConfig() (Config, error) {
 	}
 
 	return config, nil
+}
+
+//GetListenAddress combiens the ListenAddress with Port to form a well formed host address
+func (webConfig WebConfig) GetListenAddress() string {
+	return fmt.Sprintf("%s:%d", webConfig.ListenAddress, webConfig.Port)
 }
