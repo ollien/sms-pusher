@@ -11,6 +11,7 @@ import (
 	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
+	"github.com/ollien/sms-pusher/server/messaging"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -21,7 +22,7 @@ const (
 //RouteHandler holds all routes and allows them to share common variables
 type RouteHandler struct {
 	databaseConnection db.DatabaseConnection
-	sendChannel        chan<- firebasexmpp.OutboundMessage
+	sendChannel        chan<- firebasexmpp.DownstreamPayload
 	logger             routeLogger
 	//TODO: add sendErrorChannel once websockets are implemented
 }
@@ -216,19 +217,12 @@ func (handler RouteHandler) sendMessage(writer *LoggableResponseWriter, req *htt
 		return
 	}
 
-	smsMessage := firebasexmpp.SMSMessage{
+	smsMessage := messaging.SMSMessage{
 		PhoneNumber: recipient,
 		Message:     message,
 		Timestamp:   time.Now().Unix(),
 	}
-	outMessage, err := firebasexmpp.ConstructDownstreamSMS(device.FCMID, smsMessage)
-	if err != nil {
-		writer.setResponseErrorReason(err)
-		writer.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	handler.sendChannel <- outMessage
+	handler.sendChannel <- messaging.ConstructDownstreamSMS(device.FCMID, smsMessage)
 }
 
 func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {

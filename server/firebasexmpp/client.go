@@ -1,6 +1,7 @@
 package firebasexmpp
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
@@ -22,8 +23,8 @@ type FirebaseClient struct {
 	ClientID      string
 	senderID      string
 	serverKey     string
-	recvChannel   chan<- TextMessage
-	sendChannel   <-chan OutboundMessage
+	recvChannel   chan<- UpstreamMessage
+	sendChannel   <-chan DownstreamPayload
 	signalChannel chan<- Signal
 	errorChannel  chan<- ClientError
 }
@@ -35,7 +36,7 @@ type ClientError struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
-func NewFirebaseClient(clientID string, recvChannel chan<- TextMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
+func NewFirebaseClient(clientID string, recvChannel chan<- UpstreamMessage, sendChannel <-chan DownstreamPayload, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
 	appConfig, err := config.GetConfig()
 	if err != nil {
 		//can't use logError because the client hasn't been created yet!
@@ -112,12 +113,29 @@ func (client *FirebaseClient) StartRecv() {
 //ListenForSend listens for a message on sendChannel and sends the message.
 //Terminates when sendChannel is closed
 func (client *FirebaseClient) ListenForSend() {
-	for message := range client.sendChannel {
-		_, err := message.Send(client.xmppClient)
+	for payload := range client.sendChannel {
+		err := client.sendPayload(payload)
 		if err != nil {
 			client.logError(err, false)
 		}
 	}
+}
+
+//sendPayload sends a payload downstream to FCM
+func (client *FirebaseClient) sendPayload(payload DownstreamPayload) error {
+	marshaledPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	wrappedPayload, err := wrapInStanzas(marshaledPayload)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.xmppClient.SendOrg(string(wrappedPayload))
+
+	return err
 }
 
 //logError sends an error upstream to the error channel
@@ -129,11 +147,13 @@ func (client *FirebaseClient) logError(err error, fatal bool) {
 	client.errorChannel <- clientError
 }
 
-func (client *FirebaseClient) sendACK(message UpstreamMessage) (int, error) {
+func (client *FirebaseClient) sendACK(message UpstreamMessage) error {
 	ack, err := ConstructACK(message.From, message.MessageID)
 	if err != nil {
-		return 0, err
+		return err
 	}
 
-	return ack.Send(client.xmppClient)
+	_, err = client.xmppClient.SendOrg(string(ack))
+
+	return err
 }

@@ -39,7 +39,7 @@ type loggableHandlerFunction = func(*LoggableResponseWriter, *http.Request, http
 type handlerFunction = func(http.ResponseWriter, *http.Request, httprouter.Params)
 
 //NewWebserver creats a new Webserver with httpServer being set to a new http.Server
-func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, sendChannel chan<- firebasexmpp.OutboundMessage, logger *logrus.Logger) Webserver {
+func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, sendChannel chan<- firebasexmpp.DownstreamPayload, logger *logrus.Logger) Webserver {
 	routeHandler := RouteHandler{
 		databaseConnection: databaseConnection,
 		sendChannel:        sendChannel,
