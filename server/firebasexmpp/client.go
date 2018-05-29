@@ -22,7 +22,7 @@ type FirebaseClient struct {
 	ClientID      string
 	senderID      string
 	serverKey     string
-	recvChannel   chan<- TextMessage
+	recvChannel   chan<- UpstreamMessage
 	sendChannel   <-chan OutboundMessage
 	signalChannel chan<- Signal
 	errorChannel  chan<- ClientError
@@ -35,7 +35,7 @@ type ClientError struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
-func NewFirebaseClient(clientID string, recvChannel chan<- TextMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
+func NewFirebaseClient(clientID string, recvChannel chan<- UpstreamMessage, sendChannel <-chan OutboundMessage, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
 	appConfig, err := config.GetConfig()
 	if err != nil {
 		//can't use logError because the client hasn't been created yet!

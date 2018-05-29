@@ -35,7 +35,7 @@ func main() {
 		logger.Info("Setup completed.")
 	}
 
-	outChannel := make(chan firebasexmpp.TextMessage)
+	outChannel := make(chan firebasexmpp.UpstreamMessage)
 	sendChannel := make(chan firebasexmpp.OutboundMessage)
 	supervisor := NewXMPPSupervisor(outChannel, sendChannel, logger)
 	go listenForSMS(outChannel)
