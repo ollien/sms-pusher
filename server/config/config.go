@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"sync"
 )
@@ -16,6 +17,7 @@ type Config struct {
 	Database DatabaseConfig `json:"db"`
 	XMPP     XMPPConfig     `json:"xmpp"`
 	MMS      MMSConfig      `json:"mms"`
+	Web      WebConfig      `json:"web"`
 }
 
 //DatabaseConfig represents the config for the database
@@ -32,6 +34,12 @@ type XMPPConfig struct {
 //MMSConfig represents the config for the MMS portion of the FCM XMPP server
 type MMSConfig struct {
 	UploadLocation string `json:"upload_location"`
+}
+
+//WebConfig represents the config for the webserver
+type WebConfig struct {
+	ListenAddress string `json:"listen_address"`
+	Port          int    `json:"port"`
 }
 
 //ParseConfig parses the default configPath into a Config
@@ -69,4 +77,9 @@ func GetConfig() (Config, error) {
 	}
 
 	return config, nil
+}
+
+//GetListenAddress combiens the ListenAddress with Port to form a well formed host address
+func (webConfig WebConfig) GetListenAddress() string {
+	return fmt.Sprintf("%s:%d", webConfig.ListenAddress, webConfig.Port)
 }

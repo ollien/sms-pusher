@@ -7,6 +7,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/ollien/sms-pusher/server/messaging"
@@ -41,9 +42,14 @@ func main() {
 	supervisor := NewXMPPSupervisor(outChannel, sendChannel, logger)
 	go listenForSMS(outChannel, logger)
 	supervisor.SpawnClient()
-	fmt.Println("Listening for SMS")
-	server := web.NewWebserver("0.0.0.0:8080", databaseConnection, sendChannel, logger)
-	fmt.Println("Server running")
+	logger.Info("Listening for SMS")
+	config, err := config.GetConfig()
+	if err != nil {
+		logger.Fatal("Could not parse config.")
+	}
+	listenAddress := config.Web.GetListenAddress()
+	server := web.NewWebserver(listenAddress, databaseConnection, sendChannel, logger)
+	logger.Infof("Webserver running on %s", listenAddress)
 	server.Start()
 }
 
