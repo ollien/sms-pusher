@@ -45,7 +45,7 @@ func main() {
 	logger.Info("Listening for SMS")
 	config, err := config.GetConfig()
 	if err != nil {
-		logger.Fatal("Could not parse config.")
+		logger.Fatalf("Could not parse config: %s", err)
 	}
 	listenAddress := config.Web.GetListenAddress()
 	server := web.NewWebserver(listenAddress, databaseConnection, sendChannel, logger)
