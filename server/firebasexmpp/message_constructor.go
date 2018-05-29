@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 
 	"github.com/mattn/go-xmpp"
-	uuid "github.com/satori/go.uuid"
 )
 
 //OutboundMessage represents a single message to be sent out to the XMPP server
@@ -97,24 +96,6 @@ func NewACKPayload(registrationID, messageID string) ACKPayload {
 //ConstructACK constructs a full ACK message to be send to the server.
 func ConstructACK(registrationID, messageID string) (RawMessage, error) {
 	payload := NewACKPayload(registrationID, messageID)
-	marshaledPayload, err := json.Marshal(payload)
-	if err != nil {
-		return RawMessage{}, err
-	}
-
-	return wrapInStanzas(marshaledPayload)
-}
-
-//ConstructDownstreamSMS constructs a ConstreamPayload and returns the marshaled result
-func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) (RawMessage, error) {
-	messageID := uuid.NewV4()
-	payload := DownstreamPayload{
-		To:        string(deviceTo),
-		MessageID: messageID.String(),
-		Priority:  "high",
-		TTL:       3600,
-		Data:      message,
-	}
 	marshaledPayload, err := json.Marshal(payload)
 	if err != nil {
 		return RawMessage{}, err

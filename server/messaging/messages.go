@@ -1,6 +1,11 @@
 package messaging
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/ollien/sms-pusher/server/firebasexmpp"
+	uuid "github.com/satori/go.uuid"
+)
 
 //StringEncodedStringSlice represents an array of strings that is encoded as JSON
 type StringEncodedStringSlice []string
@@ -48,4 +53,18 @@ func (encodedSlice *StringEncodedStringSlice) UnmarshalJSON(data []byte) error {
 	stringSlice := (*[]string)(encodedSlice)
 
 	return json.Unmarshal([]byte(decodedString), stringSlice)
+}
+
+//ConstructDownstreamSMS constructs a DownstreamPayload fitted for an SMSMessage
+func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) firebasexmpp.DownstreamPayload {
+	messageID := uuid.NewV4()
+	payload := firebasexmpp.DownstreamPayload{
+		To:        string(deviceTo),
+		MessageID: messageID.String(),
+		Priority:  "high",
+		TTL:       3600,
+		Data:      message,
+	}
+
+	return payload
 }
