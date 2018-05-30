@@ -7,53 +7,21 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/ollien/sms-pusher/server/config"
 	"github.com/ollien/sms-pusher/server/db"
 	"github.com/ollien/sms-pusher/server/firebasexmpp"
 	"github.com/ollien/sms-pusher/server/messaging"
-	"github.com/ollien/sms-pusher/server/web"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
 func main() {
-	logFormatter := &logrus.TextFormatter{
-		FullTimestamp:   true,
-		TimestampFormat: "2006-01-02 15:04:05-0700",
-	}
-	logger := logrus.New()
-	logger.Formatter = logFormatter
-	databaseConnection, err := db.InitDB(logger)
+	server, err := NewServer()
 	if err != nil {
-		logger.Fatalf("Database error: %s", err)
+		logrus.Fatal(err)
 	}
 
-	defer databaseConnection.Close()
-
-	setupDone, err := setup(databaseConnection)
-	if err != nil {
-		logger.Fatal(err)
-	} else if setupDone {
-		logger.Info("Setup completed.")
-	}
-
-	outChannel := make(chan firebasexmpp.UpstreamMessage)
-	sendChannel := make(chan firebasexmpp.DownstreamPayload)
-	supervisor := NewXMPPSupervisor(outChannel, sendChannel, logger)
-	go listenForSMS(outChannel, logger)
-	supervisor.SpawnClient()
-	logger.Info("Listening for SMS")
-	config, err := config.GetConfig()
-	if err != nil {
-		logger.Fatalf("Could not parse config: %s", err)
-	}
-	listenAddress := config.Web.GetListenAddress()
-	server, err := web.NewWebserver(listenAddress, databaseConnection, sendChannel, logger)
-	if err != nil {
-		logger.Fatalf("Could not start webserver: %s", err)
-	}
-	logger.Infof("Webserver running on %s", listenAddress)
-	server.Server.ListenAndServe()
+	defer server.Stop()
+	server.Run()
 }
 
 //setup sets up datbase rows such that the server can function.
