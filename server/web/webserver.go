@@ -29,7 +29,7 @@ type hookedRouter struct {
 type Webserver struct {
 	logger       *logrus.Logger
 	routeHandler RouteHandler
-	Server       http.Server
+	Server       *http.Server
 }
 
 type loggableHandlerFunction = func(*LoggableResponseWriter, *http.Request, httprouter.Params)
@@ -50,7 +50,7 @@ func NewWebserver(listenAddr string, databaseConnection db.DatabaseConnection, s
 		logger:             newRouteLogger(logger),
 	}
 	router := newRouter()
-	httpServer := http.Server{
+	httpServer := &http.Server{
 		Addr:    config.Web.GetListenAddress(),
 		Handler: router,
 	}
