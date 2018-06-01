@@ -19,6 +19,7 @@ const driver = "postgres"
 type DatabaseConnection struct {
 	*sql.DB
 	logger *logrus.Logger
+	uri    string
 }
 
 //DatabaseError represents an error that was produced during the running of a databse action
@@ -50,34 +51,42 @@ type Session struct {
 	User User
 }
 
-//InitDB intiializes the database connection and returns a DB
-func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
+//NewDatabaseConnection intiializes the database connection and returns a DatabaseConnection.
+func NewDatabaseConnection(logger *logrus.Logger) (DatabaseConnection, error) {
 	goose.SetLogger(logger)
 	appConfig, err := config.GetConfig()
 	if err != nil {
 		return DatabaseConnection{}, err
 	}
 
-	rawConnection, err := sql.Open(driver, appConfig.Database.URI)
-	if err != nil {
-		return DatabaseConnection{}, err
-	}
-
 	connection := DatabaseConnection{
-		DB:     rawConnection,
 		logger: logger,
-	}
-
-	err = goose.Up(rawConnection, "/dev/null")
-	if err != nil {
-		return DatabaseConnection{}, err
+		uri:    appConfig.Database.URI,
 	}
 
 	return connection, nil
 }
 
+//Connect connets to the database and begins necessary migrations.
+func (connection *DatabaseConnection) Connect() error {
+	rawConnection, err := sql.Open(driver, connection.uri)
+	if err != nil {
+		return err
+	}
+
+	err = goose.Up(rawConnection, "/dev/null")
+	if err != nil {
+		return err
+	}
+
+	//Don't store the database connection until we know everything's been set up by the migration.
+	connection.DB = rawConnection
+
+	return nil
+}
+
 //handleError will take an error, package it as a DatabaseError, and perform any logging needed.
-func (connection DatabaseConnection) handleError(err error, databaseFault bool) error {
+func (connection *DatabaseConnection) handleError(err error, databaseFault bool) error {
 	if err == nil {
 		return nil
 	}
@@ -89,7 +98,7 @@ func (connection DatabaseConnection) handleError(err error, databaseFault bool) 
 }
 
 //logIfNetError will log the error with error severity if the error spawned from a network problem, such as the database being down. Returns true if an error was logged.
-func (connection DatabaseConnection) logIfNetError(err error) bool {
+func (connection *DatabaseConnection) logIfNetError(err error) bool {
 	if _, ok := err.(*net.OpError); ok {
 		connection.logger.WithField("err", err).Error("Could not connect to database.")
 		return true
