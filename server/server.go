@@ -32,7 +32,12 @@ func NewServer() (Server, error) {
 	logger := logrus.New()
 	logger.Formatter = logFormatter
 
-	databaseConnection, err := db.InitDB(logger)
+	databaseConnection, err := db.NewDatabaseConnection(logger)
+	if err != nil {
+		return Server{}, err
+	}
+
+	err = databaseConnection.Connect()
 	if err != nil {
 		return Server{}, err
 	}

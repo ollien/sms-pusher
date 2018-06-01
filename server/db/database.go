@@ -19,6 +19,7 @@ const driver = "postgres"
 type DatabaseConnection struct {
 	*sql.DB
 	logger *logrus.Logger
+	uri    string
 }
 
 //DatabaseError represents an error that was produced during the running of a databse action
@@ -50,30 +51,38 @@ type Session struct {
 	User User
 }
 
-//InitDB intiializes the database connection and returns a DB
-func InitDB(logger *logrus.Logger) (DatabaseConnection, error) {
+//NewDatabaseConnection intiializes the database connection and returns a DatabaseConnection.
+func NewDatabaseConnection(logger *logrus.Logger) (DatabaseConnection, error) {
 	goose.SetLogger(logger)
 	appConfig, err := config.GetConfig()
 	if err != nil {
 		return DatabaseConnection{}, err
 	}
 
-	rawConnection, err := sql.Open(driver, appConfig.Database.URI)
-	if err != nil {
-		return DatabaseConnection{}, err
+	connection := DatabaseConnection{
+		logger: logger,
+		uri:    appConfig.Database.URI,
 	}
 
-	connection := DatabaseConnection{
-		DB:     rawConnection,
-		logger: logger,
+	return connection, nil
+}
+
+//Connect connets to the database and begins necessary migrations.
+func (connection *DatabaseConnection) Connect() error {
+	rawConnection, err := sql.Open(driver, connection.uri)
+	if err != nil {
+		return err
 	}
 
 	err = goose.Up(rawConnection, "/dev/null")
 	if err != nil {
-		return DatabaseConnection{}, err
+		return err
 	}
 
-	return connection, nil
+	//Don't store the database connection until we know everything's been set up by the migration.
+	connection.DB = rawConnection
+
+	return nil
 }
 
 //handleError will take an error, package it as a DatabaseError, and perform any logging needed.
