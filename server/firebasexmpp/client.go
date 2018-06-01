@@ -30,8 +30,9 @@ type FirebaseClient struct {
 
 //ClientError represents an error that occurs within a cient
 type ClientError struct {
-	Err   error
-	Fatal bool
+	Client *FirebaseClient
+	Err    error
+	Fatal  bool
 }
 
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
@@ -135,8 +136,9 @@ func (client *FirebaseClient) sendPayload(payload DownstreamPayload) error {
 //logError sends an error upstream to the error channel
 func (client *FirebaseClient) logError(err error, fatal bool) {
 	clientError := ClientError{
-		Err:   err,
-		Fatal: fatal,
+		Client: client,
+		Err:    err,
+		Fatal:  fatal,
 	}
 	client.errorChannel <- clientError
 }
