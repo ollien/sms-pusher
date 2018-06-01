@@ -36,16 +36,10 @@ type ClientError struct {
 }
 
 //NewFirebaseClient creates a FirebaseClient from the given XMPPConfig
-func NewFirebaseClient(clientID string, recvChannel chan<- UpstreamMessage, sendChannel <-chan DownstreamPayload, signalChannel chan<- Signal, errorChannel chan<- ClientError) FirebaseClient {
+func NewFirebaseClient(clientID string, recvChannel chan<- UpstreamMessage, sendChannel <-chan DownstreamPayload, signalChannel chan<- Signal, errorChannel chan<- ClientError) (FirebaseClient, error) {
 	appConfig, err := config.GetConfig()
 	if err != nil {
-		//can't use logError because the client hasn't been created yet!
-		clientError := ClientError{
-			Err:   err,
-			Fatal: true,
-		}
-		errorChannel <- clientError
-		return FirebaseClient{}
+		return FirebaseClient{}, err
 	}
 
 	xmppConfig := appConfig.XMPP
@@ -54,13 +48,7 @@ func NewFirebaseClient(clientID string, recvChannel chan<- UpstreamMessage, send
 	username := fmt.Sprintf("%s@%s", xmppConfig.SenderID, fcmUsernameAddres)
 	client, err := xmpp.NewClient(server, username, xmppConfig.ServerKey, true)
 	if err != nil {
-		//can't use logError because the client hasn't been created yet!
-		clientError := ClientError{
-			Err:   err,
-			Fatal: true,
-		}
-		errorChannel <- clientError
-		return FirebaseClient{}
+		return FirebaseClient{}, err
 	}
 
 	return FirebaseClient{
@@ -72,7 +60,7 @@ func NewFirebaseClient(clientID string, recvChannel chan<- UpstreamMessage, send
 		sendChannel:   sendChannel,
 		signalChannel: signalChannel,
 		errorChannel:  errorChannel,
-	}
+	}, nil
 }
 
 //StartRecv listens for incoming  messages from Firebase Cloud Messaging and acts on them as defined by their type of message.

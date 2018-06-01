@@ -68,12 +68,17 @@ func NewServer() (Server, error) {
 }
 
 //Run starts the Server
-func (server Server) Run() {
+func (server Server) Run() error {
+	err := server.supervisor.SpawnClient()
+	if err != nil {
+		server.logger.Fatalf("Error in starting client: %s", err)
+	}
+
 	go listenForSMS(server.upstreamChannel, server.logger)
-	server.supervisor.SpawnClient()
 	server.logger.Info("Listening for SMS")
 	server.logger.Info("Starting Webserver")
-	server.webserver.Server.ListenAndServe()
+
+	return server.webserver.Server.ListenAndServe()
 }
 
 //Stop stops the Server
