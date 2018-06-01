@@ -86,7 +86,7 @@ func (connection *DatabaseConnection) Connect() error {
 }
 
 //handleError will take an error, package it as a DatabaseError, and perform any logging needed.
-func (connection DatabaseConnection) handleError(err error, databaseFault bool) error {
+func (connection *DatabaseConnection) handleError(err error, databaseFault bool) error {
 	if err == nil {
 		return nil
 	}
@@ -98,7 +98,7 @@ func (connection DatabaseConnection) handleError(err error, databaseFault bool) 
 }
 
 //logIfNetError will log the error with error severity if the error spawned from a network problem, such as the database being down. Returns true if an error was logged.
-func (connection DatabaseConnection) logIfNetError(err error) bool {
+func (connection *DatabaseConnection) logIfNetError(err error) bool {
 	if _, ok := err.(*net.OpError); ok {
 		connection.logger.WithField("err", err).Error("Could not connect to database.")
 		return true
