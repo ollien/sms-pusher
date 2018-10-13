@@ -1,0 +1,16 @@
+{
+	"db": {
+		"uri": "postgres://postgres@localhost:5432/sms_pusher?sslmode=disable"
+	},
+	"xmpp": {
+		"server_key": "AAAAVKeCA7o:APA91bGVDb74ZxTaPdNZxHTGemYFYZTt6V5Oj9Tq7qZDPFF6fOWENvayULpgo35_C-YGJ4vkYU9XG_zu8KZUAvmevH4MgPiWT_U3Mptn_yftlXS73qhxq_3a3AsWd0PAn3k5vyrdxVwy",
+		"sender_id": "363587568570"
+	},
+	"mms": {
+		"upload_location": "/tmp/mms/"
+	},
+	"web": {
+		"listen_address": "0.0.0.0",
+		"port": 8080
+	}
+}

@@ -222,7 +222,14 @@ func (handler RouteHandler) sendMessage(writer *LoggableResponseWriter, req *htt
 		Message:     message,
 		Timestamp:   time.Now().Unix(),
 	}
-	handler.sendChannel <- messaging.ConstructDownstreamSMS(device.FCMID, smsMessage)
+	downstreamMessage, err := messaging.ConstructDownstreamSMS(device.FCMID, smsMessage)
+	if err != nil {
+		writer.setResponseErrorReason(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	handler.sendChannel <- downstreamMessage
 }
 
 func (handler RouteHandler) uploadMMSFile(writer *LoggableResponseWriter, req *http.Request, params httprouter.Params) {

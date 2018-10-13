@@ -94,8 +94,12 @@ func (db DatabaseConnection) VerifyUser(username string, password []byte) (User,
 
 //CreateSession makes a session given a User
 func (db DatabaseConnection) CreateSession(user User) (Session, error) {
-	sessionID := uuid.NewV4()
-	_, err := db.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
+	sessionID, err := uuid.NewV4()
+	if err != nil {
+		return Session{}, db.handleError(err, true)
+	}
+
+	_, err = db.Exec("INSERT INTO sessions VALUES($1, $2);", sessionID, user.ID)
 	if err != nil {
 		return Session{}, db.handleError(err, true)
 	}
@@ -155,8 +159,12 @@ func (db DatabaseConnection) GetDevice(deviceID uuid.UUID) (Device, error) {
 
 //MakeFileBlock makes a file block in the database
 func (db DatabaseConnection) MakeFileBlock(user User) (uuid.UUID, error) {
-	blockID := uuid.NewV4()
-	_, err := db.Exec("INSERT INTO mms_file_blocks VALUES($1, $2)", blockID, user.ID)
+	blockID, err := uuid.NewV4()
+	if err != nil {
+		return uuid.UUID{}, db.handleError(err, true)
+	}
+
+	_, err = db.Exec("INSERT INTO mms_file_blocks VALUES($1, $2)", blockID, user.ID)
 	if err != nil {
 		return uuid.UUID{}, db.handleError(err, true)
 	}
@@ -173,12 +181,16 @@ func (db DatabaseConnection) RecordFile(fileName string, blockID uuid.UUID) erro
 
 //RegisterDeviceToUser registers a device for a user
 func (db DatabaseConnection) RegisterDeviceToUser(user User) (Device, error) {
-	deviceID := uuid.NewV4()
+	deviceID, err := uuid.NewV4()
+	if err != nil {
+		return Device{}, db.handleError(err, true)
+	}
+
 	deviceRow := db.QueryRow("INSERT INTO devices VALUES($1, NULL, $2) RETURNING *;", deviceID, user.ID)
 	var internalDeviceID uuid.UUID
 	var fcmID []byte
 	var userID int
-	err := deviceRow.Scan(&internalDeviceID, &fcmID, &userID)
+	err = deviceRow.Scan(&internalDeviceID, &fcmID, &userID)
 	if err != nil {
 		return Device{}, db.handleError(err, true)
 	}

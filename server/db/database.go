@@ -6,6 +6,7 @@ import (
 
 	_ "github.com/lib/pq"
 	"github.com/ollien/sms-pusher/server/config"
+
 	//Adds migrations to goose
 	_ "github.com/ollien/sms-pusher/server/db/migrations"
 	"github.com/pressly/goose"

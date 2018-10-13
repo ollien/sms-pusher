@@ -54,8 +54,13 @@ func (supervisor *XMPPSupervisor) SpawnClient() error {
 }
 
 func (supervisor *XMPPSupervisor) spawnClientFromContainer(container ClientContainer) error {
-	//Because errors can happen during creation, we need to strat the listening for errors routine now.
-	clientID := uuid.NewV4().String()
+	//Because errors can happen during creation, we need to start the listening for errors routine now.
+	rawClientID, err := uuid.NewV4()
+	if err != nil {
+		return err
+	}
+	clientID := rawClientID.String()
+
 	firebaseClient, err := firebasexmpp.NewFirebaseClient(clientID, supervisor.recvChannel, supervisor.sendChannel, supervisor.signalChannel, container.errorChannel)
 	if err != nil {
 		return err

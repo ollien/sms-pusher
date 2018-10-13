@@ -56,8 +56,12 @@ func (encodedSlice *StringEncodedStringSlice) UnmarshalJSON(data []byte) error {
 }
 
 //ConstructDownstreamSMS constructs a DownstreamPayload fitted for an SMSMessage
-func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) firebasexmpp.DownstreamPayload {
-	messageID := uuid.NewV4()
+func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) (firebasexmpp.DownstreamPayload, error) {
+	messageID, err := uuid.NewV4()
+	if err != nil {
+		return firebasexmpp.DownstreamPayload{}, err
+	}
+
 	payload := firebasexmpp.DownstreamPayload{
 		To:        string(deviceTo),
 		MessageID: messageID.String(),
@@ -66,5 +70,5 @@ func ConstructDownstreamSMS(deviceTo []byte, message SMSMessage) firebasexmpp.Do
 		Data:      message,
 	}
 
-	return payload
+	return payload, nil
 }
