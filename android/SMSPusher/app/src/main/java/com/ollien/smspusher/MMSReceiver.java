@@ -109,7 +109,7 @@ public class MMSReceiver extends BroadcastReceiver {
 						blockId = (String) resObject.get("block_id");
 						int numSentSoFar = numSent.incrementAndGet();
 						//If we have all of the parts, call our callback.
-						if (numSentSoFar == partsList.size()) {
+						if (numSentSoFar >= partsList.size()) {
 							callback.accept(blockId);
 						}
 					} catch (JSONException e) {
